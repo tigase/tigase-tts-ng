@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Tigase XMPP Server Tests" verbose="1">
+	<test name="Example Jaxmpp Test">
+		<classes>
+			<class name="tigase.tests.ExampleJaxmppTest" />
+		</classes>
+	</test>
+</suite>

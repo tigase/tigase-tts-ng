@@ -1,0 +1,252 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyyy-MM-dd/HH:mm:ss</maven.build.timestamp.format>
+		<properties.file>/server.properties</properties.file>
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>tigase</groupId>
+	<artifactId>tigase-tts-ng</artifactId>
+	<name>Tigase TTS-NG</name>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<description>Test suits for Tigase XMPP Server</description>
+	<issueManagement>
+		<system>Redmine</system>
+		<url>https://projects.tigase.org/projects/tigase-tts-ng</url>
+	</issueManagement>
+	<scm>
+		<connection>scm:git:https://repository.tigase.org/git/tigase-tts-ng</connection>
+		<developerConnection>scm:git:https://repository.tigase.org/git/tigase-tts-ng</developerConnection>
+		<url>https://projects.tigase.org/projects/tigase-tts-ng/repository</url>
+		<tag>HEAD</tag>
+	</scm>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.2</version>
+				<configuration>
+					<timestampFormat>{0,date} {0,time}</timestampFormat>
+					<shortRevisionLength>8</shortRevisionLength>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.gmaven</groupId>
+				<artifactId>gmaven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>gitver</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>execute</goal>
+						</goals>
+						<configuration>
+							<providerSelection>2.0</providerSelection>
+							<properties>
+								<script>git rev-list master --count</script>
+							</properties>
+							<source>
+								def command = project.properties.script
+								def process = command.execute()
+								process.waitFor()
+
+								def describe = process.in.text.trim()
+								println "setting revision to: " + describe
+
+								project.properties.setProperty('gitVersion',describe)
+							</source>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18</version>
+				<configuration>
+					<!--<redirectTestOutputToFile>true</redirectTestOutputToFile>-->
+					<printSummary>true</printSummary>
+					<reportFormat>plain</reportFormat>
+					<trimStackTrace>false</trimStackTrace>
+					<failIfNoTests>false</failIfNoTests>
+					<failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+					<rerunFailingTestsCount>5</rerunFailingTestsCount>
+					<systemPropertyVariables>
+						<org.uncommons.reportng.escape-output>true</org.uncommons.reportng.escape-output>
+						<properties_file>${properties.file}</properties_file>
+					</systemPropertyVariables>
+					<testFailureIgnore>false</testFailureIgnore>
+
+					<suiteXmlFiles>
+						<suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+					</suiteXmlFiles>
+					<!--<workingDirectory>target/</workingDirectory>-->
+					<properties>
+						<property>
+							<name>listener</name>
+							<value>org.uncommons.reportng.HTMLReporter, org.uncommons.reportng.JUnitXMLReporter, tigase.DotTestListener</value>
+						</property>
+					</properties>
+				</configuration>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh-external</artifactId>
+				<version>2.8</version>
+			</extension>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>2.8</version>
+			</extension>
+		</extensions>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-core</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-j2se</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-chat</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-presence</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-registration</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-muc</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-im</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-pubsub</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-adhoc</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-roster</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-xep0136</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>jaxmpp-xep0013_flexible_offline</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tigase</groupId>
+			<artifactId>tigase-utils</artifactId>
+			<version>3.4.4-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>6.8.8</version>
+<!--			<scope>test</scope>-->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>3.0</version>
+<!--			<scope>test</scope>-->
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.uncommons</groupId>
+			<artifactId>reportng</artifactId>
+			<version>1.1.4</version>
+<!--			<scope>test</scope>-->
+			<exclusions>
+				<exclusion>
+					<groupId>org.testng</groupId>
+					<artifactId>testng</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.6</version>
+		</dependency>
+
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>tigase</id>
+			<name>Tigase repository</name>
+			<url>http://maven.tigase.org</url>
+		</repository>
+		<repository>
+			<id>tigase-snapshot</id>
+			<name>Tigase repository</name>
+			<url>http://build.xmpp-test.net/maven/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+</project>
+
+
