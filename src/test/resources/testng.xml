@@ -6,4 +6,9 @@
 			<class name="tigase.tests.ExampleJaxmppTest" />
 		</classes>
 	</test>
+	<test name="Sending XMPP messages using HTTP REST API">
+		<classes>
+			<class name="tigase.tests.Test2936" />
+		</classes>
+	</test>
 </suite>

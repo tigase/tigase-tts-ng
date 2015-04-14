@@ -401,6 +401,10 @@ public abstract class AbstractTest {
 		Assert.fail(e.getMessage());
 	}
 
+	public String getHttpPort() {
+		return props.getProperty("test.http.port");
+	}
+	
 	public String getApiKey() {
 		return props.getProperty("test.http.api-key");
 	}
