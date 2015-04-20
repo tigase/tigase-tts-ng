@@ -96,15 +96,25 @@ public class Test2944 extends AbstractTest {
 		setLimit(mutex, userJaxmpp2, limit);
 		testLimit(mutex, userJaxmpp1, userJaxmpp2, limit);		
 	}
+
+	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 0 - disabling offline storage")
+	public void testOfflineLimit3() throws Exception {
+		userJaxmpp1.login(true);
+		userJaxmpp2.login(true);
+		int limit = 0;
+		Mutex mutex = new Mutex();
+		setLimit(mutex, userJaxmpp2, limit);
+		testLimit(mutex, userJaxmpp1, userJaxmpp2, limit);		
+	}	
 	
 	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 3 and removing limit")
-	public void testOfflineLimit3() throws Exception {
+	public void testOfflineLimit4() throws Exception {
 		userJaxmpp1.login(true);
 		userJaxmpp2.login(true);
 		int limit = 3;
 		Mutex mutex = new Mutex();
 		setLimit(mutex, userJaxmpp2, limit);
-		limit = 0;
+		limit = -1;
 		setLimit(mutex, userJaxmpp2, limit);
 		testLimit(mutex, userJaxmpp1, userJaxmpp2, limit);		
 	}
@@ -115,7 +125,8 @@ public class Test2944 extends AbstractTest {
 		iq.setAttribute("id", id);
 		iq.setType(StanzaType.set);
 		Element msgoffline = ElementFactory.create("msgoffline", null, "msgoffline");
-		msgoffline.setAttribute("limit", String.valueOf(limit));
+		String limitStr = limit >= 0 ? String.valueOf(limit) : "false";
+		msgoffline.setAttribute("limit", limitStr);
 		iq.addChild(msgoffline);
 		jaxmpp.send(iq, new AsyncCallback() {
 
@@ -135,8 +146,8 @@ public class Test2944 extends AbstractTest {
 				mutex.notify("offline:limit:set:null:timeout:null");
 			}
 		});
-		mutex.waitFor(20 * 1000, "offline:limit:set:" + limit + ":result:" + id);
-		assertTrue(mutex.isItemNotified("offline:limit:set:" + limit + ":result:" + id));
+		mutex.waitFor(20 * 1000, "offline:limit:set:" + limitStr + ":result:" + id);
+		assertTrue(mutex.isItemNotified("offline:limit:set:" + limitStr + ":result:" + id));
 	}
 	
 	private void testLimit(final Mutex mutex, Jaxmpp sender, Jaxmpp receiver, int limit) throws JaxmppException, InterruptedException {
@@ -181,7 +192,7 @@ public class Test2944 extends AbstractTest {
 		
 		receiver.login(true);
 		
-		if (limit == 0)
+		if (limit == -1)
 			limit = 10;
 		
 		for (int i=0; i<10; i++) {
