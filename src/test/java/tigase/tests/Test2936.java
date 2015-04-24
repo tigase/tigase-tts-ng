@@ -86,7 +86,7 @@ public class Test2936 extends AbstractTest {
 	public void setUp() throws Exception {
 		super.setUp();	
 		Jaxmpp adminJaxmpp = createJaxmppAdmin();
-        HttpHost target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
+        HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(
                 new AuthScope(target.getHostName(), target.getPort()),
@@ -122,7 +122,7 @@ public class Test2936 extends AbstractTest {
 		});
 		userJaxmpp.login(true);		
 		
-		HttpHost target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
+		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
 		HttpClientContext localContext = HttpClientContext.create();
 		AuthCache authCache = new BasicAuthCache();
 		BasicScheme basicAuth = new BasicScheme();
