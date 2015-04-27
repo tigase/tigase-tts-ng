@@ -11,4 +11,9 @@
 			<class name="tigase.tests.Test2936" />
 		</classes>
 	</test>
+	<test name="REST API for Setting/Updating Privacy Rules">
+		<classes>
+			<class name="tigase.tests.Test2928" />
+		</classes>
+	</test>
 </suite>
