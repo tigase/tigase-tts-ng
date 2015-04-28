@@ -6,14 +6,24 @@
 			<class name="tigase.tests.ExampleJaxmppTest" />
 		</classes>
 	</test>
-	<test name="Sending XMPP messages using HTTP REST API">
+	<test name="Test #2928 - HTTP - REST API: REST API for Setting/Updating Privacy Rules">
+		<classes>
+			<class name="tigase.tests.Test2928" />
+		</classes>
+	</test>	
+	<test name="Test #2936 - HTTP - REST API: Sending XMPP messages using HTTP REST API">
 		<classes>
 			<class name="tigase.tests.Test2936" />
 		</classes>
 	</test>
-	<test name="REST API for Setting/Updating Privacy Rules">
+	<test name="Test #2939 - TLS - Client Cert: Two-way TLS">
 		<classes>
-			<class name="tigase.tests.Test2928" />
+			<class name="tigase.tests.Test2939"/>
+		</classes>
+	</test>
+	<test name="Test #2944 - XMPP - Offline Messages: Setting offline messages limit to 3">
+		<classes>
+			<class name="tigase.tests.Test2944" />
 		</classes>
 	</test>
 </suite>
