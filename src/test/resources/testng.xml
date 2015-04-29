@@ -26,4 +26,9 @@
 			<class name="tigase.tests.Test2944" />
 		</classes>
 	</test>
+	<test name="Test #2947 - XMPP - Offline Message Sink Provider">
+		<classes>
+			<class name="tigase.tests.Test2947" />
+		</classes>
+	</test>
 </suite>
