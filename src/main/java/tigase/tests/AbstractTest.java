@@ -496,7 +496,11 @@ public abstract class AbstractTest {
 		final BareJID userJid = jaxmpp.getSessionObject().getUserBareJid();
 		final Mutex mutex = new Mutex();
 
-		if (ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject()).getLocalpart().equals("admin"))
+		final JID jid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
+		if (jid == null && !jaxmpp.isConnected())
+			jaxmpp.login(true);
+		
+		if (jid.getLocalpart().equals("admin"))
 			throw new RuntimeException("Better not to remove user 'admin', don't you think?");
 
 		final JaxmppCore.DisconnectedHandler disconnectionHandler = new JaxmppCore.DisconnectedHandler() {

@@ -74,7 +74,9 @@ public class Test2944 extends AbstractTest {
 	@AfterMethod
 	public void cleanUp() throws Exception {
 		removeUserAccount(userJaxmpp1);
-		removeUserAccount(userJaxmpp2);
+		if (userJaxmpp2 != null) {
+			removeUserAccount(userJaxmpp2);
+		}
 	}	
 	
 	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 3")
@@ -152,6 +154,8 @@ public class Test2944 extends AbstractTest {
 	
 	private void testLimit(final Mutex mutex, Jaxmpp sender, Jaxmpp receiver, int limit) throws JaxmppException, InterruptedException {
 		receiver.disconnect(true);
+		
+		Thread.sleep(1000);
 
 		final List<String> sent = new ArrayList<String>();
 		
@@ -189,6 +193,8 @@ public class Test2944 extends AbstractTest {
 				}
 			}
 		});
+		
+		Thread.sleep(1000);
 		
 		receiver.login(true);
 		
