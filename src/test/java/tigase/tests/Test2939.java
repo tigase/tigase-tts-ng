@@ -29,7 +29,6 @@ public class Test2939 extends AbstractTest {
 	/**
 	 * Number of domain. Domain must be separately configured for this test!
 	 */
-	private static final int DOMAIN_NUMBER = 1;
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with client certificate")
 	public void testConnectionWithCertificate() throws Exception {
@@ -39,7 +38,7 @@ public class Test2939 extends AbstractTest {
 		logger.addHandler(handler);
 		logger.setLevel(Level.ALL);
 
-		final String domain = getDomain(DOMAIN_NUMBER);
+		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
 
@@ -77,7 +76,7 @@ public class Test2939 extends AbstractTest {
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS without client certificate")
 	public void testConnectionWithoutCertificate() throws Exception {
-		final String domain = getDomain(DOMAIN_NUMBER);
+		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
 
@@ -104,7 +103,7 @@ public class Test2939 extends AbstractTest {
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with wrong client certificate")
 	public void testConnectionWithWrongCertificate() throws Exception {
-		final String domain = getDomain(DOMAIN_NUMBER);
+		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
 
