@@ -64,6 +64,8 @@ public class Test2928 extends AbstractTest {
 	}
 
 	private CloseableHttpClient httpClient;
+	private HttpHost target;
+	private HttpClientContext localContext;
 
 	BareJID adminJID;
 	Jaxmpp adminJaxmpp;
@@ -84,34 +86,42 @@ public class Test2928 extends AbstractTest {
 		adminJaxmpp = createJaxmppAdmin();
 		adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
 		adminJaxmpp.login( true );
+
+		target = new HttpHost( getInstanceHostname(), Integer.parseInt( getHttpPort() ), "http" );
+		CredentialsProvider credsProvider = new BasicCredentialsProvider();
+		final Object adminBareJid = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.USER_BARE_JID );
+		final String adminPassword = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.PASSWORD );
+		final AuthScope authScope = new AuthScope( target.getHostName(), target.getPort() );
+		log("authScope: " + authScope.toString());
+		final UsernamePasswordCredentials userPass = new UsernamePasswordCredentials( adminBareJid.toString(), adminPassword );
+		log("UsernamePasswordCredentials: " + userPass + " / adminPassword: " + adminPassword );
+		credsProvider.setCredentials(authScope, userPass);
+		log("credsProvider: " + credsProvider.getCredentials(authScope ));
+		httpClient = HttpClients.custom().setDefaultCredentialsProvider( credsProvider )
+				.setDefaultRequestConfig( RequestConfig.custom().setSocketTimeout( 5000 ).build() ).build();
+
+
+		localContext = HttpClientContext.create();
+		AuthCache authCache = new BasicAuthCache();
+		BasicScheme basicAuth = new BasicScheme();
+		authCache.put( target, basicAuth );
+		localContext.setAuthCache( authCache );
+
+
 	}
 
 	@BeforeMethod
 	public void prepareTest() throws JaxmppException, InterruptedException {
-		String domainName;
-
-		domainName = addVhost( adminJaxmpp, "filtering-" );
-		userRegularJaxmpp = prepareUser( domainName, "user_regular" );
+		userRegularJaxmpp = prepareUser( getDomain(), "user_regular" );
 		userRegularJID = userRegularJaxmpp.getSessionObject().getUserBareJid();
 
-		domainName = addVhost( adminJaxmpp, "filtering-whitelisted" );
-		userRegular1Jaxmpp_whitelist = prepareUser( domainName, "user_regular1_whitelist" );
+		userRegular1Jaxmpp_whitelist = prepareUser( getDomain(), "user_regular1_whitelist" );
 		userRegular1JID_whitelist = userRegular1Jaxmpp_whitelist.getSessionObject().getUserBareJid();
 		log( "userRegular1Jaxmpp_whitelist: " + userRegular1Jaxmpp_whitelist );
 		log( "userRegular1JID_whitelist: " + userRegular1JID_whitelist );
 
-		domainName = addVhost( adminJaxmpp, "filtering-blacklisted" );
-		userRegular2Jaxmpp_blacklist = prepareUser( domainName, "user_regular2_blacklist" );
+		userRegular2Jaxmpp_blacklist = prepareUser( getDomain(), "user_regular2_blacklist" );
 		userRegular2JID_blacklist = userRegular2Jaxmpp_blacklist.getSessionObject().getUserBareJid();
-
-		HttpHost target = new HttpHost( getInstanceHostname(), Integer.parseInt( getHttpPort() ), "http" );
-		CredentialsProvider credsProvider = new BasicCredentialsProvider();
-		final Object adminBareJid = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.USER_BARE_JID );
-		final String adminPassword = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.PASSWORD );
-		credsProvider.setCredentials( new AuthScope( target.getHostName(), target.getPort() ),
-																	new UsernamePasswordCredentials( adminBareJid.toString(), adminPassword ) );
-		httpClient = HttpClients.custom().setDefaultCredentialsProvider( credsProvider )
-				.setDefaultRequestConfig( RequestConfig.custom().setSocketTimeout( 5000 ).build() ).build();
 
 	}
 
@@ -129,12 +139,6 @@ public class Test2928 extends AbstractTest {
 		tearDownUser( userRegular1Jaxmpp_whitelist );
 		tearDownUser( userRegular2Jaxmpp_blacklist );
 
-		BareJID[] domains = new BareJID[] { userRegular1JID_whitelist, userRegular2JID_blacklist };
-
-		for ( BareJID jid : domains ) {
-			String domainName = jid.getDomain();
-			removeVhost( adminJaxmpp, domainName );
-		}
 	}
 
 	private void tearDownUser( Jaxmpp user ) throws JaxmppException, InterruptedException {
@@ -147,14 +151,11 @@ public class Test2928 extends AbstractTest {
 	}
 
 	@AfterClass
-	public void tearDownAdmin() throws JaxmppException {
+	public void tearDownAdmin() throws JaxmppException, IOException {
 		adminJaxmpp.disconnect();
-	}
-
-	@AfterMethod
-	public void cleanUp() throws Exception {
 		httpClient.close();
 	}
+
 
 	private void reloginUser( Jaxmpp user ) throws InterruptedException, JaxmppException {
 		if ( user.isConnected() ){
@@ -222,12 +223,6 @@ public class Test2928 extends AbstractTest {
 
 	public void updateContactFiltering( BareJID user, DomainFilterPolicy policy, String rule ) throws Exception {
 
-		HttpHost target = new HttpHost( getInstanceHostname(), Integer.parseInt( getHttpPort() ), "http" );
-		HttpClientContext localContext = HttpClientContext.create();
-		AuthCache authCache = new BasicAuthCache();
-		BasicScheme basicAuth = new BasicScheme();
-		authCache.put( target, basicAuth );
-		localContext.setAuthCache( authCache );
 
 		HttpPost postRequest = new HttpPost( "/rest/adhoc/sess-man@" + getDomain( 0 ) );
 		postRequest.addHeader( "Api-Key", getApiKey() );
@@ -238,9 +233,11 @@ public class Test2928 extends AbstractTest {
 		entity.setContentType( "application/xml" );
 		postRequest.setEntity( entity );
 
+		log( "postRequest: " + postRequest.toString() );
 		log( "command: " + command.getAsString() );
 		log( "target: " + target );
 		log( "entity: " + entity );
+		log( "entity: " + inputStreamToString(entity.getContent()) );
 
 		HttpResponse response = httpClient.execute( target, postRequest, localContext );
 
