@@ -6,10 +6,6 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
 
@@ -32,12 +28,6 @@ public class Test2939 extends AbstractTest {
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with client certificate")
 	public void testConnectionWithCertificate() throws Exception {
-		Logger logger = Logger.getLogger("tigase.jaxmpp");
-		Handler handler = new ConsoleHandler();
-		handler.setLevel(Level.ALL);
-		logger.addHandler(handler);
-		logger.setLevel(Level.ALL);
-
 		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
@@ -68,7 +58,7 @@ public class Test2939 extends AbstractTest {
 		try {
 			jaxmpp.login(true);
 		} catch (Exception e) {
-			Assert.fail(e.getMessage());
+			fail(e);
 		} finally {
 			Assert.assertNotNull(ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject()));
 		}
