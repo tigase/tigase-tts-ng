@@ -31,4 +31,9 @@
 			<class name="tigase.tests.Test2947" />
 		</classes>
 	</test>
+	<test name="Test #2958 - HTTP - REST API: REST API for PubSub Message Expiration">
+		<classes>
+			<class name="tigase.tests.Test2958" />
+		</classes>
+	</test>
 </suite>
