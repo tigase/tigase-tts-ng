@@ -41,4 +41,9 @@
 			<class name="tigase.tests.Test2958" />
 		</classes>
 	</test>
+	<test name="Test #2951 - Tigase XMPP server monitoring">
+		<classes>
+			<class name="tigase.tests.Test2951" />
+		</classes>
+	</test>
 </suite>
