@@ -1,11 +1,17 @@
 package tigase.tests;
 
-import java.io.File;
-import java.net.URL;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
 
@@ -22,6 +28,19 @@ import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
 public class Test2939 extends AbstractTest {
 
+	public static byte[] getBytesFromInputStream(InputStream is) throws IOException {
+		try (ByteArrayOutputStream os = new ByteArrayOutputStream();) {
+			byte[] buffer = new byte[0xFFFF];
+
+			for (int len; (len = is.read(buffer)) != -1;)
+				os.write(buffer, 0, len);
+
+			os.flush();
+
+			return os.toByteArray();
+		}
+	}
+
 	/**
 	 * Number of domain. Domain must be separately configured for this test!
 	 */
@@ -31,6 +50,12 @@ public class Test2939 extends AbstractTest {
 		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
+
+		Logger logger = Logger.getLogger("tigase.jaxmpp");
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.ALL);
+		logger.addHandler(handler);
+		logger.setLevel(Level.ALL);
 
 		final BareJID userJID = BareJID.bareJIDInstance(u, domain);
 
@@ -45,8 +70,10 @@ public class Test2939 extends AbstractTest {
 			jaxmpp.getConnectionConfiguration().setServer(instanceHostname);
 		}
 
-		URL url = getClass().getResource("/client.pem");
-		CertificateEntry ce = CertificateUtil.loadCertificate(new File(url.toURI()));
+		InputStreamReader crtStream = new InputStreamReader(getClass().getResourceAsStream("/client.pem"));
+		CertificateEntry ce = CertificateUtil.parseCertificate(crtStream);
+		crtStream.close();
+
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(null, "".toCharArray());
