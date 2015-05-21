@@ -54,6 +54,7 @@ public class Test2951 extends AbstractTest {
 	}
 
 	private boolean read(final String expected, final long timeout) throws Exception {
+		TestLogger.log("Waiting for e-mail...");
 		Properties props = new Properties();
 
 		props.put("mail.imaps.ssl.checkserveridentity", "false");
@@ -68,6 +69,8 @@ public class Test2951 extends AbstractTest {
 
 			Folder inbox = store.getFolder("inbox");
 			inbox.open(Folder.READ_ONLY);
+
+			TestLogger.log("Mail receiver connected (I hope so!)");
 
 			final int startMessageCount = inbox.getMessageCount();
 			if (startMessageCount > 0) {
@@ -108,7 +111,7 @@ public class Test2951 extends AbstractTest {
 			store.close();
 			return result;
 		} catch (Exception e) {
-			e.printStackTrace();
+			TestLogger.log(e.getMessage());
 			return false;
 		}
 	}
