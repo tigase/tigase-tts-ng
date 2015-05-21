@@ -119,7 +119,7 @@ public class Test2955 extends AbstractTest {
 			assertEquals(ex.getStatusCode(), 401);
 		}
 		webClient.setCredentialsProvider(credentialProvider);
-		Page p = webClient.getPage("http://localhost:8080/admin/");		
+		Page p = webClient.getPage(getAdminUrl());		
 		assertNotNull(p);
 	}
 
