@@ -1,6 +1,18 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="Tigase XMPP Server Tests" verbose="1">
+	<test name="Retrieve server version">
+		<classes>
+			<class name="tigase.tests.util.RetrieveVersion" />
+		</classes>
+	</test>
+	<test name="Retrieve server statistics 1">
+		<classes>
+			<class name="tigase.tests.util.RetrieveStatistics" />
+		</classes>
+	</test>
+
+
 	<test name="Example Jaxmpp Test">
 		<classes>
 			<class name="tigase.tests.ExampleJaxmppTest" />
@@ -46,4 +58,11 @@
 			<class name="tigase.tests.Test2951" />
 		</classes>
 	</test>
+
+	<test name="Retrieve server statistics 2">
+		<classes>
+			<class name="tigase.tests.util.RetrieveStatistics" />
+		</classes>
+	</test>
+
 </suite>

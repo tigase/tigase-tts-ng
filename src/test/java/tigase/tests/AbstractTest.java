@@ -21,23 +21,7 @@
  */
 package tigase.tests;
 
-import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-import static tigase.TestLogger.log;
-
-import java.io.InputStream;
-import java.security.SecureRandom;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Random;
-
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
@@ -52,6 +36,8 @@ import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.eventbus.JaxmppEvent;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xmpp.forms.FixedField;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.forms.ListSingleField;
@@ -60,7 +46,6 @@ import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
-import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
@@ -79,6 +64,29 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.SecureRandom;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Random;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
+import org.testng.Assert;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+
+import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+import static tigase.TestLogger.log;
+
 public abstract class AbstractTest {
 
 	private static int counter = 0;
@@ -87,6 +95,8 @@ public abstract class AbstractTest {
 
 	public static final String LOG_PREFIX_KEY = "LOG_PREFIX";
 
+	private static Handler ngLogger = null;
+
 	private final static Random randomGenerator = new SecureRandom();
 
 	public static final String nextRnd() {
@@ -94,10 +104,12 @@ public abstract class AbstractTest {
 		return Integer.toString(r, 36) + String.format("%04d", ++counter);
 	}
 
+	protected boolean connectorLogsEnabled = true;
 	protected final EventListener connectorListener = new EventListener() {
 
 		@Override
 		public void onEvent(Event<? extends EventHandler> event) {
+			if (!connectorLogsEnabled) return;
 			String t = "";
 			if (event instanceof JaxmppEvent<?>) {
 				JaxmppEvent<?> e = (JaxmppEvent<?>) event;
@@ -326,7 +338,12 @@ public abstract class AbstractTest {
 
 	public BareJID createUserAccount(String logPrefix, final String username, final String domain, final String email)
 			throws JaxmppException, InterruptedException {
-		final String password = username;
+		return createUserAccount(logPrefix, username, username, domain, username + "@wp.pl");
+	}
+
+	public BareJID createUserAccount(String logPrefix, final String username, final String password,
+																																						final String domain, final String email)
+			throws JaxmppException, InterruptedException {
 		final String server = getInstanceHostname();
 
 		final Jaxmpp jaxmpp1 = createJaxmpp(logPrefix);
@@ -781,15 +798,59 @@ public abstract class AbstractTest {
 		}
 	}
 
+	
+	protected void setLoggerLevel( Level lvl, boolean connectorLogsEnabled ) throws SecurityException {
+		this.connectorLogsEnabled = connectorLogsEnabled;
+
+		Logger log = Logger.getLogger( "tigase.jaxmpp" );
+
+		if ( ngLogger == null ){
+			ngLogger = new Handler() {
+
+				@Override
+				public void close() throws SecurityException {
+				}
+
+				@Override
+				public void flush() {
+				}
+
+				@Override
+				public void publish( LogRecord record ) {
+					log( record.getSourceClassName() + "." + record.getSourceMethodName() + ": " + record.getMessage() );
+				}
+			};
+
+			log.addHandler( ngLogger );
+		}
+
+		ngLogger.setLevel( lvl );
+		log.setUseParentHandlers( false );
+		log.setLevel( lvl );
+	}
+
 	@BeforeSuite
 	@BeforeClass(alwaysRun = true)
 	@BeforeGroups
 	@BeforeMethod
 	protected void setUp() throws Exception {
-		InputStream stream = getClass().getResourceAsStream("/server.properties");
-		this.props = new Properties();
-		this.props.load(stream);
-		stream.close();
+		loadProperties();
+	}
+
+	private String getProperty(String key) throws IOException {
+		if ( this.props == null ){
+			loadProperties();
+		}
+		return this.props.getProperty( key );
+	}
+	
+	private void loadProperties() throws IOException {
+		if ( this.props == null ){
+			InputStream stream = getClass().getResourceAsStream( "/server.properties" );
+			this.props = new Properties();
+			this.props.load( stream );
+			stream.close();
+		}
 	}
 
 	protected final void testSendAndWait(Jaxmpp from, Jaxmpp to) throws Exception {
@@ -830,6 +891,30 @@ public abstract class AbstractTest {
 		} finally {
 			to.getEventBus().remove(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, listener);
 		}
+	}
+
+	@BeforeSuite
+	public void registerAdmin() throws JaxmppException, InterruptedException, IOException, Exception {
+
+		Boolean register = false;
+		String registerProp = getProperty( "test.admin.register" );
+		if ( registerProp != null ){
+			register = Boolean.valueOf( registerProp.toLowerCase() );
+		}
+
+		Jaxmpp adminJaxmpp;
+		BareJID userAccount;
+		String username = getProperty( "test.admin.username" );
+		String password = getProperty( "test.admin.password" );
+		String domain = getDomain( 0 );
+		if ( register ){
+			createUserAccount( username, username, password, domain, username + "@" + domain );
+		}
+		userAccount = BareJID.bareJIDInstance( username, domain );
+		adminJaxmpp = createJaxmpp( username, userAccount, userAccount.getDomain(), password );
+		adminJaxmpp.login();
+
+		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
 	}
 
 }
