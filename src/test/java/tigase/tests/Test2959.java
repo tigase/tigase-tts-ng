@@ -52,10 +52,9 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 import static tigase.TestLogger.log;
 
-public class Test2958 extends AbstractTest {
+public class Test2959 extends AbstractTest {
 
 	private static final int SECOND = 1000;
-	private static final int MINUTE = SECOND * 60;
 
 	DateTimeFormatter dtf = new DateTimeFormatter();
 
@@ -73,6 +72,9 @@ public class Test2958 extends AbstractTest {
 
 	@BeforeClass(dependsOnMethods = { "setUp" })
 	private void prepareAdmin() throws JaxmppException {
+
+		setLoggerLevel( Level.ALL, true);
+
 		adminJaxmpp = createJaxmppAdmin();
 		adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
 
@@ -198,8 +200,8 @@ public class Test2958 extends AbstractTest {
 			}
 		} );
 
-		mutex.waitFor( 10 * 1000, nodeName + ":create_node" );
-		Assert.assertTrue( "Node created", mutex.isItemNotified( nodeName + ":create_node:success" ) );
+		mutex.waitFor( 30 * 1000, nodeName + ":create_node" );
+		Assert.assertTrue( "PubSub node " + nodeName + " not created", mutex.isItemNotified( nodeName + ":create_node:success" ) );
 
 		subscribeUser( pubSubModule, pubsubJID, JID.jidInstance( userRegularJID ), nodeName );
 
