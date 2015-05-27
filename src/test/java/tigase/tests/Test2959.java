@@ -92,8 +92,13 @@ public class Test2959 extends AbstractTest {
 		log( "UsernamePasswordCredentials: " + userPass + " / adminPassword: " + adminPassword );
 		credsProvider.setCredentials( authScope, userPass );
 		log( "credsProvider: " + credsProvider.getCredentials( authScope ) );
+		int timeout = 15;
 		httpClient = HttpClients.custom().setDefaultCredentialsProvider( credsProvider )
-				.setDefaultRequestConfig( RequestConfig.custom().setSocketTimeout( 5000 ).build() ).build();
+				.setDefaultRequestConfig( RequestConfig.custom()
+						.setSocketTimeout( timeout * SECOND )
+						.setConnectTimeout( timeout * SECOND )
+						.setConnectionRequestTimeout( timeout * SECOND )
+						.build() ).build();
 
 		localContext = HttpClientContext.create();
 		AuthCache authCache = new BasicAuthCache();
@@ -328,7 +333,17 @@ public class Test2959 extends AbstractTest {
 		log( "entity: " + entity );
 		log( "entity: " + inputStreamToString( entity.getContent() ) );
 
-		HttpResponse response = httpClient.execute( target, postRequest, localContext );
+		HttpResponse response = null;
+		try {
+			response = httpClient.execute( target, postRequest, localContext );
+		} catch ( Exception ex ) {
+			fail( ex );
+		}
+
+		if ( response == null ){
+			Assert.fail( "Request response not received" );
+			return;
+		}
 
 		log( "response: " + response.toString() );
 		String responseContent = response.getEntity() != null
