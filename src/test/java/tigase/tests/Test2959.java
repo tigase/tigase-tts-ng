@@ -195,8 +195,8 @@ public class Test2959 extends AbstractTest {
 
 			@Override
 			public void onSuccess( Stanza responseStanza ) throws JaxmppException {
-				mutex.notify( nodeName + ":create_node" );
 				mutex.notify( nodeName + ":create_node:success" );
+				mutex.notify( nodeName + ":create_node" );
 			}
 
 			@Override
@@ -277,8 +277,8 @@ public class Test2959 extends AbstractTest {
 
 			@Override
 			public void onSuccess( Stanza responseStanza ) throws JaxmppException {
-				mutex.notify( nodeName + ":delete_node" );
 				mutex.notify( nodeName + ":delete_node:success" );
+				mutex.notify( nodeName + ":delete_node" );
 			}
 
 			@Override
