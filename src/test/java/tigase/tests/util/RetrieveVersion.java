@@ -53,14 +53,25 @@ public class RetrieveVersion extends AbstractTest {
 
 		setLoggerLevel( Level.OFF, false );
 
+		String[] instanceHostnames = getInstanceHostnames();
+		if ( instanceHostnames != null & instanceHostnames.length > 0 ){
+			for ( String node : instanceHostnames ) {
+				log( " == " + node + " ==", false );
+				retrieveVersion( node );
+
+			}
+		}
+	}
+
+	private void retrieveVersion(String hostname) throws Exception, JaxmppException {
 		Jaxmpp adminJaxmpp = createJaxmppAdmin();
+		adminJaxmpp.getConnectionConfiguration().setServer(hostname);
 		adminJaxmpp.login();
 		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
 		if ( adminJaxmpp.isConnected() ){
 
 			// version
-			log( "\n\n\n" );
-			log( " == Retrieve version" );
+			log( " == Retrieve version", false );
 			IQ iq = IQ.create();
 			iq.setType( StanzaType.set );
 			iq.setTo( JID.jidInstance( adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
@@ -70,21 +81,21 @@ public class RetrieveVersion extends AbstractTest {
 
 				@Override
 				public void onError( Stanza responseStanza, XMPPException.ErrorCondition error ) throws JaxmppException {
-					log( "error" + responseStanza.getAsString() );
+					log( "error" + responseStanza.getAsString(), false );
 				}
 
 				@Override
 				public void onSuccess( Stanza responseStanza ) throws JaxmppException {
 					final Element query = responseStanza.getChildrenNS( "query", "jabber:iq:version" );
 //					log( "onSuccess: " + responseStanza.getAsString() );
-					log( "onSuccess" );
-					log( "" );
+					log( "onSuccess", false );
+					log( "", false );
 					if ( query != null && query.getChildren() != null && !query.getChildren().isEmpty() ){
 						for ( Element child : query.getChildren() ) {
-							log( child.getName() + ": " + child.getValue() );
+							log( child.getName() + ": " + child.getValue(), false );
 						}
 					}
-					log( "" );
+					log( "", false );
 				}
 
 				@Override
@@ -94,8 +105,7 @@ public class RetrieveVersion extends AbstractTest {
 			} );
 
 			// configuration
-			log( "\n\n\n" );
-			log( " == Retrieve configuration" );
+			log( " == Retrieve configuration", false );
 			iq = IQ.create();
 			iq.setType( StanzaType.set );
 			iq.setTo( JID.jidInstance( "basic-conf", adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
@@ -111,13 +121,13 @@ public class RetrieveVersion extends AbstractTest {
 
 				@Override
 				public void onError( Stanza responseStanza, XMPPException.ErrorCondition error ) throws JaxmppException {
-					log( "error" + responseStanza.getAsString() );
+					log( "error" + responseStanza.getAsString(), false );
 				}
 
 				@Override
 				public void onSuccess( Stanza responseStanza ) throws JaxmppException {
 //					log( "onSuccess: " + responseStanza.getAsString() );
-					log( "onSuccess" );
+					log( "onSuccess", false );
 					Element command = responseStanza.getChildrenNS( "command", "http://jabber.org/protocol/commands" );
 					if ( command != null ){
 						Element x = command.getChildrenNS( "x", "jabber:x:data" );
@@ -125,13 +135,13 @@ public class RetrieveVersion extends AbstractTest {
 //						log( "onSuccess, x: " + x );
 						if ( x != null ){
 							JabberDataElement jde2 = new JabberDataElement( x );
-							log( "" );
+							log( "", false );
 							if ( jde2 != null && jde2.getFields() != null && !jde2.getFields().isEmpty() ){
 								for ( AbstractField field : jde2.getFields() ) {
-									log( field.getVar() + ": " + field.getFieldValue() );
+									log( field.getVar() + ": " + field.getFieldValue(), false );
 								}
 							}
-							log( "" );
+							log( "", false );
 						}
 					}
 				}
@@ -148,8 +158,7 @@ public class RetrieveVersion extends AbstractTest {
 
 
 			// components
-			log( "\n\n\n" );
-			log( " == Retrieve components" );
+			log( " == Retrieve components", false );
 			iq = IQ.create();
 			iq.setType( StanzaType.set );
 			iq.setTo( JID.jidInstance( "basic-conf", adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
@@ -165,13 +174,13 @@ public class RetrieveVersion extends AbstractTest {
 
 				@Override
 				public void onError( Stanza responseStanza, XMPPException.ErrorCondition error ) throws JaxmppException {
-					log( "error" + responseStanza.getAsString() );
+					log( "error" + responseStanza.getAsString(), false );
 				}
 
 				@Override
 				public void onSuccess( Stanza responseStanza ) throws JaxmppException {
 //					log( "onSuccess: " + responseStanza.getAsString() );
-					log( "onSuccess" );
+					log( "onSuccess", false );
 					Element command = responseStanza.getChildrenNS( "command", "http://jabber.org/protocol/commands" );
 					if ( command != null ){
 						Element x = command.getChildrenNS( "x", "jabber:x:data" );
@@ -179,28 +188,30 @@ public class RetrieveVersion extends AbstractTest {
 //						log( "onSuccess, x: " + x );
 						if ( x != null ){
 							JabberDataElement jde2 = new JabberDataElement( x );
-							log( "" );
+							log( "", false );
 							if ( jde2 != null && jde2.getFields() != null && !jde2.getFields().isEmpty() ){
 								for ( AbstractField field : jde2.getFields() ) {
 									if ( field instanceof TextMultiField ){
-										log( field.getVar() + ": " + ( (TextMultiField) field ).getFieldValue()[0] );
+										log( field.getVar() + ": " + ( (TextMultiField) field ).getFieldValue()[0], false );
 									}
 								}
 							}
-							log( "" );
+							log( "", false );
 						}
 					}
 				}
 
 				@Override
 				public void onTimeout() throws JaxmppException {
-					log( "onTimeout" );
+					log( "onTimeout", false );
 				}
 			} );
 
 			adminJaxmpp.disconnect();
-		}
 
+			log( "\n\n\n" );
+
+		}
 	}
 
 }

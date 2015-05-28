@@ -473,6 +473,22 @@ public abstract class AbstractTest {
 	 *
 	 * @return random domain name
 	 */
+	public String[] getInstanceHostnames() {
+		final String hostnamesProp = props.getProperty("server.cluster.nodes");
+		String[] hostnames = null;
+		String hostname = null;
+		if (null != hostnamesProp) {
+			hostnames = hostnamesProp.split(",");
+		}
+		return hostnames;
+	}
+
+	/**
+	 * Return randomly chosen domain from list of available domains in
+	 * "server.cluster.nodes" property
+	 *
+	 * @return random domain name
+	 */
 	public String getInstanceHostname() {
 		final String hostnamesProp = props.getProperty("server.cluster.nodes");
 		String[] hostnames = null;

@@ -53,7 +53,19 @@ public class RetrieveStatistics extends AbstractTest {
 
 		setLoggerLevel( Level.OFF, false );
 
+		String[] instanceHostnames = getInstanceHostnames();
+		if ( instanceHostnames != null & instanceHostnames.length > 0 ){
+			for ( String node : instanceHostnames ) {
+				log( " == " + node + " ==", false );
+				retrieveStatistics( node );
+
+			}
+		}
+	}
+
+	private void retrieveStatistics(String hostname) throws JaxmppException, Exception {
 		Jaxmpp adminJaxmpp = createJaxmppAdmin();
+		adminJaxmpp.getConnectionConfiguration().setServer(hostname);
 		adminJaxmpp.login();
 		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
 		if ( adminJaxmpp.isConnected() ){
@@ -110,7 +122,6 @@ public class RetrieveStatistics extends AbstractTest {
 
 			adminJaxmpp.disconnect();
 		}
-
 	}
 
 }

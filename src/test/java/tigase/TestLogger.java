@@ -32,9 +32,13 @@ public class TestLogger {
 	private static SimpleDateFormat dt = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
 
 	public static void log(String s) {
+		log( s, true );
+	}
+
+	public static void log(String s, boolean newline) {
 		String date = dt.format( new Date() ) + " | ";
 		System.out.println( date + s );
-		Reporter.log( date + s + "\n");
+		Reporter.log( date + s + (newline ? "\n" : ""));
 //		Reporter.log( escapeHtml4( s ) );
 	}
 
