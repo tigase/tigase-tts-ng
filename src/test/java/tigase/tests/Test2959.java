@@ -73,7 +73,7 @@ public class Test2959 extends AbstractTest {
 	@BeforeClass(dependsOnMethods = { "setUp" })
 	private void prepareAdmin() throws JaxmppException {
 
-		setLoggerLevel( Level.ALL, true);
+		setLoggerLevel( Level.INFO, true);
 
 		adminJaxmpp = createJaxmppAdmin();
 		adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
@@ -211,45 +211,50 @@ public class Test2959 extends AbstractTest {
 		subscribeUser( pubSubModule, pubsubJID, JID.jidInstance( userRegularJID ), nodeName );
 
 		// publishing normal message (to online)
-		log( "\n\n\n===== publishing normal message (to online) \n\n\n" );
+		log( "\n\n\n===== publishing normal message (to online) \n" );
 
 		String message = nextRnd().toLowerCase();
 		publishToPubsub( nodeName, null, null, "content_" + message );
 
 		mutex.waitFor( 10 * 1000, userRegularJID + ":message:received:content_" + message );
-		Assert.assertTrue( "Message received", mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		Assert.assertTrue( "User: " + userRegularJID + " should have received message: " + message,
+											 mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
 
 		// publishing already old message - expecting message being filtered out (to online)
-		log( "\n\n\n===== publishing already old message - expecting message being filtered out (to online) \n\n\n" );
+		log( "\n\n\n===== publishing already old message - expecting message being filtered out (to online) \n" );
 		message = nextRnd().toLowerCase();
 		Date timestamp = new Date( new Date().getTime() - 5 * SECOND );
 		publishToPubsub( nodeName, null, timestamp, "content_" + message );
 
-		mutex.waitFor( 5 * 1000, userRegularJID + ":message:received:content_" + message );
-		Assert.assertFalse( "Message not received", mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		mutex.waitFor( 15 * 1000, userRegularJID + ":message:received:content_" + message );
+		Assert.assertFalse( "User: " + userRegularJID + " should have NOT received message: " + message,
+												mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
 
 		// testing offline messages
 		// publishing normal message (to offline)
-		log( "\n\n\n===== publishing normal message (to offline) \n\n\n" );
+		log( "\n\n\n===== publishing normal message (to offline) \n" );
 		userRegularJaxmpp.disconnect();
-		Thread.sleep( 1 * SECOND );
+		Thread.sleep( 5 * SECOND );
 
 		message = nextRnd().toLowerCase();
 		publishToPubsub( nodeName, null, null, "content_" + message );
 
+		Thread.sleep( 5 * SECOND );
+		
 		userRegularJaxmpp.login( true );
-		Thread.sleep( 1 * SECOND );
+		Thread.sleep( 5 * SECOND );
 
 		mutex.waitFor( 10 * SECOND, userRegularJID + ":message:received:content_" + message );
-		Assert.assertTrue( "Message received", mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		Assert.assertTrue( "User: " + userRegularJID + " should have received message: " + message,
+												mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
 
 		// publishing already old message - expecting message being filtered out (to offline)
-		log( "\n\n\n===== publishing already old message - expecting message being filtered out (to offline) \n\n\n" );
+		log( "\n\n\n===== publishing already old message - expecting message being filtered out (to offline) \n" );
 
 		subscribeUser( pubSubModule, pubsubJID, JID.jidInstance( adminJID ), nodeName );
 
 		userRegularJaxmpp.disconnect();
-		Thread.sleep( 1 * SECOND );
+		Thread.sleep( 5 * SECOND );
 
 		message = nextRnd().toLowerCase();
 
@@ -258,15 +263,17 @@ public class Test2959 extends AbstractTest {
 		publishToPubsub( nodeName, null, timestamp, "content_" + message );
 
 		// let's wait for regular user untill message expire
-		Thread.sleep( 10 * SECOND );
+		Thread.sleep( 20 * SECOND );
 
 		userRegularJaxmpp.login( true );
 
 		// user back online, admin was online - user should not receive message and admin should
 		mutex.waitFor( 5 * 1000, userRegularJID + ":message:received:content_" + message );
-		mutex.waitFor( 5 * 1000, adminJID + ":message:received:content_" + message );
-		Assert.assertFalse( "Message not received", mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
-		Assert.assertTrue( "Message received", mutex.isItemNotified( adminJID + ":message:received:content_" + message ) );
+		mutex.waitFor( 20 * 1000, adminJID + ":message:received:content_" + message );
+		Assert.assertFalse( "User: " + userRegularJID + " should have NOT received message: " + message,
+												mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		Assert.assertTrue( "User: " + adminJID + " should have received message: " + message,
+												mutex.isItemNotified( adminJID + ":message:received:content_" + message ) );
 
 		pubSubModule.deleteNode( pubsubJID, nodeName, new AsyncCallback() {
 
