@@ -2,3 +2,7 @@
 .project
 /target/
 config-dump.properties
+.idea/
+.settings/
+test-output/
+tigase-tts-ng.iml
