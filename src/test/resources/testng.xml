@@ -58,7 +58,11 @@
 			<class name="tigase.tests.Test2951" />
 		</classes>
 	</test>
-
+	<test name="MUC Max Users">
+		<classes>
+			<class name="tigase.tests.Test3179" />
+		</classes>
+	</test>
 	<test name="Retrieve server statistics 2">
 		<classes>
 			<class name="tigase.tests.util.RetrieveStatistics" />
