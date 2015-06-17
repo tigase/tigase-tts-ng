@@ -925,12 +925,15 @@ public abstract class AbstractTest {
 		String domain = getDomain( 0 );
 		if ( register ){
 			createUserAccount( username, username, password, domain, username + "@" + domain );
-		}
-		userAccount = BareJID.bareJIDInstance( username, domain );
-		adminJaxmpp = createJaxmpp( username, userAccount, userAccount.getDomain(), password );
-		adminJaxmpp.login();
+			userAccount = BareJID.bareJIDInstance( username, domain );
+			adminJaxmpp = createJaxmpp( username, userAccount, userAccount.getDomain(), password );
+			adminJaxmpp.login( true );
 
-		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
+			assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
+			if ( adminJaxmpp.isConnected() ){
+				adminJaxmpp.disconnect();
+			}
+		}
 	}
 
 }
