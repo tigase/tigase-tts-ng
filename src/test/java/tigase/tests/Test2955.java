@@ -347,8 +347,11 @@ public class Test2955 extends AbstractTest {
 		DomNodeList<HtmlElement> tables = form.getElementsByTagName("table");
 		//DomNodeList<HtmlElement> tbody = tables.get(0).getElementsByTagName("tbody");
 		DomNodeList<HtmlElement> trs = tables.get(0).getElementsByTagName("tr");
-		Iterator<DomElement> tds = trs.get(0).getChildElements().iterator();
-		assertEquals(tds.next().asText(), userJid1Resource);
+		if (!trs.isEmpty()) {
+			// in some cases this might not be saved to database yet
+			Iterator<DomElement> tds = trs.get(0).getChildElements().iterator();
+			assertEquals(tds.next().asText(), userJid1Resource);
+		}
 	}
 	
 	private BareJID randomUserJid() throws TigaseStringprepException {
