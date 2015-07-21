@@ -68,9 +68,14 @@
 			<class name="tigase.tests.util.RetrieveStatistics" />
 		</classes>
 	</test>
-	<test name="Test Case #3258 - HTTP - REST API: Test support for retrieval of XEP-0084: User Avatar using REST API call">
+	<test name="Test #3258 - HTTP - REST API: Test support for retrieval of XEP-0084: User Avatar using REST API call">
 		<classes>
 			<class name="tigase.tests.Test3258" />
 		</classes>
+	</test>
+	<test name="Test #3305 - WebSocket: Test WebSocket connectivity">
+		<classes>
+			<class name="tigase.tests.Test3305" />
+		</classes>		
 	</test>
 </suite>
