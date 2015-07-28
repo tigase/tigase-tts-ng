@@ -55,7 +55,7 @@ public class Test3305 extends AbstractTest {
 	public void setUp() throws Exception {
 		super.setUp();		
 		userJid1 = createUserAccount(USER_PREFIX);
-		userJaxmpp1 = createJaxmpp(USER_PREFIX, userJid1);
+		userJaxmpp1 = createJaxmpp("non_" + USER_PREFIX, userJid1);
 		userJaxmpp2 = createJaxmpp(USER_PREFIX, userJid1);
 	}
 	
