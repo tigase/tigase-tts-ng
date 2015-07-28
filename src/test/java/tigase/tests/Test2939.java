@@ -75,6 +75,7 @@ public class Test2939 extends AbstractTest {
 
 		InputStreamReader crtStream = new InputStreamReader(getClass().getResourceAsStream("/client.pem"));
 		CertificateEntry ce = CertificateUtil.parseCertificate(crtStream);
+		log(ce.toString());
 		crtStream.close();
 
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -148,6 +149,7 @@ public class Test2939 extends AbstractTest {
 		KeyPair keyPair = CertificateUtil.createKeyPair(1024, "");
 		X509Certificate c = CertificateUtil.createSelfSignedCertificate("alice@coffeebean.local", "domain", "org", "org", "tr",
 				"kp", "PL", keyPair);
+		log(c.toString());
 		keyStore.setKeyEntry("client", keyPair.getPrivate(), "".toCharArray(), new Certificate[] { c });
 		kmf.init(keyStore, "".toCharArray());
 
