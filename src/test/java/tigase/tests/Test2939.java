@@ -26,6 +26,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
+import static tigase.TestLogger.log;
+
 public class Test2939 extends AbstractTest {
 
 	public static byte[] getBytesFromInputStream(InputStream is) throws IOException {
@@ -47,6 +49,7 @@ public class Test2939 extends AbstractTest {
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with client certificate")
 	public void testConnectionWithCertificate() throws Exception {
+		log("== testConnectionWithCertificate");
 		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
@@ -93,6 +96,7 @@ public class Test2939 extends AbstractTest {
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS without client certificate")
 	public void testConnectionWithoutCertificate() throws Exception {
+		log("== testConnectionWithoutCertificate");
 		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
@@ -120,6 +124,7 @@ public class Test2939 extends AbstractTest {
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with wrong client certificate")
 	public void testConnectionWithWrongCertificate() throws Exception {
+		log("== testConnectionWithWrongCertificate");
 		final String domain = props.getProperty("server.client_auth.domain");
 		String u = props.getProperty("test.admin.username");
 		String p = props.getProperty("test.admin.password");
