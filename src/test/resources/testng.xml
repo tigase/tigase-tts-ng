@@ -78,4 +78,9 @@
 			<class name="tigase.tests.Test3305" />
 		</classes>		
 	</test>
+	<test name="Test #3544 - XMPP - PubSub: Removal of PEP nodes on user removal">
+		<classes>
+			<class name="tigase.tests.Test3544" />
+		</classes>		
+	</test>
 </suite>
