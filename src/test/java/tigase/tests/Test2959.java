@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import junit.framework.Assert;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -43,6 +42,7 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -206,7 +206,7 @@ public class Test2959 extends AbstractTest {
 		} );
 
 		mutex.waitFor( 30 * 1000, nodeName + ":create_node" );
-		Assert.assertTrue( "PubSub node " + nodeName + " not created", mutex.isItemNotified( nodeName + ":create_node:success" ) );
+		Assert.assertTrue( mutex.isItemNotified( nodeName + ":create_node:success" ), "PubSub node " + nodeName + " not created" );
 
 		subscribeUser( pubSubModule, pubsubJID, JID.jidInstance( userRegularJID ), nodeName );
 
@@ -217,8 +217,8 @@ public class Test2959 extends AbstractTest {
 		publishToPubsub( nodeName, null, null, "content_" + message );
 
 		mutex.waitFor( 10 * 1000, userRegularJID + ":message:received:content_" + message );
-		Assert.assertTrue( "User: " + userRegularJID + " should have received message: " + message,
-											 mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		Assert.assertTrue( mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ),
+											 "User: " + userRegularJID + " should have received message: " + message );
 
 		// publishing already old message - expecting message being filtered out (to online)
 		log( "\n\n\n===== publishing already old message - expecting message being filtered out (to online) \n" );
@@ -227,8 +227,8 @@ public class Test2959 extends AbstractTest {
 		publishToPubsub( nodeName, null, timestamp, "content_" + message );
 
 		mutex.waitFor( 15 * 1000, userRegularJID + ":message:received:content_" + message );
-		Assert.assertFalse( "User: " + userRegularJID + " should have NOT received message: " + message,
-												mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		Assert.assertFalse( mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ),
+												"User: " + userRegularJID + " should have NOT received message: " + message);
 
 		// testing offline messages
 		// publishing normal message (to offline)
@@ -245,8 +245,8 @@ public class Test2959 extends AbstractTest {
 		Thread.sleep( 5 * SECOND );
 
 		mutex.waitFor( 10 * SECOND, userRegularJID + ":message:received:content_" + message );
-		Assert.assertTrue( "User: " + userRegularJID + " should have received message: " + message,
-												mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
+		Assert.assertTrue( mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ),
+											 "User: " + userRegularJID + " should have received message: " + message);
 
 		// publishing already old message - expecting message being filtered out (to offline)
 		log( "\n\n\n===== publishing already old message - expecting message being filtered out (to offline) \n" );
@@ -270,10 +270,10 @@ public class Test2959 extends AbstractTest {
 		// user back online, admin was online - user should not receive message and admin should
 		mutex.waitFor( 5 * 1000, userRegularJID + ":message:received:content_" + message );
 		mutex.waitFor( 20 * 1000, adminJID + ":message:received:content_" + message );
-		Assert.assertFalse( "User: " + userRegularJID + " should have NOT received message: " + message,
-												mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ) );
-		Assert.assertTrue( "User: " + adminJID + " should have received message: " + message,
-												mutex.isItemNotified( adminJID + ":message:received:content_" + message ) );
+		Assert.assertFalse( mutex.isItemNotified( userRegularJID + ":message:received:content_" + message ),
+												"User: " + userRegularJID + " should have NOT received message: " + message);
+		Assert.assertTrue( mutex.isItemNotified( adminJID + ":message:received:content_" + message ),
+											 "User: " + adminJID + " should have received message: " + message);
 
 		pubSubModule.deleteNode( pubsubJID, nodeName, new AsyncCallback() {
 
@@ -295,7 +295,7 @@ public class Test2959 extends AbstractTest {
 		} );
 
 		mutex.waitFor( 10 * 1000, nodeName + ":delete_node" );
-		Assert.assertTrue( "Node created", mutex.isItemNotified( nodeName + ":delete_node:success" ) );
+		Assert.assertTrue( mutex.isItemNotified( nodeName + ":delete_node:success" ), "Node created" );
 
 	}
 
@@ -320,7 +320,7 @@ public class Test2959 extends AbstractTest {
 		} );
 
 		mutex.waitFor( 10 * 1000, nodeName + ":subscribe_node" );
-		Assert.assertTrue( "Node subscribed", mutex.isItemNotified( nodeName + ":subscribe_node:success" ) );
+		Assert.assertTrue( mutex.isItemNotified( nodeName + ":subscribe_node:success" ), "Node subscribed" );
 	}
 
 	private void publishToPubsub( String nodeid, String itemId, Date timestamp, String content ) throws Exception {
