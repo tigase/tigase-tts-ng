@@ -67,6 +67,8 @@ import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Random;
@@ -81,6 +83,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertFalse;
@@ -98,6 +103,22 @@ public abstract class AbstractTest {
 	private static Handler ngLogger = null;
 
 	private final static Random randomGenerator = new SecureRandom();
+
+	private final static TrustManager[] dummyTrustManagers = new X509TrustManager[] { new X509TrustManager() {
+
+		@Override
+		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+		}
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+		}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers() {
+			return null;
+		}
+	} };
 
 	public static final String nextRnd() {
 		int r = randomGenerator.nextInt() & 0x7fffffff;
@@ -249,6 +270,7 @@ public abstract class AbstractTest {
 	public Jaxmpp createJaxmpp(final String logPrefix) {
 		try {
 			Jaxmpp jaxmpp1 = new Jaxmpp();
+			jaxmpp1.getSessionObject().setProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
 			if (logPrefix != null)
 				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
 			jaxmpp1.getSessionObject().setProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
