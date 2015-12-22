@@ -273,7 +273,7 @@ public abstract class AbstractTest {
 			jaxmpp1.getSessionObject().setProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
 			if (logPrefix != null)
 				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
-			jaxmpp1.getSessionObject().setProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
+			jaxmpp1.getSessionObject().setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
 			jaxmpp1.getEventBus().addListener(connectorListener);
 
 			jaxmpp1.getModulesManager().register(new InBandRegistrationModule());
@@ -873,6 +873,7 @@ public abstract class AbstractTest {
 	@BeforeMethod
 	protected void setUp() throws Exception {
 		loadProperties();
+		setLoggerLevel( Level.ALL, connectorLogsEnabled );
 	}
 
 	private String getProperty(String key) throws IOException {
