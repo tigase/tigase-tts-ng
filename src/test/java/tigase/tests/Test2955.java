@@ -37,14 +37,17 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSubmitInput;
 import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.UUID;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
+
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -55,6 +58,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.util.TigaseStringprepException;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -84,7 +90,7 @@ public class Test2955 extends AbstractTest {
 	}
 
 	@AfterMethod
-	public void cleanUp() throws Exception {
+	public void cleanUp()  {
 		credentialProvider = null;
 		webClient = null;
 		try {
@@ -102,6 +108,8 @@ public class Test2955 extends AbstractTest {
 				
 				removeUserAccount(userJaxmpp2);
 			}
+		} catch ( JaxmppException | InterruptedException ex ) {
+					Logger.getLogger( Test2955.class.getName() ).log( Level.SEVERE, "Cleaning up failed", ex );
 		} finally {
 			userJid1 = null;
 			userJid2 = null;
