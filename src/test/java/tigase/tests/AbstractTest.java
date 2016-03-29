@@ -21,28 +21,20 @@
  */
 package tigase.tests;
 
-import tigase.TestLogger;
-import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.Connector;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.Connector.StanzaSendingHandler.StanzaSendingEvent;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.eventbus.Event;
 import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.eventbus.JaxmppEvent;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementFactory;
-import tigase.jaxmpp.core.client.xmpp.forms.FixedField;
-import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
-import tigase.jaxmpp.core.client.xmpp.forms.ListSingleField;
-import tigase.jaxmpp.core.client.xmpp.forms.TextSingleField;
-import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
+import tigase.jaxmpp.core.client.xmpp.forms.*;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
@@ -55,15 +47,13 @@ import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
+import tigase.jaxmpp.core.client.xmpp.stanzas.*;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
-import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
@@ -76,16 +66,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-
-import org.testng.Assert;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertFalse;
@@ -311,6 +291,8 @@ public abstract class AbstractTest {
 			if (instanceHostname != null) {
 				jaxmpp1.getConnectionConfiguration().setServer(instanceHostname);
 			}
+		} else {
+			jaxmpp1.getConnectionConfiguration().setServer(host);
 		}
 
 		if (user1JID != null)
@@ -326,6 +308,10 @@ public abstract class AbstractTest {
 	}
 
 	public Jaxmpp createJaxmppAdmin() {
+		return createJaxmppAdmin(null);
+	}
+
+	public Jaxmpp createJaxmppAdmin(String hostname) {
 		Jaxmpp adminJaxmpp = null;
 		String user = props.getProperty("test.admin.username");
 		String pass = props.getProperty("test.admin.password");
@@ -339,7 +325,7 @@ public abstract class AbstractTest {
 		}
 		jidInstance = BareJID.bareJIDInstance(user, domain);
 		if (null != jidInstance) {
-			adminJaxmpp = createJaxmpp("admin", jidInstance, null, pass);
+			adminJaxmpp = createJaxmpp("admin", jidInstance, null, hostname, pass);
 		}
 		return adminJaxmpp;
 	}

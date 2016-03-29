@@ -83,4 +83,9 @@
 			<class name="tigase.tests.Test3544" />
 		</classes>		
 	</test>
+	<test name="Test #3993 - XMPP - PubSub: Testing propagation of changes to node configuration to other cluster nodes">
+		<classes>
+			<class name="tigase.tests.Test3993" />
+		</classes>
+	</test>
 </suite>
