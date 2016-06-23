@@ -88,4 +88,9 @@
 			<class name="tigase.tests.Test3993" />
 		</classes>
 	</test>
+	<test name="Test #4262 - XMPP - StreamManagement: Testing message delivery reliability related to stream resumption and resource conflict">
+		<classes>
+			<class name="tigase.tests.Test4262" />
+		</classes>
+	</test>
 </suite>
