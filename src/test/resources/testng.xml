@@ -93,4 +93,9 @@
 			<class name="tigase.tests.Test4262" />
 		</classes>
 	</test>
+	<test name="Test #4298 - XMPP - StreamManagement: Testing message delivery reliability related to stream resumption and sending message to offline contact">
+		<classes>
+			<class name="tigase.tests.Test4298" />
+		</classes>
+	</test>
 </suite>
