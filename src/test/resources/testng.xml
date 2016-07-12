@@ -88,6 +88,11 @@
 			<class name="tigase.tests.Test3993" />
 		</classes>
 	</test>
+	<test name="Test #4229 - XMPP - PubSub: Testing propagation of changes to node configuration to other cluster nodes (PubSub protocol and AdHoc commands)">
+		<classes>
+			<class name="tigase.tests.Test4229" />
+		</classes>
+	</test>
 	<test name="Test #4262 - XMPP - StreamManagement: Testing message delivery reliability related to stream resumption and resource conflict">
 		<classes>
 			<class name="tigase.tests.Test4262" />
