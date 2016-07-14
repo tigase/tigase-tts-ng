@@ -1,6 +1,4 @@
 /*
- * Test3544.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,34 +17,21 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
+package tigase.tests.pubsub;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import org.testng.AssertJUnit;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
-import tigase.jaxmpp.j2se.Jaxmpp;
-
-import static tigase.TestLogger.log;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementBuilder;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
-import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.RetrieveItemsAsyncCallback;
@@ -57,25 +42,34 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
-import tigase.xml.DefaultElementFactory;
+import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
-public class Test3544 extends AbstractTest {
-	
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
+public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
+
 	BareJID user1JID;
 	BareJID user2JID;
 	Jaxmpp jaxmpp1;
 	Jaxmpp jaxmpp2;
-	
+
 	@BeforeMethod
 	@Override
 	public void setUp() throws Exception {
-		super.setUp();		
+		super.setUp();
 		user1JID = createUserAccount("user1");
 		user2JID = createUserAccount("user2");
 		jaxmpp1 = createJaxmpp("user1", user1JID);
 		jaxmpp2 = createJaxmpp("user2", user2JID);
 	}
-	
+
 	@AfterMethod
 	public void cleanUp() throws Exception {
 		if (jaxmpp1 != null) {
@@ -84,12 +78,12 @@ public class Test3544 extends AbstractTest {
 		if (jaxmpp2 != null) {
 			removeUserAccount(jaxmpp2);
 		}
-	}	
-	
+	}
+
 	@Test(groups = { "XMPP - PubSub" }, description = "Removal of PEP nodes on user removal")
 	public void testRemovalOfPepServiceNodesOnUserRemoval() throws Exception {
 		final Mutex mutex = new Mutex();
-		
+
 		jaxmpp1.login(true);
 		jaxmpp2.login(true);
 
@@ -104,7 +98,7 @@ public class Test3544 extends AbstractTest {
 		});
 		roster1.add(user2JID, "User2", null);
 		mutex.waitFor(1000 * 10, "added:" + user2JID);
-		
+
 		jaxmpp1.getEventBus().addHandler(RosterModule.ItemUpdatedHandler.ItemUpdatedEvent.class,
 				new RosterModule.ItemUpdatedHandler() {
 
@@ -146,13 +140,13 @@ public class Test3544 extends AbstractTest {
 					fail(e);
 				}
 			}
-		};		
+		};
 		jaxmpp1.getEventBus().addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscriptionHandler2);
 		jaxmpp1.getModule(PresenceModule.class).subscribe(JID.jidInstance(user2JID));
-		
+
 		mutex.waitFor(10 * 1000, user2JID + ":both");
 		assertTrue(mutex.isItemNotified(user2JID + ":both"));
-		
+
 		Element payload = ElementFactory.create("geoloc", null, "http://jabber.org/protocol/geoloc");
 		Element country = ElementFactory.create("country", "US", null);
 		payload.addChild(country);
@@ -173,14 +167,14 @@ public class Test3544 extends AbstractTest {
 				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 			}
 		});
-	
+
 		mutex.waitFor(10 * 1000, "published:geoloc");
-		assertTrue(mutex.isItemNotified("published:geoloc"));		
-		
-		jaxmpp2.getModule(PubSubModule.class).retrieveItem(user1JID, "http://jabber.org/protocol/geoloc", new PubSubModule.RetrieveItemsAsyncCallback() {
+		assertTrue(mutex.isItemNotified("published:geoloc"));
+
+		jaxmpp2.getModule(PubSubModule.class).retrieveItem(user1JID, "http://jabber.org/protocol/geoloc", new RetrieveItemsAsyncCallback() {
 
 			@Override
-			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<RetrieveItemsAsyncCallback.Item> items) {
+			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
 				mutex.notify("retrieved:" + nodeName + ":" + items.size());
 			}
 

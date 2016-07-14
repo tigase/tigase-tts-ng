@@ -119,7 +119,11 @@
 					<testFailureIgnore>false</testFailureIgnore>
 
 					<suiteXmlFiles>
-						<suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/testng_server.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/testng_muc.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/testng_pubsub.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/testng_http_api.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/testng_custom.xml</suiteXmlFile>
 					</suiteXmlFiles>
 					<!--<workingDirectory>target/</workingDirectory>-->
 					<properties>

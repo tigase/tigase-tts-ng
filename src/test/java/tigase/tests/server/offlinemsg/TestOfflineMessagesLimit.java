@@ -1,6 +1,4 @@
 /*
- * Test2944.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,23 +17,12 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
+package tigase.tests.server.offlinemsg;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.testng.Assert;
-import static org.testng.Assert.assertTrue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -47,12 +34,22 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  *
  * @author andrzej
  */
-public class Test2944 extends AbstractTest {
+public class TestOfflineMessagesLimit extends AbstractTest {
 
 	private static final String USER_PREFIX = "offline_";
 	
@@ -167,7 +164,7 @@ public class Test2944 extends AbstractTest {
 				try {
 					mutex.notify("offline:message:error:" + stanza.getFirstChild("body").getValue());
 				} catch (XMLException ex) {
-					Logger.getLogger(Test2944.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(TestOfflineMessagesLimit.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		});		
@@ -189,7 +186,7 @@ public class Test2944 extends AbstractTest {
 				try {
 					mutex.notify("offline:message:success:" + stanza.getFirstChild("body").getValue());
 				} catch (XMLException ex) {
-					Logger.getLogger(Test2944.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(TestOfflineMessagesLimit.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		});

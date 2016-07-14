@@ -1,6 +1,4 @@
 /*
- * Test3305.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,12 +17,8 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
+package tigase.tests.server;
 
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static org.testng.Assert.assertTrue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,12 +31,21 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.j2se.ConnectionConfiguration;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
+import tigase.tests.server.offlinemsg.TestOfflineMessagesLimit;
+
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  *
  * @author andrzej
  */
-public class Test3305 extends AbstractTest {
+public class TestWebSocketConnectivity extends AbstractTest {
 
 	private static final String USER_PREFIX = "ws_";
 	
@@ -66,7 +69,7 @@ public class Test3305 extends AbstractTest {
 		removeUserAccount(userJaxmpp1);
 	}	
 	
-	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 3")
+	@Test
 	public void testWebSocketConnectivity() throws Exception {
 		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
 		userJaxmpp2.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
@@ -86,7 +89,7 @@ public class Test3305 extends AbstractTest {
 				try {
 					mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
 				} catch (XMLException ex) {
-					Logger.getLogger(Test2944.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(TestOfflineMessagesLimit.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		});

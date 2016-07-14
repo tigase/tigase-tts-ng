@@ -1,15 +1,26 @@
-package tigase.tests;
-
-import java.util.Properties;
-
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
+/*
+ * Tigase Jabber/XMPP Server - TTS-NG
+ * Copyright (C) 2004-2016 "Tigase, Inc." <office@tigase.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ *
+ */
+package tigase.tests.server;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import tigase.TestLogger;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.JID;
@@ -21,8 +32,16 @@ import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
-public class Test2951 extends AbstractTest {
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Store;
+import java.util.Properties;
+
+public class TestServerMonitoring extends AbstractTest {
 
 	private void disableTaskConfig(JID monitorTaskJID, AdHocCommansModule adHoc) throws JaxmppException, InterruptedException {
 		final Mutex mutex = new Mutex();

@@ -1,4 +1,23 @@
-package tigase.tests;
+/*
+ * Tigase Jabber/XMPP Server - TTS-NG
+ * Copyright (C) 2004-2016 "Tigase, Inc." <office@tigase.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ *
+ */
+package tigase.tests.server.offlinemsg;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -22,6 +41,8 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -34,7 +55,7 @@ import static tigase.TestLogger.log;
 /**
  * Created by andrzej on 22.06.2016.
  */
-public class Test4262 extends AbstractTest {
+public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends AbstractTest {
 
 	private static final String USER_PREFIX = "sm-resumption";
 

@@ -1,31 +1,23 @@
-package tigase.tests;
-
-import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.XMPPException;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementFactory;
-import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
-import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
-import tigase.jaxmpp.j2se.Jaxmpp;
-import tigase.util.DateTimeFormatter;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+/*
+ * Tigase Jabber/XMPP Server - TTS-NG
+ * Copyright (C) 2004-2016 "Tigase, Inc." <office@tigase.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ *
+ */
+package tigase.tests.pubsub;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -43,16 +35,38 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+import tigase.jaxmpp.core.client.*;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
+import tigase.tests.http.TestSendingXmppStanzaUsingREST;
+import tigase.util.DateTimeFormatter;
 
-import static org.testng.Assert.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static tigase.TestLogger.log;
 
-public class Test2959 extends AbstractTest {
+public class TestRestApiWithMessageExpiration extends AbstractTest {
 
 	private static final int SECOND = 1000;
 
@@ -138,7 +152,7 @@ public class Test2959 extends AbstractTest {
 																				String msg = content.getValue();
 																				mutex.notify( sessionObject.getUserBareJid() + ":message:received:" + msg );
 																			} catch ( XMLException ex ) {
-																				Logger.getLogger( Test2936.class.getName() ).log( Level.SEVERE, null, ex );
+																				Logger.getLogger( TestSendingXmppStanzaUsingREST.class.getName() ).log( Level.SEVERE, null, ex );
 																			}
 																		}
 

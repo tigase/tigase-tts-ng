@@ -1,6 +1,4 @@
 /*
- * Test2936.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,38 +17,23 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
+package tigase.tests.http;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.ArrayDeque;
-import java.util.Queue;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import static org.testng.Assert.*;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -66,14 +49,28 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.xml.J2seElement;
 import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 import tigase.xml.DomBuilderHandler;
 import tigase.xml.SimpleParser;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  *
  * @author andrzej
  */
-public class Test2936 extends AbstractTest {
+public class TestSendingXmppStanzaUsingREST extends AbstractTest {
 	
 	private static final String USER_PREFIX = "http_";
 	
@@ -115,7 +112,7 @@ public class Test2936 extends AbstractTest {
 					String msg = convertMessageToStr(stanza);
 					mutex.notify("message:received:" + msg);
 				} catch (XMLException ex) {
-					Logger.getLogger(Test2936.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(TestSendingXmppStanzaUsingREST.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 					

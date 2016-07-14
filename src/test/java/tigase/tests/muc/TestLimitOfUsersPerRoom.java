@@ -1,4 +1,4 @@
-package tigase.tests;
+package tigase.tests.muc;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
@@ -21,8 +21,10 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
-public class Test3179 extends AbstractTest {
+public class TestLimitOfUsersPerRoom extends AbstractTest {
 
 
     @Test(

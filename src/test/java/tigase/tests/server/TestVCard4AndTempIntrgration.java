@@ -1,6 +1,4 @@
 /*
- * Test3282.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,13 +17,10 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
+package tigase.tests.server;
 
-import java.nio.charset.Charset;
 import org.testng.Assert;
-import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.Test;
-import static tigase.TestLogger.log;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -36,12 +31,19 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
+
+import java.nio.charset.Charset;
+
+import static org.testng.AssertJUnit.assertTrue;
+import static tigase.TestLogger.log;
 
 /**
  *
  * @author andrzej
  */
-public class Test3282 extends AbstractTest {
+public class TestVCard4AndTempIntrgration extends AbstractTest {
 	
 	final String helloWorld = new String(new byte[] { (byte) 0xe4, (byte) 0xbd, (byte) 0xa0, (byte) 0xe5, (byte) 0xa5,
 			(byte) 0xbd, (byte) 0xe4, (byte) 0xb8, (byte) 0x96, (byte) 0xe7, (byte) 0x95, (byte) 0x8c },

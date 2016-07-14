@@ -1,10 +1,26 @@
-package tigase.tests;
-
-import java.util.Date;
+/*
+ * Tigase Jabber/XMPP Server - TTS-NG
+ * Copyright (C) 2004-2016 "Tigase, Inc." <office@tigase.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ *
+ */
+package tigase.tests.server.offlinemsg;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -15,8 +31,12 @@ import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.NotificationRe
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
-public class Test2947 extends AbstractTest {
+import java.util.Date;
+
+public class TestOfflineMessageSinkProvider extends AbstractTest {
 
 	@Test(groups = { "Offline Message" }, description = "Offline Message Sink Provider")
 	public void testOfflineMessageSinkProvider() throws Exception {

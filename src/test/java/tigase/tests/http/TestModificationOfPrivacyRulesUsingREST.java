@@ -17,20 +17,7 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
-
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementFactory;
-import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.j2se.Jaxmpp;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+package tigase.tests.http;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -47,16 +34,27 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
-import static org.testng.Assert.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static tigase.TestLogger.log;
 
-public class Test2928 extends AbstractTest {
+public class TestModificationOfPrivacyRulesUsingREST extends AbstractTest {
 
 	public enum DomainFilterPolicy {
 

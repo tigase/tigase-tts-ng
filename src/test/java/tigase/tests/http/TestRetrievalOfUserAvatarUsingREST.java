@@ -1,6 +1,4 @@
 /*
- * Test3258.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,26 +17,10 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Random;
+package tigase.tests.http;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import sun.net.www.http.HttpClient;
-
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -55,14 +37,29 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
+import tigase.tests.Mutex;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Random;
+
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 import static tigase.TestLogger.log;
 
 /**
  *
  * @author andrzej
  */
-public class Test3258 extends AbstractTest {
+public class TestRetrievalOfUserAvatarUsingREST extends AbstractTest {
 
 	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
 	private static final String USER_AVATAR_DATA_NODE = "urn:xmpp:avatar:data";

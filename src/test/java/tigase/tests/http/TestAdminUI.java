@@ -1,6 +1,4 @@
 /*
- * Test2955.java
- *
  * Tigase Jabber/XMPP Server - TTS-NG
  * Copyright (C) 2004-2015 "Tigase, Inc." <office@tigase.com>
  *
@@ -19,35 +17,16 @@
  * If not, see http://www.gnu.org/licenses/.
  *
  */
-package tigase.tests;
+package tigase.tests.http;
 
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.DomNodeList;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlCheckBoxInput;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlSubmitInput;
-import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
-import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.UUID;
-
+import com.gargoylesoftware.htmlunit.html.*;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import static org.testng.Assert.*;
-
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -57,16 +36,22 @@ import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.AbstractTest;
 import tigase.util.TigaseStringprepException;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.testng.Assert.*;
 
 /**
  *
  * @author andrzej
  */
-public class Test2955 extends AbstractTest {
+public class TestAdminUI extends AbstractTest {
 	
 	private WebClient webClient;
 	private DefaultCredentialsProvider credentialProvider;
@@ -109,7 +94,7 @@ public class Test2955 extends AbstractTest {
 				removeUserAccount(userJaxmpp2);
 			}
 		} catch ( JaxmppException | InterruptedException ex ) {
-					Logger.getLogger( Test2955.class.getName() ).log( Level.SEVERE, "Cleaning up failed", ex );
+					Logger.getLogger( TestAdminUI.class.getName() ).log( Level.SEVERE, "Cleaning up failed", ex );
 		} finally {
 			userJid1 = null;
 			userJid2 = null;

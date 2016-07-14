@@ -1,0 +1,74 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Tigase XMPP Server Tests" verbose="1">
+	<!-- Generic tests -->
+	<test name="Retrieve server version">
+		<classes>
+			<class name="tigase.tests.util.RetrieveVersion" />
+		</classes>
+	</test>
+	<test name="Retrieve server statistics 1">
+		<classes>
+			<class name="tigase.tests.util.RetrieveStatistics" />
+		</classes>
+	</test>
+	<test name="VCard: VCard4 support - #2407, #2410">
+		<classes>
+			<class name="tigase.tests.server.TestVCard4" />
+		</classes>
+	</test>
+	<test name="VCard: VCard4 and VCard-Temp integration - #3282">
+		<classes>
+			<class name="tigase.tests.server.TestVCard4AndTempIntrgration" />
+		</classes>
+	</test>
+
+	<!-- Offline Messages -->
+	<test name="Offline Messages: Setting offline messages limit to 3 - #2944">
+		<classes>
+			<class name="tigase.tests.server.offlinemsg.TestOfflineMessagesLimit" />
+		</classes>
+	</test>
+	<test name="Offline Messages: Sink Provider - #2947">
+		<classes>
+			<class name="tigase.tests.server.offlinemsg.TestOfflineMessageSinkProvider" />
+		</classes>
+	</test>
+	<test name="Offline Messages: Testing message delivery reliability related to stream resumption and resource conflict - #4262">
+		<classes>
+			<class name="tigase.tests.server.offlinemsg.TestOfflineMessageDeliveryAfterSmResumptionTimeout" />
+		</classes>
+	</test>
+	<test name="Offline Messages: Testing message delivery reliability related to stream resumption and sending message to offline contact - #4298">
+		<classes>
+			<class name="tigase.tests.server.offlinemsg.TestOfflineMessageDeliveryAfterSmResumptionInACS" />
+		</classes>
+	</test>
+
+	<!-- C2S -->
+	<test name="C2S: TLS - Client Cert: Two-way TLS - #2939">
+		<classes>
+			<class name="tigase.tests.server.TestTwoWayTLS"/>
+		</classes>
+	</test>
+
+	<!-- WebSocket -->
+	<test name="WebSocket: Test WebSocket connectivity - #3305">
+		<classes>
+			<class name="tigase.tests.server.TestWebSocketConnectivity" />
+		</classes>
+	</test>
+
+	<!-- Other -->
+	<test name="Tigase XMPP server monitoring - #2951">
+		<classes>
+			<class name="tigase.tests.server.TestServerMonitoring" />
+		</classes>
+	</test>
+
+	<test name="Retrieve server statistics 2">
+		<classes>
+			<class name="tigase.tests.util.RetrieveStatistics" />
+		</classes>
+	</test>
+</suite>
