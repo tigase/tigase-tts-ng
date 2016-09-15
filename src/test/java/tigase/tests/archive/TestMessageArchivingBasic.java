@@ -45,7 +45,7 @@ import static org.testng.Assert.assertTrue;
  */
 public class TestMessageArchivingBasic extends AbstractTest {
 
-	private static final String USER_PREFIX = "mam-";
+	private static final String USER_PREFIX = "MaM-";
 
 	private BareJID user1Jid;
 	private BareJID user2Jid;
@@ -111,29 +111,41 @@ public class TestMessageArchivingBasic extends AbstractTest {
 
 	@Test(dependsOnMethods = {"testMessageArchiving"})
 	public void testMesssageRetrivalSuccess() throws Exception {
-		retrieveArchivedMessage(user1Jaxmpp, user2Jaxmpp.getSessionObject().getUserBareJid(), id);
+		String testId = UUID.randomUUID().toString();
+		retrieveArchivedMessage(user1Jaxmpp, user2Jaxmpp.getSessionObject().getUserBareJid(), id, testId);
 		for (String tag : expTags) {
-			assertTrue(mutex.isItemNotified("2:" + id + ":retriveCollection:success:" + tag),
+			assertTrue(mutex.isItemNotified("2:" + testId + ":" + id + ":retriveCollection:success:" + tag),
 					"Retrieving message from repository failed - " + tag);
 		}
 	}
 
-	private void retrieveArchivedMessage(final Jaxmpp jaxmppUser1, BareJID userBareJid, final String id) throws JaxmppException, InterruptedException {
+	@Test(dependsOnMethods = {"testMessageArchiving"})
+	public void testMesssageRetrivalJidComparison() throws Exception {
+		// check that localpart and domain are compared in case insensitive way
+		String testId = UUID.randomUUID().toString();
+		retrieveArchivedMessage(user1Jaxmpp, BareJID.bareJIDInstance(user2Jaxmpp.getSessionObject().getUserBareJid().toString().toLowerCase()), id, testId);
+		for (String tag : expTags) {
+			assertTrue(mutex.isItemNotified("2:" + testId + ":" + id + ":retriveCollection:success:" + tag),
+					"Retrieving message from repository failed - " + tag);
+		}
+	}
+
+	private void retrieveArchivedMessage(final Jaxmpp jaxmppUser1, BareJID userBareJid, final String id, final String testId) throws JaxmppException, InterruptedException {
 		jaxmppUser1.getModule(MessageArchivingModule.class)
 				.listCollections(JID.jidInstance(userBareJid),
 						null, null, null, new MessageArchivingModule.CollectionAsyncCallback() {
 
 							public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-								mutex.notify("1:" + id + ":retriveCollection:error");
+								mutex.notify("1:" + testId + ":" + id + ":retriveCollection:error");
 							}
 
 							public void onTimeout() throws JaxmppException {
-								mutex.notify("1:" + id + ":retriveCollection:timeout");
+								mutex.notify("1:" + testId + ":" + id + ":retriveCollection:timeout");
 							}
 
 							@Override
 							protected void onCollectionReceived(ResultSet<Chat> vcard) throws XMLException {
-								mutex.notify("1:" + id + ":retriveCollection:received");
+								mutex.notify("1:" + testId + ":" + id + ":retriveCollection:received");
 
 								for (Chat item : vcard.getItems()) {
 									try {
@@ -143,19 +155,19 @@ public class TestMessageArchivingBasic extends AbstractTest {
 														null, null, null, null, new MessageArchivingModule.ItemsAsyncCallback() {
 
 															public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-																mutex.notify("2:" + id + ":retriveCollection:error");
+																mutex.notify("2:" + testId + ":" + id + ":retriveCollection:error");
 															}
 
 															public void onTimeout() throws JaxmppException {
-																mutex.notify("2:" + id + ":retriveCollection:timeout");
+																mutex.notify("2:" + testId + ":" + id + ":retriveCollection:timeout");
 															}
 
 															@Override
 															protected void onItemsReceived(ChatResultSet chat) throws XMLException {
 																for (ChatItem item : chat.getItems()) {
-																	mutex.notify("2:" + id + ":retriveCollection:success:" + item.getBody());
+																	mutex.notify("2:" + testId + ":" + id + ":retriveCollection:success:" + item.getBody());
 																}
-																mutex.notify("2:" + id + ":retriveCollection:received");
+																mutex.notify("2:" + testId + ":" + id + ":retriveCollection:received");
 															}
 
 														});
@@ -167,7 +179,7 @@ public class TestMessageArchivingBasic extends AbstractTest {
 
 						});
 
-		mutex.waitFor(20 * 1000, "1:" + id + ":retriveCollection:received", "2:" + id + ":retriveCollection:received");
+		mutex.waitFor(20 * 1000, "1:" + testId + ":" + id + ":retriveCollection:received", "2:" + testId + ":" + id + ":retriveCollection:received");
 	}
 
 
