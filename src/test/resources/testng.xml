@@ -98,4 +98,14 @@
 			<class name="tigase.tests.Test4298" />
 		</classes>
 	</test>
+	<test name="Test #4266 - JaXMPP - Testing reconnections">
+		<classes>
+			<class name="tigase.tests.Test4266" />
+		</classes>
+	</test>
+	<test name="Test #4378 - JaXMPP - Testing state of JaXMPP instance after issues with connection or authentication timeout">
+		<classes>
+			<class name="tigase.tests.Test4378" />
+		</classes>
+	</test>
 </suite>

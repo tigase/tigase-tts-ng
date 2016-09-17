@@ -515,6 +515,18 @@ public abstract class AbstractTest {
 		return hostname;
 	}
 
+	public String getWebSocketURI() {
+		String port = props.getProperty("test.ws.port");
+		String hostname = getInstanceHostname();
+		return "ws://" + hostname + ":" + port + "/";
+	}
+
+	public String getBoshURI() {
+		String port = props.getProperty("test.bosh.port");
+		String hostname = getInstanceHostname();
+		return "http://" + hostname + ":" + port + "/";
+	}
+
 	public void removeUserAccount(final BareJID userJID) throws JaxmppException, InterruptedException {
 		final Jaxmpp jaxmpp2 = createJaxmpp(null);
 		jaxmpp2.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
@@ -544,10 +556,10 @@ public abstract class AbstractTest {
 		if (jid.getLocalpart().equals("admin"))
 			throw new RuntimeException("Better not to remove user 'admin', don't you think?");
 
-		final JaxmppCore.DisconnectedHandler disconnectionHandler = new JaxmppCore.DisconnectedHandler() {
+		final JaxmppCore.LoggedOutHandler disconnectionHandler = new JaxmppCore.LoggedOutHandler() {
 
 			@Override
-			public void onDisconnected(SessionObject sessionObject) {
+			public void onLoggedOut(SessionObject sessionObject) {
 				log("Disconnected! " + userJid);
 				mutex.notifyForce();
 			}
@@ -555,7 +567,7 @@ public abstract class AbstractTest {
 		};
 
 		try {
-			jaxmpp.getEventBus().addHandler(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class, disconnectionHandler);
+			jaxmpp.getEventBus().addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
 
 			jaxmpp.getModule(InBandRegistrationModule.class).removeAccount(new AsyncCallback() {
 
@@ -588,7 +600,7 @@ public abstract class AbstractTest {
 			jaxmpp.disconnect();
 
 		} finally {
-			jaxmpp.getEventBus().remove(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class, disconnectionHandler);
+			jaxmpp.getEventBus().remove(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
 		}
 	}
 
