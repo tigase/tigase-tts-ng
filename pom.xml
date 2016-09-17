@@ -126,6 +126,7 @@
 						<suiteXmlFile>src/test/resources/testng_http_api.xml</suiteXmlFile>
 						<suiteXmlFile>src/test/resources/testng_archive.xml</suiteXmlFile>
 						<suiteXmlFile>src/test/resources/testng_custom.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/testng_jaxmpp.xml</suiteXmlFile>
 					</suiteXmlFiles>
 					<!--<workingDirectory>target/</workingDirectory>-->
 					<properties>

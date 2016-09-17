@@ -515,6 +515,18 @@ public abstract class AbstractTest {
 		return hostname;
 	}
 
+	public String getWebSocketURI() {
+		String port = props.getProperty("test.ws.port");
+		String hostname = getInstanceHostname();
+		return "ws://" + hostname + ":" + port + "/";
+	}
+
+	public String getBoshURI() {
+		String port = props.getProperty("test.bosh.port");
+		String hostname = getInstanceHostname();
+		return "http://" + hostname + ":" + port + "/";
+	}
+
 	public void removeUserAccount(final BareJID userJID) throws JaxmppException, InterruptedException {
 		final Jaxmpp jaxmpp2 = createJaxmpp(null);
 		jaxmpp2.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);

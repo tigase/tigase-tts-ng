@@ -1,0 +1,14 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="JaXMPP Tests" verbose="1">
+	<test name="Testing reconnections - #4266">
+		<classes>
+			<class name="tigase.tests.jaxmpp.TestReconnections" />
+		</classes>
+	</test>
+	<test name="Testing state of JaXMPP instance after issues with connection or authentication timeout - #4378">
+		<classes>
+			<class name="tigase.tests.jaxmpp.TestHandlingOfConnectionIssues" />
+		</classes>
+	</test>
+</suite>
