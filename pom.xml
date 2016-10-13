@@ -162,7 +162,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		</extensions>
 	</build>
 	<dependencies>
 		<dependency>
