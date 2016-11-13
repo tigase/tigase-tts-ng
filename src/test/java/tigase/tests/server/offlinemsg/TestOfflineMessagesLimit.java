@@ -152,7 +152,7 @@ public class TestOfflineMessagesLimit extends AbstractTest {
 	private void testLimit(final Mutex mutex, Jaxmpp sender, Jaxmpp receiver, int limit) throws JaxmppException, InterruptedException {
 		receiver.disconnect(true);
 		
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 
 		final List<String> sent = new ArrayList<String>();
 		
@@ -191,7 +191,7 @@ public class TestOfflineMessagesLimit extends AbstractTest {
 			}
 		});
 		
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		
 		receiver.login(true);
 		

@@ -309,8 +309,13 @@ public class TestRetrievalOfUserAvatarUsingREST extends AbstractTest {
 
 		retrieveAvatar(mutex, jaxmpp2, user1JID, avatarData, true, nextRnd());
 
-		
-		URL url = new URL("http://" + getDomain(0) + ":" + getHttpPort() + "/rest/avatar/" + user1JID.toString() + "/avatar?api-key=" + getApiKey());
+		String domain = getDomain(0);
+		String[] instances = getInstanceHostnames();
+		if (instances != null && instances.length > 0) {
+			domain = instances[0];
+		}
+
+		URL url = new URL("http://" + domain + ":" + getHttpPort() + "/rest/avatar/" + user1JID.toString() + "/avatar?api-key=" + getApiKey());
 		URLConnection con = url.openConnection();
 		con.setDoInput(true);
 		InputStream is = con.getInputStream();

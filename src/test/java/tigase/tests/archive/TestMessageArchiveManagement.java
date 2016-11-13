@@ -42,10 +42,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.AssertJUnit.assertEquals;
@@ -66,10 +63,12 @@ public class TestMessageArchiveManagement extends AbstractTest {
 
 	private List<String> expTags = new ArrayList<>();
 	private List<Date> expDates = new ArrayList<>();
+	private Timer timer;
 
 	@BeforeClass
 	@Override
 	public void setUp() throws Exception {
+		timer = new Timer();
 		super.setUp();
 		user1Jid = createUserAccount(USER_PREFIX);
 		user1Jaxmpp = createJaxmpp(USER_PREFIX, user1Jid);
@@ -86,6 +85,7 @@ public class TestMessageArchiveManagement extends AbstractTest {
 
 	@AfterClass
 	public void cleanUp() throws Exception {
+		timer.cancel();
 		removeUserAccount(user1Jaxmpp);
 		removeUserAccount(user2Jaxmpp);
 	}
@@ -272,12 +272,13 @@ public class TestMessageArchiveManagement extends AbstractTest {
 			@Override
 			public void onSuccess(String queryid, boolean complete, RSM rsm) throws JaxmppException {
 				mutex.notify("items:received:" + queryid + ":" + complete);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				mutex.notify("items:received");
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						mutex.notify("items:received");
+					}
+				}, 1000);
+
 			}
 
 			@Override
@@ -298,7 +299,7 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		jaxmpp.getContext().getEventBus().remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class, handler);
 
 		for (String tag : expectedMessageTags) {
-			assertTrue(mutex.isItemNotified("item:" + tag));
+			assertTrue("Not returned message: " + tag, mutex.isItemNotified("item:" + tag));
 		}
 
 		assertEquals(expectedMessageTags.size(), count.get());

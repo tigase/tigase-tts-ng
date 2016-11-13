@@ -315,7 +315,7 @@ public abstract class AbstractTest {
 		Jaxmpp adminJaxmpp = null;
 		String user = props.getProperty("test.admin.username");
 		String pass = props.getProperty("test.admin.password");
-		String domain = getDomain(0);
+		String domain = (String) props.getOrDefault("test.admin.domain", getDomain(0));
 		BareJID jidInstance;
 		if (null == user) {
 			user = "admin";

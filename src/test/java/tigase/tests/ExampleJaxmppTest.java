@@ -49,7 +49,7 @@ public class ExampleJaxmppTest extends AbstractTest {
 
 			BareJID createUserAccount = createUserAccount( "test_user" );
 			Jaxmpp createJaxmpp = createJaxmpp( createUserAccount.getLocalpart(), createUserAccount);
-			createJaxmpp.login();
+			createJaxmpp.login( true );
 
 			assertTrue(createJaxmpp.isConnected(), "contact was not connected" );
 

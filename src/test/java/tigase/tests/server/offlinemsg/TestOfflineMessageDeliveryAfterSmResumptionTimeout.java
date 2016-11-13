@@ -340,7 +340,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 		log( "\n\n\n===== broadcasting presence \n" );
 		user2Jaxmpp.getModule(PresenceModule.class).setPresence(Presence.Show.online, null, 5);
 
-		mutex.waitFor(2 * 1000, "message:" + body);
+		mutex.waitFor(2 * 5000, "message:" + body);
 		assertTrue("Message was not delivered!", mutex.isItemNotified("message:" + body));
 	}
 
