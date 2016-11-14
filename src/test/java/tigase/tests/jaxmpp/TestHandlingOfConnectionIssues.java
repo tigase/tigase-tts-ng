@@ -35,6 +35,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -130,6 +131,8 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 	}
 
 	private void testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType connectionType) throws Exception {
+		assertNull(jaxmpp.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY));
+
 		jaxmpp.getConnectionConfiguration().setConnectionType(connectionType);
 
 		switch (connectionType) {
@@ -137,7 +140,7 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 				jaxmpp.getConnectionConfiguration().setBoshService("ws://missing/");
 				break;
 			case bosh:
-				jaxmpp.getConnectionConfiguration().setBoshService("bosh://missing/");
+				jaxmpp.getConnectionConfiguration().setBoshService("http://missing/");
 				break;
 			case socket:
 				jaxmpp.getConnectionConfiguration().setServer("missing");
@@ -149,6 +152,8 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 		} catch (Exception ex) {
 
 		}
+
+		assertNull(jaxmpp.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY));
 
 		assertEquals(jaxmpp.getConnector().getState(), Connector.State.disconnected);
 
@@ -170,7 +175,7 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 
 		assertTrue(jaxmpp.isConnected());
 
-		jaxmpp.disconnect();
+		jaxmpp.disconnect(true);
 	}
 
 }
