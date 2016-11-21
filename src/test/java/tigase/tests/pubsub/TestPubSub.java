@@ -33,6 +33,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 
+import java.util.Collection;
 import java.util.UUID;
 
 import static org.testng.AssertJUnit.assertTrue;
@@ -191,6 +192,28 @@ public class TestPubSub extends TestPubSubAbstract {
 		});
 		mutex.waitFor(10 * 1000, "published:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
 		assertTrue(mutex.isItemNotified("published:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid()));
+	}
+
+	@Override
+	protected void retrieveItemFromNode(String hostname, String node, String itemId, ResultCallback<Element> callback)
+			throws Exception {
+		Jaxmpp jaxmpp = jaxmpps.get(hostname);
+		jaxmpp.getModule(PubSubModule.class).retrieveItem(pubsubJid.getBareJid(), node, itemId, new PubSubModule.RetrieveItemsAsyncCallback() {
+			@Override
+			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
+				items.forEach(item -> callback.finished(item.getPayload()));
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				assertTrue(false);
+			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				assertTrue(false);
+			}
+		});
 	}
 
 	public void retractItemFromNode(String hostname, String node, String itemId) throws Exception {

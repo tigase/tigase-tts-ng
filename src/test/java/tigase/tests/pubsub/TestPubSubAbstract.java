@@ -61,6 +61,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 	protected abstract void deleteNode(String hostname, String node) throws Exception;
 
 	protected abstract void publishItemToNode(String hostname, BareJID publisher, String node, String itemId, Element payload) throws Exception;
+	protected abstract void retrieveItemFromNode(String hostname, String node, String itemId, ResultCallback<Element> callback) throws Exception;
 	protected abstract void retractItemFromNode(String hostname, String node, String itemId) throws Exception;
 
 	@BeforeClass
@@ -172,6 +173,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 
 			String itemId = ni.getItemId();
 			Element payload = ElementFactory.create("test", itemId, null);
+			ni.setItemPayload(payload);
 			String[] waitFor = jaxmpps.values().stream().map(jaxmpp1 -> "published:item:notified" + itemId + ":" + jaxmpp1.getSessionObject().getUserBareJid()).toArray(i -> new String[i]);
 			PubSubModule.NotificationReceivedHandler handler = new PubSubModule.NotificationReceivedHandler() {
 				@Override
@@ -192,7 +194,27 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
+
 	@Test(dependsOnMethods = { "publishItemsToNodes" })
+	public void retrieveItemsFromNodes() throws Exception {
+		createdNodes.values().forEach((NodeInfo ni) -> {
+			for (String hostname : getInstanceHostnames()) {
+				try {
+					String waitFor = "retrieved:item:" + ni.getItemId() + ":payload-matches:true:" + hostname;
+					retrieveItemFromNode(hostname, ni.getNode(), ni.getItemId(), (Element payload) -> {
+						mutex.notify("retrieved:item:" + ni.getItemId() + ":payload-matches:" + ni.getItemPayload().equals(payload) + ":" + hostname);
+					});
+
+					mutex.waitFor(10 * 1000, waitFor);
+					assertTrue(mutex.isItemNotified(waitFor));
+				} catch (Exception ex) {
+					throw new RuntimeException(ex);
+				}
+			}
+		});
+	}
+
+	@Test(dependsOnMethods = { "retrieveItemsFromNodes" })
 	public void retractItemsFromNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
@@ -279,6 +301,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 	private class NodeInfo {
 		private String id = UUID.randomUUID().toString();
 		private String itemId = UUID.randomUUID().toString();
+		private Element payload = null;
 
 		public String getName() {
 			return "Node " + id;
@@ -289,6 +312,19 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 
 		public String getItemId() { return "item-" + itemId; }
+
+		public Element getItemPayload() {
+			return payload;
+		}
+
+		protected void setItemPayload(Element payload) {
+			this.payload = payload;
+		}
 	}
 
+	public interface ResultCallback<T> {
+
+		void finished(T result);
+
+	}
 }

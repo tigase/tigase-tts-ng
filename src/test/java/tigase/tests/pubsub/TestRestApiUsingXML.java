@@ -19,19 +19,6 @@
  */
 package tigase.tests.pubsub;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -48,12 +35,8 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 
-import static org.testng.AssertJUnit.assertTrue;
-import static tigase.TestLogger.log;
+import static org.testng.AssertJUnit.*;
 
 /**
  * Test is responsible for testing PubSub component node creation
@@ -65,36 +48,8 @@ import static tigase.TestLogger.log;
  *
  * Created by andrzej on 10.07.2016.
  */
-public class TestRestApi extends TestPubSubAbstract {
-
-	private static final int SECOND = 1000;
-	private CloseableHttpClient httpClient;
-	private HttpClientContext localContext;
-	private BareJID adminBareJid;
-
-	@BeforeClass
-	public void setUp() throws Exception {
-		super.setUp();
-
-		// initialize HTTP client
-		CredentialsProvider credsProvider = new BasicCredentialsProvider();
-		localContext = HttpClientContext.create();
-		int timeout = 15;
-		httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider)
-				.setDefaultRequestConfig(RequestConfig.custom()
-						.setSocketTimeout(timeout * SECOND)
-						.setConnectTimeout(timeout * SECOND)
-						.setConnectionRequestTimeout(timeout * SECOND)
-						.build()).build();
-	}
-
-	@AfterClass
-	public void tearDown() throws Exception {
-		super.tearDown();
-		httpClient.close();
-		httpClient = null;
-		localContext = null;
-	}
+public class TestRestApiUsingXML
+		extends TestRestApiAbstract {
 
 	// HTTP API based implementation
 	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection) throws Exception {
@@ -109,7 +64,10 @@ public class TestRestApi extends TestPubSubAbstract {
 		pubsub.addChild(ElementFactory.create("title", name, null));
 		command.addChild(pubsub);
 
-		executeHttpApiRequest(hostname, "create-node", command);
+		Element result = executeHttpApiRequest(hostname, "create-node", command);
+		assertNotNull(result);
+
+		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
 	}
 
 	public void deleteNode(String hostname, String nodeName) throws Exception {
@@ -117,7 +75,10 @@ public class TestRestApi extends TestPubSubAbstract {
 
 		command.addChild(ElementFactory.create("node", nodeName, null));
 
-		executeHttpApiRequest(hostname, "delete-node", command);
+		Element result = executeHttpApiRequest(hostname, "delete-node", command);
+		assertNotNull(result);
+
+		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
 	}
 
 	public void subscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
@@ -129,7 +90,10 @@ public class TestRestApi extends TestPubSubAbstract {
 		jids.addChild(ElementFactory.create("value", jid.toString(), null));
 		command.addChild(jids);
 
-		executeHttpApiRequest(hostname, "subscribe-node", command);
+		Element result = executeHttpApiRequest(hostname, "subscribe-node", command);
+		assertNotNull(result);
+
+		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
 	}
 
 	public void unsubscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
@@ -141,7 +105,10 @@ public class TestRestApi extends TestPubSubAbstract {
 		jids.addChild(ElementFactory.create("value", jid.toString(), null));
 		command.addChild(jids);
 
-		executeHttpApiRequest(hostname, "unsubscribe-node", command);
+		Element result = executeHttpApiRequest(hostname, "unsubscribe-node", command);
+		assertNotNull(result);
+
+		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
 	}
 
 	public void publishItemToNode(String hostname, BareJID owner, String nodeName, String itemId, Element payload) throws Exception {
@@ -153,7 +120,31 @@ public class TestRestApi extends TestPubSubAbstract {
 		entry.addChild(payload);
 		command.addChild(entry);
 
-		executeHttpApiRequest(hostname, "publish-item", command);
+		Element result = executeHttpApiRequest(hostname, "publish-item", command);
+		assertNotNull(result);
+
+		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+	}
+
+	@Override
+	protected void retrieveItemFromNode(String hostname, String nodeName, String itemId, ResultCallback<Element> callback)
+			throws Exception {
+		Element command = ElementFactory.create("data");
+
+		command.addChild(ElementFactory.create("node", nodeName, null));
+		command.addChild(ElementFactory.create("item-id", itemId, null));
+
+		Element result = executeHttpApiRequest(hostname, "retrieve-item", command);
+		assertCDataEquals(nodeName, result, new String[] { "result", "node", "value" });
+		assertCDataEquals(itemId, result, new String[] { "result", "item-id", "value" });
+
+		Element pubsubItem = result.findChild(new String[] { "result", "item", "value", "item" });
+		assertNotNull(pubsubItem);
+
+		Element payload = pubsubItem.getFirstChild();
+		assertNotNull(payload);
+
+		callback.finished(payload);
 	}
 
 	public void retractItemFromNode(String hostname, String nodeName, String itemId) throws Exception {
@@ -162,7 +153,10 @@ public class TestRestApi extends TestPubSubAbstract {
 		command.addChild(ElementFactory.create("node", nodeName, null));
 		command.addChild(ElementFactory.create("item-id", itemId, null));
 
-		executeHttpApiRequest(hostname, "delete-item", command);
+		Element result = executeHttpApiRequest(hostname, "delete-item", command);
+		assertNotNull(result);
+
+		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
 	}
 
 	/** This is not available in HTTP API - we are doing this using PubSub protocol */
@@ -190,47 +184,21 @@ public class TestRestApi extends TestPubSubAbstract {
 		assertTrue("Configuration of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
 	}
 
-	private String executeHttpApiRequest(String hostname, String action, Element command) throws IOException, XMLException {
-		HttpHost target = new HttpHost( hostname, Integer.parseInt( getHttpPort() ), "http" );
-		HttpPost postRequest = new HttpPost( "/rest/pubsub/" + pubsubJid + "/" + action);
-		postRequest.addHeader( "Api-Key", getApiKey() );
+	protected Element executeHttpApiRequest(String hostname, String action, Element command)
+			throws XMLException, IOException {
+		String result = executeHttpApiRequest(hostname, action, command.getAsString(), "application/xml");
+		Element response = parseXML(result);
+		assertNotNull(response);
+		assertEquals("result", response.getName());
 
-		StringEntity entity = new StringEntity( command.getAsString() );
-		entity.setContentType( "application/xml" );
-		postRequest.setEntity( entity );
-
-		HttpResponse response = null;
-		try {
-			response = httpClient.execute( target, postRequest, localContext );
-		} catch ( Exception ex ) {
-			fail( ex );
-		}
-
-		if ( response == null ){
-			Assert.fail( "Request response not received" );
-			return null;
-		}
-
-		String responseContent = response.getEntity() != null
-				? inputStreamToString( response.getEntity().getContent() ) : "";
-		Assert.assertEquals( response.getStatusLine().getStatusCode(), 200 );
-
-		boolean responseContains = responseContent.toLowerCase().contains( "Operation successful".toLowerCase() );
-		log("got response:" + responseContent);
-		Assert.assertTrue( responseContains, "Publishing was successful" );
-
-		return responseContent;
+		return response;
 	}
 
-	private String inputStreamToString( InputStream is ) throws IOException {
-		Reader reader = new InputStreamReader( is );
-		StringBuilder sb = new StringBuilder();
-		char[] buf = new char[ 1024 ];
-		int read = 0;
-		while ( ( read = reader.read( buf ) ) >= 0 ) {
-			sb.append( buf, 0, read );
-		}
-		return sb.toString();
+	protected static void assertCDataEquals(String expected, Element result, String[] path) throws XMLException {
+		assertNotNull(result);
+		Element node = result.findChild(path);
+		assertNotNull(node);
+		assertEquals(expected, node.getValue());
 	}
 
 }

@@ -42,7 +42,7 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 /**
- * TestPubSub and TestRestApi execute simialar tests however in extended form.
+ * TestPubSub and TestRestApiUsingXML execute simialar tests however in extended form.
  * I think we can drop this test.
  *
  * Created by andrzej on 27.03.2016.
