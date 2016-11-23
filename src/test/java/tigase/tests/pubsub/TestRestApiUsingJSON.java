@@ -148,6 +148,21 @@ public class TestRestApiUsingJSON
 		assertValueEquals("Operation successful", result, new String[] { "Note" });
 	}
 
+	@Override
+	protected void retrieveUserSubscriptions(String hostname, BareJID userJid, String nodePattern,
+											 ResultCallback<List<String>> callback) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("jid", userJid.toString());
+		if (nodePattern != null) {
+			data.put("node-pattern", nodePattern);
+		}
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "retrieve-user-subscriptions", data);
+		assertNotNull(result);
+
+		callback.finished((List<String>) result.get("nodes"));
+	}
+
 	/** This is not available in HTTP API - we are doing this using PubSub protocol */
 	public void configureNode(String hostname, String nodeName, String parentNode) throws JaxmppException, InterruptedException {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);

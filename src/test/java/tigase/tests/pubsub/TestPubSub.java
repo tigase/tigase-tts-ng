@@ -19,12 +19,15 @@
  */
 package tigase.tests.pubsub;
 
+import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
+import tigase.jaxmpp.core.client.xmpp.forms.TextMultiField;
 import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
@@ -33,9 +36,12 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
+import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 /**
@@ -236,6 +242,47 @@ public class TestPubSub extends TestPubSubAbstract {
 		});
 		mutex.waitFor(10 * 1000, "retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
 		assertTrue(mutex.isItemNotified("retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid()));
+	}
+
+	@Override
+	protected void retrieveUserSubscriptions(String hostname, BareJID user, String nodePattern, ResultCallback<List<String>> callback)
+			throws Exception {
+		Jaxmpp jaxmpp = jaxmpps.get(hostname);
+
+		IQ iq = IQ.create();
+		iq.setTo(pubsubJid);
+
+		JabberDataElement x = new JabberDataElement(XDataType.submit);
+		x.addJidSingleField("jid", JID.jidInstance(user));
+		x.addTextSingleField("node-pattern", nodePattern);
+
+		Element command = ElementFactory.create("command", null, "http://jabber.org/protocol/commands");
+		command.setAttribute("node", "retrieve-user-subscriptions");
+		command.setAttribute("action", "execute");
+
+		command.addChild(x);
+
+		iq.addChild(command);
+
+		sendAndWait(jaxmpp, iq, new AsyncCallback() {
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				JabberDataElement data = new JabberDataElement(responseStanza.findChild(new String[] { "iq", "command", "x" }));
+				TextMultiField field = data.getField("nodes");
+				assertNotNull(field);
+				callback.finished(Arrays.asList(field.getFieldValue()));
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+
+			}
+		});
 	}
 
 }

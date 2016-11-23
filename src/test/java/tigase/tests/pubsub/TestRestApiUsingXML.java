@@ -33,8 +33,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.xml.XMLUtils;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.testng.AssertJUnit.*;
 
@@ -157,6 +160,27 @@ public class TestRestApiUsingXML
 		assertNotNull(result);
 
 		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+	}
+
+	@Override
+	protected void retrieveUserSubscriptions(String hostname, BareJID user, String nodePattern, ResultCallback<List<String>> callback)
+			throws Exception {
+		Element command = ElementFactory.create("data");
+		command.addChild(ElementFactory.create("jid", user.toString(), null));
+		if (nodePattern != null) {
+			command.addChild(ElementFactory.create("node-pattern", nodePattern, null));
+		}
+
+		Element result = executeHttpApiRequest(hostname, "retrieve-user-subscriptions", command);
+		assertNotNull(result);
+
+		callback.finished(result.getFirstChild("nodes").getChildren().stream().map( valueEl -> {
+			try {
+				return XMLUtils.unescape(valueEl.getValue());
+			} catch (XMLException ex) {
+				return null;
+			}
+		}).collect(Collectors.toList()));
 	}
 
 	/** This is not available in HTTP API - we are doing this using PubSub protocol */

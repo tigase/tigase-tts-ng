@@ -63,6 +63,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 	protected abstract void publishItemToNode(String hostname, BareJID publisher, String node, String itemId, Element payload) throws Exception;
 	protected abstract void retrieveItemFromNode(String hostname, String node, String itemId, ResultCallback<Element> callback) throws Exception;
 	protected abstract void retractItemFromNode(String hostname, String node, String itemId) throws Exception;
+	protected abstract void retrieveUserSubscriptions(String hostname, BareJID userJid, String nodePattern, ResultCallback<List<String>> callback) throws Exception;
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -241,6 +242,28 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 				assertTrue(mutex.isItemNotified(waitedFor));
 			}
 			jaxmpps.values().forEach(jaxmpp1 -> jaxmpp1.getEventBus().remove(handler) );
+		}
+	}
+
+	@Test(dependsOnMethods = { "publishItemsToNodes" })
+	public void retrieveUserSubscriptions() throws Exception {
+		for (String hostname : getInstanceHostnames()) {
+			NodeInfo ni = createdNodes.get(hostname);
+			BareJID user = jaxmpps.get(hostname).getSessionObject().getUserBareJid();
+			retrieveUserSubscriptions(hostname, user, null, (List<String> result) -> {
+				assertTrue(result.contains(ni.getNode()));
+			});
+		}
+	}
+
+	@Test(dependsOnMethods = { "publishItemsToNodes" })
+	public void retrieveUserSubscriptionsWithRegex() throws Exception {
+		for (String hostname : getInstanceHostnames()) {
+			NodeInfo ni = createdNodes.get(hostname);
+			BareJID user = jaxmpps.get(hostname).getSessionObject().getUserBareJid();
+			retrieveUserSubscriptions(hostname, user, "(?!" + ni.getNode() + ")", (List<String> result) -> {
+				assertTrue(!result.contains(ni.getNode()));
+			});
 		}
 	}
 
