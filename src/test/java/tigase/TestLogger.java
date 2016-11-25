@@ -18,10 +18,10 @@
  */
 package tigase;
 
+import org.testng.Reporter;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import org.testng.Reporter;
 
 /**
  *
@@ -35,8 +35,18 @@ public class TestLogger {
 		log( s, true );
 	}
 
+	public static void log(String s, Object[] params) {
+		log( s, true, params );
+	}
+
 	public static void log(String s, boolean newline) {
+		log(s, newline, null);
+	}
+	public static void log(String s, boolean newline, Object[] params) {
 		String date = dt.format( new Date() ) + " | ";
+		if (params != null) {
+			s = java.text.MessageFormat.format(s, params);
+		}
 		System.out.println( date + s );
 		Reporter.log( date + s + (newline ? "\n" : ""));
 //		Reporter.log( escapeHtml4( s ) );

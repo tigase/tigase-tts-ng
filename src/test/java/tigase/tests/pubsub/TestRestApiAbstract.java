@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import static tigase.TestLogger.log;
 /**
  * Created by andrzej on 20.11.2016.
  */
@@ -80,6 +81,9 @@ public abstract class TestRestApiAbstract extends TestPubSubAbstract {
 
 	protected String executeHttpApiRequest(String hostname, String action, String command, String contentType) throws IOException,
 																								   XMLException {
+		log("on {0} executing action {1} with content type {2} and payload:\n{3}",
+					new Object[]{hostname, action, contentType, command});
+
 		HttpHost target = new HttpHost(hostname, Integer.parseInt(getHttpPort() ), "http" );
 		HttpPost postRequest = new HttpPost("/rest/pubsub/" + pubsubJid + "/" + action);
 		postRequest.addHeader( "Api-Key", getApiKey() );
@@ -102,6 +106,10 @@ public abstract class TestRestApiAbstract extends TestPubSubAbstract {
 
 		String responseContent = response.getEntity() != null
 								 ? inputStreamToString( response.getEntity().getContent() ) : "";
+
+		log("from {0} for action {1} got result code {2} and payload\n{3}",
+			new Object[]{hostname, action, response.getStatusLine().getStatusCode(), responseContent});
+
 		Assert.assertEquals( response.getStatusLine().getStatusCode(), 200 );
 
 		return responseContent;
