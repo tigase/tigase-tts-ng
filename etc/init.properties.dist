@@ -1,0 +1,50 @@
+--vhost-disable-dns-check = true
+--virt-hosts = localhost,a.localhost:clientCertCA=root_ca.pem:clientCertRequired=true
+
+config-type = '--gen-config-def'
+trusted = [ 'admin@localhost', 'http@{clusterNode}' ]
+admins = [ 'admin@localhost' ]
+
+# basic-conf is removed in 7.2.0!
+#basic-conf/logging/java.util.logging.FileHandler.limit=100000000
+#basic-conf/logging/java.util.logging.FileHandler.count=20
+#basic-conf/logging/.level=ALL
+
+dataSource {
+    default () {
+        uri = 'jdbc://server/database'
+    }
+}
+
+msgRepository {
+    user-store-limit-enable = true
+}
+
+c2s {
+    'urn:xmpp:sm:3' () { }
+}
+
+sess-man {
+    amp () {
+        msg-pubsub-jid = 'pubsub.zeus'
+	    msg-pubsub-node = 'test'
+	    msg_pubsub-publisher = 'sess-man@mbp-andrzej.local'
+    }
+    'jabber:iq:register' () {}
+    message-archive () {
+        msg-archive-paths = [ '-/message/result[urn:xmpp:mam:1]' '/message/body', '/message/subject' ]
+    }
+}
+
+http () {
+    api-keys = [ 'test123' ]
+}
+pubsub () {
+    persistent-pep = true
+}
+muc () {
+}
+message-archive () {
+    tags-support = true
+}
+

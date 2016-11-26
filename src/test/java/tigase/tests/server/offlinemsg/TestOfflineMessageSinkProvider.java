@@ -36,6 +36,8 @@ import tigase.tests.Mutex;
 
 import java.util.Date;
 
+import static org.testng.AssertJUnit.assertTrue;
+
 public class TestOfflineMessageSinkProvider extends AbstractTest {
 
 	@Test(groups = { "Offline Message" }, description = "Offline Message Sink Provider")
@@ -54,6 +56,8 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 		// final JID publisherJID = JID.jidInstance("sess-man", "coffeebean");
 
 		ownerJaxmpp.login(true);
+
+		assertTrue(ownerJaxmpp.isConnected());
 
 		PubSubModule pubSub = ownerJaxmpp.getModule(PubSubModule.class);
 		// pubSub.createNode(pubSubJID, nodeName, new PubSubAsyncCallback() {
