@@ -21,15 +21,12 @@
  */
 package tigase.tests;
 
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static org.testng.Assert.assertTrue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.connector.ConnectorWrapper;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
@@ -37,6 +34,18 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.j2se.ConnectionConfiguration;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.jaxmpp.j2se.connectors.websocket.WebSocketConnector;
+
+import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
+import java.util.Random;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  *
@@ -61,13 +70,17 @@ public class Test3305 extends AbstractTest {
 	
 	@AfterMethod
 	public void cleanUp() throws Exception {
-		if (userJaxmpp2 != null)
+		if (userJaxmpp2 != null) {
 			userJaxmpp2.disconnect(true);
+		}
+		if (!userJaxmpp1.isConnected()) {
+			userJaxmpp1.login(true);
+		}
 		removeUserAccount(userJaxmpp1);
 	}	
 	
-	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 3")
-	public void testWebSocketConnectivity() throws Exception {
+	@Test
+	public void testWebSocket_Connectivity() throws Exception {
 		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
 		userJaxmpp2.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
 		userJaxmpp2.getConnectionConfiguration().setBoshService(wsUri);
@@ -100,5 +113,159 @@ public class Test3305 extends AbstractTest {
 		Thread.sleep(1000);
 		assertTrue(mutex.isItemNotified("websocket:message:to:" + body));
 	}
-	
+
+	@Test
+	public void testWebSocket_TwoWebSocketTextFramesInSingleTcpFrame() throws Exception {
+		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
+		userJaxmpp1.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
+		userJaxmpp1.getConnectionConfiguration().setBoshService(wsUri);
+		userJaxmpp2.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
+		userJaxmpp2.getConnectionConfiguration().setBoshService(wsUri);
+		userJaxmpp1.login(true);
+		userJaxmpp2.login(true);
+
+		assertTrue(userJaxmpp1.isConnected());
+		assertTrue(userJaxmpp2.isConnected());
+		Mutex mutex = new Mutex();
+
+		userJaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+											 new MessageModule.MessageReceivedHandler() {
+
+												 @Override
+												 public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+													 try {
+														 mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
+													 } catch (XMLException ex) {
+														 Logger.getLogger(Test3305.class.getName()).log(Level.SEVERE, null, ex);
+													 }
+												 }
+											 });
+
+		String body = UUID.randomUUID().toString();
+		Message msg1 = Message.createMessage();
+		msg1.setTo(ResourceBinderModule.getBindedJID(userJaxmpp2.getSessionObject()));
+		msg1.setBody("First-" + body);
+
+		Message msg2 = Message.createMessage();
+		msg2.setTo(ResourceBinderModule.getBindedJID(userJaxmpp2.getSessionObject()));
+		msg2.setBody(body);
+
+		ByteBuffer frame1 = generateTextFrame(msg1.getAsString());
+		ByteBuffer frame2 = generateTextFrame(msg2.getAsString());
+		ByteBuffer tmp = ByteBuffer.allocate(frame1.remaining()+frame2.remaining());
+		tmp.put(frame1);
+		tmp.put(frame2);
+		tmp.flip();
+
+		byte[] data = new byte[tmp.remaining()];
+		tmp.get(data);
+		sendUnwrappedData(userJaxmpp1, data);
+
+		mutex.waitFor(20 * 1000, "websocket:message:to:" + body);
+		Thread.sleep(1000);
+		assertTrue(mutex.isItemNotified("websocket:message:to:" + body));
+	}
+
+	@Test
+	public void testWebSocket_TwoFramesPingAndTextFrameInSingleTcpFrame() throws Exception {
+		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
+		userJaxmpp1.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
+		userJaxmpp1.getConnectionConfiguration().setBoshService(wsUri);
+		userJaxmpp2.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
+		userJaxmpp2.getConnectionConfiguration().setBoshService(wsUri);
+		userJaxmpp1.login(true);
+		userJaxmpp2.login(true);
+
+		assertTrue(userJaxmpp1.isConnected());
+		assertTrue(userJaxmpp2.isConnected());
+		Mutex mutex = new Mutex();
+
+		userJaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+											 new MessageModule.MessageReceivedHandler() {
+
+												 @Override
+												 public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+													 try {
+														 mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
+													 } catch (XMLException ex) {
+														 Logger.getLogger(Test3305.class.getName()).log(Level.SEVERE, null, ex);
+													 }
+												 }
+											 });
+
+		String body = UUID.randomUUID().toString();
+
+		Message msg2 = Message.createMessage();
+		msg2.setTo(ResourceBinderModule.getBindedJID(userJaxmpp2.getSessionObject()));
+		msg2.setBody(body);
+
+		ByteBuffer frame1 = ByteBuffer.allocate(40);
+		frame1.put((byte) 0x89);
+		frame1.put((byte) 0x84);
+		byte[] payload = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+		byte[] mask = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+		frame1.put(mask);
+		for (int i=0; i<payload.length; i++) {
+			frame1.put((byte) (payload[i] ^ mask[i]));
+		}
+		frame1.flip();
+		ByteBuffer frame2 = generateTextFrame(msg2.getAsString());
+		ByteBuffer tmp = ByteBuffer.allocate(frame1.remaining()+frame2.remaining());
+		tmp.put(frame1);
+		tmp.put(frame2);
+		tmp.flip();
+
+		byte[] data = new byte[tmp.remaining()];
+		tmp.get(data);
+		sendUnwrappedData(userJaxmpp1, data);
+
+		mutex.waitFor(20 * 1000, "websocket:message:to:" + body);
+		Thread.sleep(1000);
+		assertTrue(mutex.isItemNotified("websocket:message:to:" + body));
+	}
+
+	private ByteBuffer generateTextFrame(String input) {
+		try {
+			Random random = new SecureRandom();
+			byte[] mask = new byte[4];
+			byte[] buffer = input.getBytes("UTF-8");
+			// prepare WebSocket header according to Hybi specification
+			int size = buffer.length;
+			random.nextBytes(mask);
+			byte maskedLen = (byte) 0x80;
+			ByteBuffer bbuf = ByteBuffer.allocate(4096);
+			bbuf.put((byte) 0x81);
+			if (size <= 125) {
+				maskedLen |= (byte) size;
+				bbuf.put(maskedLen);
+			} else if (size <= 0xFFFF) {
+				maskedLen |= (byte) 0x7E;
+				bbuf.put(maskedLen);
+				bbuf.putShort((short) size);
+			} else {
+				maskedLen |= (byte) 0x7F;
+				bbuf.put(maskedLen);
+				bbuf.putLong(size);
+			}
+			bbuf.put(mask);
+
+			for (int i = 0; i < buffer.length; i++) {
+				buffer[i] = (byte) (buffer[i] ^ mask[i % 4]);
+			}
+			bbuf.put(buffer, 0, buffer.length);
+			bbuf.flip();
+			return bbuf;
+		} catch (Exception e) {
+		}
+		return null;
+	}
+
+	private void sendUnwrappedData(Jaxmpp jaxmpp, byte[] data) throws Exception {
+		WebSocketConnector webSocketConnector = (WebSocketConnector) ((ConnectorWrapper) jaxmpp.getConnector()).getConnector();
+		Field f = WebSocketConnector.class.getDeclaredField("writer");
+		f.setAccessible(true);
+		OutputStream writer = (OutputStream) f.get(webSocketConnector);
+		writer.write(data);
+		writer.flush();
+	}
 }
