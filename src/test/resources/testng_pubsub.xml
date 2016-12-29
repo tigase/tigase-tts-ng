@@ -11,6 +11,11 @@
 			<class name="tigase.tests.pubsub.TestRemovalOfPepNodeOnUserRemoval" />
 		</classes>
 	</test>
+	<test name="MAM: Support for XEP-0313 for PubSub - #4733">
+		<classes>
+			<class name="tigase.tests.pubsub.TestPubSubMAM" />
+		</classes>
+	</test>
 	<test name="REST: Node and item manipulation using REST API - XML - #4229, #4728">
 		<classes>
 			<class name="tigase.tests.pubsub.TestRestApiUsingXML"/>
