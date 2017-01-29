@@ -21,32 +21,19 @@
  */
 package tigase.tests;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import org.testng.AssertJUnit;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
-import tigase.jaxmpp.j2se.Jaxmpp;
-
-import static tigase.TestLogger.log;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementBuilder;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
-import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.RetrieveItemsAsyncCallback;
@@ -57,7 +44,14 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
-import tigase.xml.DefaultElementFactory;
+import tigase.jaxmpp.j2se.Jaxmpp;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class Test3544 extends AbstractTest {
 	
@@ -209,7 +203,7 @@ public class Test3544 extends AbstractTest {
 
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+				mutex.notify("discovered:1:error:" + error);
 			}
 
 			@Override
@@ -218,8 +212,34 @@ public class Test3544 extends AbstractTest {
 			}
 		});
 		mutex.waitFor(10 * 1000, "discovered:1:items:1", "discovered:1:item:http://jabber.org/protocol/geoloc");
-		assertTrue(mutex.isItemNotified("discovered:1:items:1"));	
-		assertTrue(mutex.isItemNotified("discovered:1:item:http://jabber.org/protocol/geoloc"));
+		if (mutex.isItemNotified("discovered:1:error:" + XMPPException.ErrorCondition.resource_constraint)) {
+			jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1JID), new DiscoveryModule.DiscoItemsAsyncCallback() {
+
+				@Override
+				public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items) throws XMLException {
+					for (DiscoveryModule.Item item : items) {
+						mutex.notify("discovered:1.2:item:" + item.getNode());
+					}
+					mutex.notify("discovered:1.2:items:"+items.size());
+				}
+
+				@Override
+				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+					mutex.notify("discovered:1.2:error:" + error);
+				}
+
+				@Override
+				public void onTimeout() throws JaxmppException {
+					throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+				}
+			});
+			mutex.waitFor(10 * 1000, "discovered:1.2:items:1", "discovered:1.2:item:http://jabber.org/protocol/geoloc");
+			assertTrue(mutex.isItemNotified("discovered:1.2:items:1"));
+			assertTrue(mutex.isItemNotified("discovered:1.2:item:http://jabber.org/protocol/geoloc"));
+		} else {
+			assertTrue(mutex.isItemNotified("discovered:1:items:1"));
+			assertTrue(mutex.isItemNotified("discovered:1:item:http://jabber.org/protocol/geoloc"));
+		}
 		
 		removeUserAccount(jaxmpp1);
 		jaxmpp1 = null;
@@ -238,7 +258,7 @@ public class Test3544 extends AbstractTest {
 
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+				mutex.notify("discovered:2:error:" + error);
 			}
 
 			@Override
@@ -247,7 +267,8 @@ public class Test3544 extends AbstractTest {
 			}
 		});
 		mutex.waitFor(10 * 1000, "discovered:2:items:0");
-		assertTrue(mutex.isItemNotified("discovered:2:items:0"));	
+		assertTrue(mutex.isItemNotified("discovered:2:items:0") || mutex.isItemNotified("discovered:2:error:" +
+																								XMPPException.ErrorCondition.resource_constraint));
 		assertFalse(mutex.isItemNotified("discovered:2:item:http://jabber.org/protocol/geoloc"));
 	}
 }
