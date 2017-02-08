@@ -26,9 +26,9 @@ c2s {
 
 sess-man {
     amp () {
-        msg-pubsub-jid = 'pubsub.zeus'
+      msg-pubsub-jid = 'pubsub.localhost'
 	    msg-pubsub-node = 'test'
-	    msg_pubsub-publisher = 'sess-man@mbp-andrzej.local'
+	    msg-pubsub-publisher = 'sess-man@localhost.local'
     }
     'jabber:iq:register' () {}
     message-archive () {
