@@ -180,11 +180,15 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 			sendAndWait( userJaxmpp, userJaxmpp, msg);
 		}
 
+		Thread.sleep(1000);
+
 		IQ iq = IQ.createIQ();
 		iq.setType(StanzaType.set);
 		Element tagsEl = ElementFactory.create("tags", null, "http://tigase.org/protocol/archive#query");
 		iq.addChild(tagsEl);
 		tagsEl.setAttribute("like", "#Good");
+
+		Thread.sleep(1000);
 
 		userJaxmpp.send(iq, new AsyncCallback() {
 

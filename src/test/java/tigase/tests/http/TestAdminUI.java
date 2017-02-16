@@ -240,7 +240,8 @@ public class TestAdminUI extends AbstractTest {
 		enabled = form.getInputByName("Account enabled");
 		assertEquals(enabled.isChecked(), false);
 		enabled.setChecked(true);
-		
+
+		assertFalse(userJaxmpp1.isConnected());
 		try {
 			userJaxmpp1.getEventBus().addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, new AuthModule.AuthFailedHandler() {
 
@@ -254,7 +255,8 @@ public class TestAdminUI extends AbstractTest {
 				
 			});
 			userJaxmpp1.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 		assertFalse(userJaxmpp1.isConnected());				
 		
 		button = form.getInputByName("submit");		
@@ -339,11 +341,13 @@ public class TestAdminUI extends AbstractTest {
 		assertEquals(form.getInputByName("Offline messages: 2").getValueAttribute(), "Offline messages: 2");
 		DomNodeList<HtmlElement> tables = form.getElementsByTagName("table");
 		//DomNodeList<HtmlElement> tbody = tables.get(0).getElementsByTagName("tbody");
-		DomNodeList<HtmlElement> trs = tables.get(0).getElementsByTagName("tr");
-		if (!trs.isEmpty()) {
-			// in some cases this might not be saved to database yet
-			Iterator<DomElement> tds = trs.get(0).getChildElements().iterator();
-			assertEquals(tds.next().asText(), userJid1Resource);
+		if (!tables.isEmpty()) {
+			DomNodeList<HtmlElement> trs = tables.get(0).getElementsByTagName("tr");
+			if (!trs.isEmpty()) {
+				// in some cases this might not be saved to database yet
+				Iterator<DomElement> tds = trs.get(0).getChildElements().iterator();
+				assertEquals(tds.next().asText(), userJid1Resource);
+			}
 		}
 	}
 	

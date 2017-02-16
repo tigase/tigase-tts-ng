@@ -21,6 +21,7 @@
  */
 package tigase.tests.util;
 
+import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -29,7 +30,6 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xmpp.forms.AbstractField;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
-import tigase.jaxmpp.core.client.xmpp.forms.ListMultiField;
 import tigase.jaxmpp.core.client.xmpp.forms.TextMultiField;
 import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
@@ -38,10 +38,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 
-import java.util.Arrays;
 import java.util.logging.Level;
-
-import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertTrue;
 import static tigase.TestLogger.log;
@@ -66,7 +63,7 @@ public class RetrieveVersion extends AbstractTest {
 	private void retrieveVersion(String hostname) throws Exception, JaxmppException {
 		Jaxmpp adminJaxmpp = createJaxmppAdmin();
 		adminJaxmpp.getConnectionConfiguration().setServer(hostname);
-		adminJaxmpp.login();
+		adminJaxmpp.login(true);
 		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
 		if ( adminJaxmpp.isConnected() ){
 
