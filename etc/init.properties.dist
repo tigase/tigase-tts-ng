@@ -1,6 +1,8 @@
 --vhost-disable-dns-check = true
 --virt-hosts = localhost,a.localhost:clientCertCA=root_ca.pem:clientCertRequired=true
 
+--tigase-primary-address = localhost.local
+
 config-type = '--gen-config-def'
 trusted = [ 'admin@localhost', 'http@{clusterNode}' ]
 admins = [ 'admin@localhost' ]
