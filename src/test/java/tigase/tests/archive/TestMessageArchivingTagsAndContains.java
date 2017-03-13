@@ -108,7 +108,7 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 				.setStart(testStartDate).addTags(tagName);
 
 		retrieveArchivedCollections(userJaxmpp, id, crit);
-		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + userJID.toString() + ":" + start),
+		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + userJID.toString()),
 				"Retrieval of list of collections failed");
 		retrieveArchivedMessages(userJaxmpp, id, crit);
 		for (String msg : expectedMessages) {
@@ -149,7 +149,7 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 				.setStart(testStartDate).addContains(tagName);
 
 		retrieveArchivedCollections(userJaxmpp, id, crit);
-		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + userJID.toString() + ":" + start),
+		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + userJID.toString()),
 				"Retrieval of list of collections failed");
 		retrieveArchivedMessages(userJaxmpp, id, crit);
 		for (String msg : expectedMessages) {
@@ -257,7 +257,11 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 					@Override
 					protected void onCollectionReceived( ResultSet<Chat> chats ) throws XMLException {
 						for ( Chat item : chats.getItems() ) {
-							mutex.notify( "1:" + id + ":retriveCollection:received:" + item.getWithJid() + ":"+item.getStart() );
+							mutex.notify( "1:" + id + ":retriveCollection:received:" + item.getWithJid());
+						}
+						try {
+							Thread.sleep(100);
+						} catch (Exception ex) {
 						}
 						mutex.notify( "1:" + id + ":retriveCollection:received" );
 					}

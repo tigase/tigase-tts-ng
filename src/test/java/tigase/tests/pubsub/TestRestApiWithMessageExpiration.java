@@ -267,7 +267,7 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 
 		subscribeUser( pubSubModule, pubsubJID, JID.jidInstance( adminJID ), nodeName );
 
-		userRegularJaxmpp.disconnect();
+		userRegularJaxmpp.disconnect(true);
 		Thread.sleep( 5 * SECOND );
 
 		message = nextRnd().toLowerCase();
@@ -384,10 +384,14 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 		Element data = ElementFactory.create( "data" );
 		Element node = ElementFactory.create( "node", nodeid, null );
 		data.addChild( node );
-		Element itemid = ElementFactory.create( "item-id", itemId, null );
-		data.addChild( itemid );
-		Element expireat = ElementFactory.create( "expire-at", ( timestamp != null ? dtf.formatDateTime( timestamp ) : null ), null );
-		data.addChild( expireat );
+		if (itemId != null) {
+			Element itemid = ElementFactory.create("item-id", itemId, null);
+			data.addChild(itemid);
+		}
+		if (timestamp != null) {
+			Element expireat = ElementFactory.create("expire-at", (timestamp != null ? dtf.formatDateTime(timestamp) : null), null);
+			data.addChild(expireat);
+		}
 		Element entry = ElementFactory.create( "entry" );
 		if ( content != null ){
 			Element cnt = ElementFactory.create( "content" );

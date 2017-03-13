@@ -1,5 +1,5 @@
 --vhost-disable-dns-check = true
---virt-hosts = localhost,a.localhost:clientCertCA=root_ca.pem:clientCertRequired=true
+--virt-hosts = 'localhost,a.localhost:clientCertCA=root_ca.pem:clientCertRequired=true'
 
 --tigase-primary-address = localhost.local
 
@@ -42,7 +42,7 @@ sess-man {
 }
 
 http () {
-    api-keys = [ 'test123' ]
+    api-keys = [ 'test-api-key' ]
 }
 pubsub () {
     persistent-pep = true
