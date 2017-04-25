@@ -60,9 +60,7 @@ public class RetrieveStatistics extends AbstractTest {
 	}
 
 	private void retrieveStatistics(String hostname) throws JaxmppException, Exception {
-		Jaxmpp adminJaxmpp = createJaxmppAdmin();
-		adminJaxmpp.getConnectionConfiguration().setServer(hostname);
-		adminJaxmpp.login(true);
+		Jaxmpp adminJaxmpp = getAdminAccount().createJaxmpp().setHost(hostname).setConnected(true).build();
 		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
 		if ( adminJaxmpp.isConnected() ){
 

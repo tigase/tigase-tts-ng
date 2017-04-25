@@ -219,9 +219,10 @@ public class TestPubSubOld extends AbstractTest {
 
 	private void initConnections() throws JaxmppException {
 		for (String hostname : this.getInstanceHostnames()) {
-			Jaxmpp jaxmpp = createJaxmppAdmin(hostname);
-			jaxmpp.getModulesManager().register(new DiscoveryModule());
-			jaxmpp.login(true);
+			Jaxmpp jaxmpp = getAdminAccount().createJaxmpp().setHost(hostname).setConfigurator(jaxmpp1 -> {
+				jaxmpp1.getModulesManager().register(new DiscoveryModule());
+				return jaxmpp1;
+			}).setConnected(true).build();
 			jaxmpps.put(hostname, jaxmpp);
 		}
 	}

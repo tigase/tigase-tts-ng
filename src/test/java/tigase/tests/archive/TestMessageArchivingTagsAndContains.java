@@ -19,7 +19,6 @@
  */
 package tigase.tests.archive;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
@@ -30,6 +29,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.*;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -37,6 +37,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -52,16 +53,20 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 	Date testStartDate;
 	String expect;
 	String id;
-	BareJID userJID;
+	Account user;
 	Jaxmpp userJaxmpp;
 	final Mutex mutex = new Mutex();
 
 	@BeforeMethod
 	public void setUpTest() throws JaxmppException, InterruptedException {
 		testStartDate = new Date();
-		userJID = createUserAccount("user1");
-		userJaxmpp = createJaxmpp("user1", userJID);
-		userJaxmpp.login(true);
+
+		user = createAccount().setLogPrefix("user1").build();
+		userJaxmpp = user.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
+		
 		// enable message archiving to be sure it works
 		id = nextRnd().toLowerCase();
 		setArchiveSettings(userJaxmpp, id, true);
@@ -69,15 +74,7 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 		mutex.waitFor( 20 * 1000, expect );
 		assertTrue( mutex.isItemNotified( expect ), "Set archive for user error.");
 	}
-
-	@AfterMethod
-	public void cleanUpTest() throws JaxmppException, InterruptedException {
-		if ( !userJaxmpp.isConnected() ){
-			userJaxmpp.login( true );
-		}
-		removeUserAccount( userJaxmpp );
-	}
-
+	
 	@Test(description = "Support for storage of messages with tags and searching by tags")
 	public void testStorageAndQueryWithTags() throws Exception {
 		id = nextRnd().toLowerCase();
@@ -108,7 +105,7 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 				.setStart(testStartDate).addTags(tagName);
 
 		retrieveArchivedCollections(userJaxmpp, id, crit);
-		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + userJID.toString()),
+		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + user.getJid().toString()),
 				"Retrieval of list of collections failed");
 		retrieveArchivedMessages(userJaxmpp, id, crit);
 		for (String msg : expectedMessages) {
@@ -149,7 +146,7 @@ public class TestMessageArchivingTagsAndContains extends AbstractTest {
 				.setStart(testStartDate).addContains(tagName);
 
 		retrieveArchivedCollections(userJaxmpp, id, crit);
-		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + userJID.toString()),
+		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + user.getJid().toString()),
 				"Retrieval of list of collections failed");
 		retrieveArchivedMessages(userJaxmpp, id, crit);
 		for (String msg : expectedMessages) {

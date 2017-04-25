@@ -21,30 +21,9 @@
  */
 package tigase.tests;
 
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.j2se.Jaxmpp;
-import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
-
 /**
  * Created by andrzej on 17.09.2016.
  */
 public class AbstractJaxmppTest extends AbstractTest {
-
-	protected Jaxmpp createJaxmppInstance(BareJID user1JID) {
-		return createJaxmppInstance(user1JID, user1JID.getLocalpart());
-	}
-
-	protected Jaxmpp createJaxmppInstance(BareJID user1JID, String password) {
-		Jaxmpp jaxmpp1 = createJaxmpp("jaxmpp_");
-
-		if (user1JID != null)
-			jaxmpp1.getConnectionConfiguration().setUserJID(user1JID);
-		if (password != null)
-			jaxmpp1.getConnectionConfiguration().setUserPassword(password);
-
-		jaxmpp1.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
-
-		return jaxmpp1;
-	}
 
 }

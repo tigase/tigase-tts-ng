@@ -37,7 +37,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -50,6 +49,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.xml.J2seElement;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 import tigase.xml.DomBuilderHandler;
 import tigase.xml.SimpleParser;
 
@@ -75,29 +75,25 @@ public class TestSendingXmppStanzaUsingREST extends AbstractTest {
 	private static final String USER_PREFIX = "http_";
 	
 	private CloseableHttpClient httpClient;
-	private BareJID userJid;
+	private Account user;
 	private Jaxmpp userJaxmpp;
 	
 	@BeforeMethod
-	@Override
 	public void setUp() throws Exception {
-		super.setUp();	
-		Jaxmpp adminJaxmpp = createJaxmppAdmin();
         HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(
                 new AuthScope(target.getHostName(), target.getPort()),
-                new UsernamePasswordCredentials(adminJaxmpp.getSessionObject().getUserProperty(SessionObject.USER_BARE_JID).toString(), 
-						adminJaxmpp.getSessionObject().getUserProperty(SessionObject.PASSWORD)));
+                new UsernamePasswordCredentials(getAdminAccount().getJid().toString(),
+						getAdminAccount().getPassword()));
 		httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(5000).build()).build();
-		userJid = createUserAccount(USER_PREFIX);
-		userJaxmpp = createJaxmpp(USER_PREFIX, userJid);
+		user = createAccount().setLogPrefix(USER_PREFIX).build();
+		userJaxmpp = user.createJaxmpp().setConnected(true).build();
 	}
 	
 	@AfterMethod
 	public void cleanUp() throws Exception {
 		httpClient.close();
-		removeUserAccount(userJaxmpp);
 	}
 	
 	@Test(groups = { "HTTP - REST API" }, description = "Sending XMPP messages using HTTP REST API")
@@ -117,8 +113,7 @@ public class TestSendingXmppStanzaUsingREST extends AbstractTest {
 			}
 					
 		});
-		userJaxmpp.login(true);		
-		
+
 		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
 		HttpClientContext localContext = HttpClientContext.create();
 		AuthCache authCache = new BasicAuthCache();

@@ -19,10 +19,12 @@
  */
 package tigase.tests.server.offlinemsg;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.*;
+import tigase.jaxmpp.core.client.AsyncCallback;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -36,6 +38,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,33 +56,21 @@ public class TestOfflineMessagesLimit extends AbstractTest {
 
 	private static final String USER_PREFIX = "offline_";
 	
-	BareJID userJid1;
-	BareJID userJid2;
+	Account user1;
+	Account user2;
 	Jaxmpp userJaxmpp1;
 	Jaxmpp userJaxmpp2;
 	
 	@BeforeMethod
-	@Override
 	public void setUp() throws Exception {
-		super.setUp();		
-		userJid1 = createUserAccount(USER_PREFIX);
-		userJaxmpp1 = createJaxmpp(USER_PREFIX, userJid1);
-		userJid2 = createUserAccount(USER_PREFIX);
-		userJaxmpp2 = createJaxmpp(USER_PREFIX, userJid2);
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		userJaxmpp1 = user1.createJaxmpp().setConnected(true).build();
+		user2 = createAccount().setLogPrefix(USER_PREFIX).build();
+		userJaxmpp2 = user2.createJaxmpp().setConnected(true).build();
 	}
-	
-	@AfterMethod
-	public void cleanUp() throws Exception {
-		removeUserAccount(userJaxmpp1);
-		if (userJaxmpp2 != null) {
-			removeUserAccount(userJaxmpp2);
-		}
-	}	
 	
 	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 3")
 	public void testOfflineLimit1() throws Exception {
-		userJaxmpp1.login(true);
-		userJaxmpp2.login(true);
 		int limit = 3;
 		Mutex mutex = new Mutex();
 		setLimit(mutex, userJaxmpp2, limit);
@@ -88,8 +79,6 @@ public class TestOfflineMessagesLimit extends AbstractTest {
 	
 	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 5")
 	public void testOfflineLimit2() throws Exception {
-		userJaxmpp1.login(true);
-		userJaxmpp2.login(true);
 		int limit = 5;
 		Mutex mutex = new Mutex();
 		setLimit(mutex, userJaxmpp2, limit);
@@ -98,8 +87,6 @@ public class TestOfflineMessagesLimit extends AbstractTest {
 
 	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 0 - disabling offline storage")
 	public void testOfflineLimit3() throws Exception {
-		userJaxmpp1.login(true);
-		userJaxmpp2.login(true);
 		int limit = 0;
 		Mutex mutex = new Mutex();
 		setLimit(mutex, userJaxmpp2, limit);
@@ -108,8 +95,6 @@ public class TestOfflineMessagesLimit extends AbstractTest {
 	
 	@Test(groups = { "XMPP - Offline Messages" }, description = "Setting offline messages limit to 3 and removing limit")
 	public void testOfflineLimit4() throws Exception {
-		userJaxmpp1.login(true);
-		userJaxmpp2.login(true);
 		int limit = 3;
 		Mutex mutex = new Mutex();
 		setLimit(mutex, userJaxmpp2, limit);

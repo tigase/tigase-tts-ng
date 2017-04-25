@@ -19,15 +19,14 @@
  */
 package tigase.tests.archive;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.ChatItem;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.ChatResultSet;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.Criteria;
@@ -36,6 +35,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,33 +49,24 @@ import static org.testng.Assert.assertEquals;
 public class TestMessageArchivingRSM extends AbstractTest {
 	private final Mutex mutex = new Mutex();
 
-	private BareJID user1JID;
-	private BareJID user2JID;
+	private Account user1;
+	private Account user2;
 	private Jaxmpp jaxmppUser1;
 	private Jaxmpp jaxmppUser2;
 
 	@BeforeMethod
 	public void prepareTest() throws JaxmppException, InterruptedException {
-		user1JID = createUserAccount( "user" );
-		jaxmppUser1 = createJaxmpp( user1JID.getLocalpart(), user1JID );
-		jaxmppUser1.login( true );
+		user1 = createAccount().setLogPrefix("user").build();
+		jaxmppUser1 = user1.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
 
-		user2JID = createUserAccount( "user" );
-		jaxmppUser2 = createJaxmpp( user2JID.getLocalpart(), user2JID );
-		jaxmppUser2.login( true );
-	}
-
-	@AfterMethod
-	public void cleanUpTest() throws JaxmppException, InterruptedException {
-		if ( !jaxmppUser1.isConnected() ){
-			jaxmppUser1.login( true );
-		}
-		removeUserAccount( jaxmppUser1 );
-
-		if ( !jaxmppUser2.isConnected() ){
-			jaxmppUser2.login( true );
-		}
-		removeUserAccount( jaxmppUser2 );
+		user2 = createAccount().setLogPrefix("user").build();
+		jaxmppUser2 = user2.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
 	}
 
 	@Test
@@ -93,7 +84,7 @@ public class TestMessageArchivingRSM extends AbstractTest {
 		msgs.addAll(generateMessages(jaxmppUser2, jaxmppUser1, "Test message 2 -", 25));
 
 		// retrieving last 10 items
-		Criteria crit = new Criteria().setWith(JID.jidInstance(user2JID)).setStart(start).setLastPage(true).setLimit(10);
+		Criteria crit = new Criteria().setWith(JID.jidInstance(user2.getJid())).setStart(start).setLastPage(true).setLimit(10);
 		jaxmppUser1.getModule(MessageArchivingModule.class).retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
 
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {

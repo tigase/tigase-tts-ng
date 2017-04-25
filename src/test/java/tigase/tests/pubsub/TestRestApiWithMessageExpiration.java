@@ -36,7 +36,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.testng.Assert;
 import org.testng.annotations.*;
-import tigase.jaxmpp.core.client.*;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -47,11 +50,12 @@ import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.http.TestSendingXmppStanzaUsingREST;
+import tigase.tests.utils.Account;
+import tigase.tests.utils.PubSubNode;
 import tigase.util.DateTimeFormatter;
 
 import java.io.IOException;
@@ -76,30 +80,31 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 	private HttpHost target;
 	private HttpClientContext localContext;
 
-	BareJID adminJID;
 	Jaxmpp adminJaxmpp;
+	BareJID adminJID;
 
+	Account userRegular;
 	BareJID userRegularJID;
 	Jaxmpp userRegularJaxmpp;
 
 	final Mutex mutex = new Mutex();
 
-	@BeforeClass(dependsOnMethods = { "setUp" })
+	@BeforeClass
 	private void prepareAdmin() throws JaxmppException {
 
 		setLoggerLevel( Level.INFO, true);
 
-		adminJaxmpp = createJaxmppAdmin();
-		adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
-
-		addMessageListener( adminJaxmpp );
-
-		adminJaxmpp.login( true );
+		adminJaxmpp = getJaxmppAdmin();
+		adminJID = getAdminAccount().getJid();
+//
+//		addMessageListener( adminJaxmpp );
+//
+//		adminJaxmpp.login( true );
 
 		target = new HttpHost( getInstanceHostname(), Integer.parseInt( getHttpPort() ), "http" );
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
-		final Object adminBareJid = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.USER_BARE_JID );
-		final String adminPassword = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.PASSWORD );
+		final Object adminBareJid = getAdminAccount().getJid();//adminJaxmpp.getSessionObject().getUserProperty( SessionObject.USER_BARE_JID );
+		final String adminPassword = getAdminAccount().getPassword();//adminJaxmpp.getSessionObject().getUserProperty( SessionObject.PASSWORD );
 		final AuthScope authScope = new AuthScope( target.getHostName(), target.getPort() );
 		log( "authScope: " + authScope.toString() );
 		final UsernamePasswordCredentials userPass = new UsernamePasswordCredentials( adminBareJid.toString(), adminPassword );
@@ -124,21 +129,14 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 
 	@BeforeMethod
 	public void prepareTest() throws JaxmppException, InterruptedException {
-		userRegularJaxmpp = prepareUser( getDomain(), "user_regular" );
-		userRegularJID = userRegularJaxmpp.getSessionObject().getUserBareJid();
+		userRegular = createAccount().setLogPrefix("user").setUsername("user_regular" + nextRnd()).setDomain(getDomain()).build();
+		userRegularJID = userRegular.getJid();
+		userRegularJaxmpp = userRegular.createJaxmpp().setConfigurator(jaxmpp -> {
+			addMessageListener(jaxmpp);
+			return jaxmpp;
+		}).setConnected(true).build();
 	}
-
-	private Jaxmpp prepareUser( String domain, String username )
-			throws JaxmppException, InterruptedException {
-		BareJID tmp = createUserAccount( "user", username + nextRnd().toLowerCase(), domain );
-		Jaxmpp cnt = createJaxmpp( tmp.getLocalpart(), tmp );
-
-		addMessageListener( cnt );
-
-		cnt.login( true );
-		return cnt;
-	}
-
+	
 	private void addMessageListener( Jaxmpp cnt ) {
 		cnt.getEventBus().addHandler( MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
 																	new MessageModule.MessageReceivedHandler() {
@@ -158,25 +156,9 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 
 																	} );
 	}
-
-	@AfterMethod
-	public void cleanUpTest() throws JaxmppException, InterruptedException {
-		tearDownUser( userRegularJaxmpp );
-
-	}
-
-	private void tearDownUser( Jaxmpp user ) throws JaxmppException, InterruptedException {
-		if ( null != user ){
-			if ( !user.isConnected() ){
-				user.login( true );
-			}
-			removeUserAccount( user );
-		}
-	}
-
+	
 	@AfterClass
 	private void tearDownAdmin() throws JaxmppException, IOException {
-		adminJaxmpp.disconnect();
 		httpClient.close();
 	}
 
@@ -196,32 +178,11 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 	public void testMessageExpiration() throws Exception {
 
 		final String nodeName = "node_" + nextRnd().toLowerCase();
-
+		
 		BareJID pubsubJID = BareJID.bareJIDInstance( "pubsub." + getDomain( 0 ) );
-		PubSubModule pubSubModule = adminJaxmpp.getModule( PubSubModule.class );
+		PubSubNode pubSubNode = pubSubManager.createNode(nodeName).setJaxmpp(adminJaxmpp).build();
 
-		pubSubModule.createNode( pubsubJID, nodeName, new AsyncCallback() {
-
-			@Override
-			public void onError( Stanza responseStanza, XMPPException.ErrorCondition error ) throws JaxmppException {
-				mutex.notify( nodeName + ":create_node" );
-			}
-
-			@Override
-			public void onSuccess( Stanza responseStanza ) throws JaxmppException {
-				mutex.notify( nodeName + ":create_node:success" );
-				mutex.notify( nodeName + ":create_node" );
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify( nodeName + ":create_node" );
-			}
-		} );
-
-		mutex.waitFor( 30 * 1000, nodeName + ":create_node" );
-		Assert.assertTrue( mutex.isItemNotified( nodeName + ":create_node:success" ), "PubSub node " + nodeName + " not created" );
-
+		PubSubModule pubSubModule = adminJaxmpp.getModule(PubSubModule.class);
 		subscribeUser( pubSubModule, pubsubJID, JID.jidInstance( userRegularJID ), nodeName );
 
 		// publishing normal message (to online)
@@ -289,28 +250,9 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 		Assert.assertTrue( mutex.isItemNotified( adminJID + ":message:received:content_" + message ),
 											 "User: " + adminJID + " should have received message: " + message);
 
-		pubSubModule.deleteNode( pubsubJID, nodeName, new AsyncCallback() {
 
-			@Override
-			public void onError( Stanza responseStanza, XMPPException.ErrorCondition error ) throws JaxmppException {
-				mutex.notify( nodeName + ":delete_node" );
-			}
-
-			@Override
-			public void onSuccess( Stanza responseStanza ) throws JaxmppException {
-				mutex.notify( nodeName + ":delete_node:success" );
-				mutex.notify( nodeName + ":delete_node" );
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify( nodeName + ":delete_node" );
-			}
-		} );
-
-		mutex.waitFor( 10 * 1000, nodeName + ":delete_node" );
-		Assert.assertTrue( mutex.isItemNotified( nodeName + ":delete_node:success" ), "Node created" );
-
+		// This may be skipped as AbstractTest class will take care of this
+		//pubSubManager.deleteNode(pubSubNode);
 	}
 
 	private void subscribeUser( PubSubModule pubSubModule, BareJID pubsubJID, JID user, final String nodeName ) throws InterruptedException, JaxmppException {

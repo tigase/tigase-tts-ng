@@ -138,8 +138,7 @@ public class TestServerMonitoring extends AbstractTest {
 	@Test(groups = { "Monitor" }, description = "Tigase XMPP server monitoring")
 	public void testTigaseXMPPServerMonitoring() throws Exception {
 		final Mutex mutex = new Mutex();
-		Jaxmpp jaxmpp = createJaxmppAdmin();
-		jaxmpp.login(true);
+		Jaxmpp jaxmpp = getJaxmppAdmin();
 
 		AdHocCommansModule adHoc = jaxmpp.getModule(AdHocCommansModule.class);
 		final String msgUID = "test-" + nextRnd();
@@ -179,7 +178,6 @@ public class TestServerMonitoring extends AbstractTest {
 		Assert.assertTrue(foundPattern, "Mail with notification not received");
 
 		disableTaskConfig(monitorTaskJID, adHoc);
-		jaxmpp.disconnect(true);
 	}
 
 }

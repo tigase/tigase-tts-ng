@@ -19,10 +19,9 @@
  */
 package tigase.tests.server;
 
-import org.testng.annotations.AfterMethod;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.ConnectorWrapper;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -36,6 +35,7 @@ import tigase.jaxmpp.j2se.connectors.websocket.WebSocketConnector;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.server.offlinemsg.TestOfflineMessagesLimit;
+import tigase.tests.utils.Account;
 
 import java.io.OutputStream;
 import java.lang.reflect.Field;
@@ -56,31 +56,19 @@ public class TestWebSocketConnectivity extends AbstractTest {
 
 	private static final String USER_PREFIX = "ws_";
 	
-	BareJID userJid1;
+	Account user1;
 	Jaxmpp userJaxmpp1;
 	Jaxmpp userJaxmpp2;
 	
 	@BeforeMethod
-	@Override
 	public void setUp() throws Exception {
-		super.setUp();		
-		userJid1 = createUserAccount(USER_PREFIX);
-		userJaxmpp1 = createJaxmpp("non_" + USER_PREFIX, userJid1);
-		userJaxmpp2 = createJaxmpp(USER_PREFIX, userJid1);
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		userJaxmpp1 = user1.createJaxmpp().setLogPrefix("non_" + USER_PREFIX).build();
+		userJaxmpp2 = user1.createJaxmpp().build();
 	}
 	
-	@AfterMethod
-	public void cleanUp() throws Exception {
-		if (userJaxmpp2 != null) {
-			userJaxmpp2.disconnect(true);
-		}
-		if (!userJaxmpp1.isConnected()) {
-			userJaxmpp1.login(true);
-		}
-		removeUserAccount(userJaxmpp1);
-	}	
-	
-	@Test
+	//@Test
+	@Ignore
 	public void testWebSocket_Connectivity() throws Exception {
 		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
 		userJaxmpp2.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
@@ -115,7 +103,8 @@ public class TestWebSocketConnectivity extends AbstractTest {
 		assertTrue(mutex.isItemNotified("websocket:message:to:" + body));
 	}
 
-	@Test
+	@Ignore
+	//@Test
 	public void testWebSocket_TwoWebSocketTextFramesInSingleTcpFrame() throws Exception {
 		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
 		userJaxmpp1.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);

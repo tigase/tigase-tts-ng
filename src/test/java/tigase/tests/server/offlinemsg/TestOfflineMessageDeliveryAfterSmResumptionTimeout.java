@@ -19,10 +19,8 @@
  */
 package tigase.tests.server.offlinemsg;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -43,6 +41,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -59,35 +58,25 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 
 	private static final String USER_PREFIX = "sm-resumption";
 
-	private BareJID user1Jid;
-	private BareJID user2Jid;
+	private Account user1;
+	private Account user2;
 
 	private Jaxmpp user1Jaxmpp;
 	private Jaxmpp user2Jaxmpp;
 
 	@BeforeMethod
-	@Override
 	public void setUp() throws Exception {
-		super.setUp();
-		user1Jid = createUserAccount(USER_PREFIX);
-		user1Jaxmpp = createJaxmpp(USER_PREFIX, user1Jid);
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user1Jaxmpp = user1.createJaxmpp().setConnected(true).build();
 
-		user2Jid = createUserAccount(USER_PREFIX);
-		user2Jaxmpp = createJaxmpp(USER_PREFIX, user2Jid);
-		user2Jaxmpp.getConnectionConfiguration().setResource("test-x");
-		user2Jaxmpp.getModulesManager().register(new StreamManagementModule(user2Jaxmpp));
-
-		// connecting clients
-		user1Jaxmpp.login(true);
-		user2Jaxmpp.login(true);
+		user2 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user2Jaxmpp = user2.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getConnectionConfiguration().setResource("test-x");
+			jaxmpp.getModulesManager().register(new StreamManagementModule(jaxmpp));
+			return jaxmpp;
+		}).setConnected(true).build();
 	}
-
-	@AfterMethod
-	public void cleanUp() throws Exception {
-		removeUserAccount(user1Jaxmpp);
-		removeUserAccount(user2Jaxmpp);
-	}
-
+	
 	// Messages type == null (normal)
 	@Test
 	public void testMessageDeliveryReliabilityWithResumptionAndWithFullJid() throws Exception {
@@ -216,7 +205,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 		}
 		assertEquals(Connector.State.disconnected, user2Jaxmpp.getConnector().getState());
 
-		JID destination = fullJid ? JID.jidInstance(user2Jid, "test-x") : JID.jidInstance(user2Jid);
+		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
 		log( "\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n" );
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");
 
@@ -284,7 +273,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 
 		// sending message from user 1 to user 2
 		String body = UUID.randomUUID().toString();
-		JID destination = fullJid ? JID.jidInstance(user2Jid, "test-x") : JID.jidInstance(user2Jid);
+		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
 
 		log( "\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n" );
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");

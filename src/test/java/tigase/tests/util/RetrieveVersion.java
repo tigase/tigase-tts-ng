@@ -44,7 +44,7 @@ import static org.testng.Assert.assertTrue;
 import static tigase.TestLogger.log;
 
 public class RetrieveVersion extends AbstractTest {
-
+	
 	@Test(groups = { "utils" }, description = "Retrieve server version")
 	public void retrieveServerVersion() throws InterruptedException, JaxmppException, Exception {
 
@@ -59,11 +59,9 @@ public class RetrieveVersion extends AbstractTest {
 			}
 		}
 	}
-
+	
 	private void retrieveVersion(String hostname) throws Exception, JaxmppException {
-		Jaxmpp adminJaxmpp = createJaxmppAdmin();
-		adminJaxmpp.getConnectionConfiguration().setServer(hostname);
-		adminJaxmpp.login(true);
+		Jaxmpp adminJaxmpp = getAdminAccount().createJaxmpp().setHost(hostname).setConnected(true).build();
 		assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
 		if ( adminJaxmpp.isConnected() ){
 

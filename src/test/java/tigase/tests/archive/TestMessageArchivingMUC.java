@@ -40,6 +40,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,39 +56,34 @@ public class TestMessageArchivingMUC extends AbstractTest {
 	BareJID adminJID;
 	Jaxmpp adminJaxmpp;
 
-	BareJID user1Jid;
+	Account user1;
 	Jaxmpp user1Jaxmpp;
-	BareJID user2Jid;
+	Account user2;
 	Jaxmpp user2Jaxmpp;
-	BareJID user3Jid;
+	Account user3;
 	Jaxmpp user3Jaxmpp;
-	BareJID user4Jid;
+	Account user4;
 	Jaxmpp user4Jaxmpp;
 
-	@BeforeClass(dependsOnMethods={"setUp"})
+	@BeforeClass
 	public void prepareAdmin() throws JaxmppException {
-		adminJaxmpp = createJaxmppAdmin();
-		adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
-		adminJaxmpp.login( true );
+		adminJaxmpp = getAdminAccount().createJaxmpp().setConnected(true).build();
+		adminJID = getAdminAccount().getJid();
 	}
 
 	@BeforeMethod
 	public void prepareTest() throws JaxmppException, InterruptedException {
 		// prepare users
-		user1Jid = createUserAccount(USER_PREFIX);
-		user2Jid = user1Jid;
-		user3Jid = createUserAccount(USER_PREFIX);
-		user4Jid = createUserAccount(USER_PREFIX);
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user2 = user1;
+		user3 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user4 = createAccount().setLogPrefix(USER_PREFIX).build();
 
 		// prepare Jaxmpp instances
-		user1Jaxmpp = createJaxmpp(USER_PREFIX, user1Jid);
-		user1Jaxmpp.login(true);
-		user2Jaxmpp = createJaxmpp(USER_PREFIX, user2Jid);
-		user2Jaxmpp.login(true);
-		user3Jaxmpp = createJaxmpp(USER_PREFIX, user3Jid);
-		user3Jaxmpp.login(true);
-		user4Jaxmpp = createJaxmpp(USER_PREFIX, user4Jid);
-		user4Jaxmpp.login(true);
+		user1Jaxmpp = user1.createJaxmpp().setConnected(true).build();
+		user2Jaxmpp = user2.createJaxmpp().setConnected(true).build();
+		user3Jaxmpp = user3.createJaxmpp().setConnected(true).build();
+		user4Jaxmpp = user4.createJaxmpp().setConnected(true).build();
 	}
 
 	@Test
@@ -96,7 +92,7 @@ public class TestMessageArchivingMUC extends AbstractTest {
 
 		// create MUC room and join
 		String roomName = "test_2710_" + nextRnd();
-		String mucDomain = "muc." + user1Jid.getDomain();
+		String mucDomain = "muc." + user1.getJid().getDomain();
 		BareJID roomJid = BareJID.bareJIDInstance(roomName, mucDomain);
 		joinRoom(mutex, user1Jaxmpp, roomJid);
 		configureRoom(mutex, user1Jaxmpp, roomJid);
@@ -323,26 +319,4 @@ public class TestMessageArchivingMUC extends AbstractTest {
 		Assert.assertEquals(gotSubjects, subjects);
 	}
 
-	@AfterMethod
-	public void cleanUpTest() throws JaxmppException, InterruptedException {
-		if (user2Jaxmpp != null && user2Jaxmpp.isConnected())
-			user2Jaxmpp.disconnect();
-		tearDownUser(user3Jaxmpp);
-		tearDownUser(user4Jaxmpp);
-		tearDownUser(user1Jaxmpp);
-	}
-
-	private void tearDownUser( Jaxmpp user ) throws JaxmppException, InterruptedException {
-		if ( null != user ){
-			if ( !user.isConnected() ){
-				user.login( true );
-			}
-			removeUserAccount( user );
-		}
-	}
-
-	@AfterClass
-	public void tearDownAdmin() throws JaxmppException {
-		adminJaxmpp.disconnect();
-	}
 }

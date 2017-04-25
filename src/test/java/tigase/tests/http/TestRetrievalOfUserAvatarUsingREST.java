@@ -20,6 +20,7 @@
 package tigase.tests.http;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
@@ -39,6 +40,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,6 +67,12 @@ public class TestRetrievalOfUserAvatarUsingREST extends AbstractTest {
 	private static final String USER_AVATAR_DATA_NODE = "urn:xmpp:avatar:data";
 
 	private static final String USER_AVATAR_METADATA_NODE = "urn:xmpp:avatar:metadata";
+
+	final Mutex mutex = new Mutex();
+	private Account user1;
+	private Account user2;
+	private Jaxmpp jaxmpp1;
+	private Jaxmpp jaxmpp2;
 
 	public static String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
@@ -263,51 +271,51 @@ public class TestRetrievalOfUserAvatarUsingREST extends AbstractTest {
 						+ uuid));
 	}
 
+	protected Jaxmpp configureJaxmpp(Jaxmpp jaxmpp) {
+		jaxmpp.getModulesManager().register(new PubSubModule());
+		jaxmpp.getModulesManager().register(new RosterModule());
+		return jaxmpp;
+	}
+
+	@BeforeMethod
+	public void setUp() throws Exception {
+		user1 = createAccount().setLogPrefix("user1").build();
+		user2 = createAccount().setLogPrefix("user2").build();
+
+		jaxmpp1 = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+		jaxmpp2 = user2.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+	}
+
 	@Test(groups = { "Phase 1" }, description = "Test User Avatar support - XEP-0084")
 	public void testUserAvatarSupportXEP0084() throws JaxmppException, InterruptedException, XMLException,
 			NoSuchAlgorithmException, MalformedURLException, IOException {
 		byte[] avatarData = generateRandomAvatarData();
 
-		final BareJID user1JID = createUserAccount("user1");
-		final BareJID user2JID = createUserAccount("user2");
-		final Jaxmpp jaxmpp1 = createJaxmpp("user1", user1JID);
-		final Jaxmpp jaxmpp2 = createJaxmpp("user2", user2JID);
-
-		jaxmpp1.getModulesManager().register(new PubSubModule());
-		jaxmpp1.getModulesManager().register(new RosterModule());
-		jaxmpp2.getModulesManager().register(new PubSubModule());
-		jaxmpp2.getModulesManager().register(new RosterModule());
-
-		jaxmpp1.login(true);
-		jaxmpp2.login(true);
-
-		final Mutex mutex = new Mutex();
-
 		publishAvatar(mutex, jaxmpp1, avatarData);
-		retrieveAvatar(mutex, jaxmpp1, user1JID, avatarData, true, nextRnd());
-		retrieveAvatar(mutex, jaxmpp2, user1JID, avatarData, false, nextRnd());
+		retrieveAvatar(mutex, jaxmpp1, user1.getJid(), avatarData, true, nextRnd());
+		retrieveAvatar(mutex, jaxmpp2, user1.getJid(), avatarData, false, nextRnd());
 
-		RosterItem ri = new RosterItem(user2JID, jaxmpp1.getSessionObject());
+		RosterItem ri = new RosterItem(user2.getJid(), jaxmpp1.getSessionObject());
 		ri.setSubscription(RosterItem.Subscription.from);
 		RosterModule.getRosterStore(jaxmpp1.getSessionObject()).update(ri);
 
 		Thread.sleep(1000 * 2);
 
 		Element subscrEl = ElementFactory.create("presence");
-		subscrEl.setAttribute("to", user1JID.toString());
+		subscrEl.setAttribute("to", user1.getJid().toString());
 		subscrEl.setAttribute("type", StanzaType.subscribe.toString());
 		jaxmpp2.send(Stanza.create(subscrEl));
 
 		Thread.sleep(1000 * 3);
 
 		subscrEl = ElementFactory.create("presence");
-		subscrEl.setAttribute("to", user2JID.toString());
+		subscrEl.setAttribute("to", user2.getJid().toString());
 		subscrEl.setAttribute("type", StanzaType.subscribed.toString());
 		jaxmpp1.send(Stanza.create(subscrEl));
 
 		Thread.sleep(1000 * 10);
 
-		retrieveAvatar(mutex, jaxmpp2, user1JID, avatarData, true, nextRnd());
+		retrieveAvatar(mutex, jaxmpp2, user1.getJid(), avatarData, true, nextRnd());
 
 		String domain = getDomain(0);
 		String[] instances = getInstanceHostnames();
@@ -315,7 +323,7 @@ public class TestRetrievalOfUserAvatarUsingREST extends AbstractTest {
 			domain = instances[0];
 		}
 
-		URL url = new URL("http://" + domain + ":" + getHttpPort() + "/rest/avatar/" + user1JID.toString() + "/avatar?api-key=" + getApiKey());
+		URL url = new URL("http://" + domain + ":" + getHttpPort() + "/rest/avatar/" + user1.getJid().toString() + "/avatar?api-key=" + getApiKey());
 		URLConnection con = url.openConnection();
 		con.setDoInput(true);
 		InputStream is = con.getInputStream();
@@ -328,9 +336,5 @@ public class TestRetrievalOfUserAvatarUsingREST extends AbstractTest {
 		// we need to remove HTTP headers data from bytes read from stream
 		data = Arrays.copyOfRange(data, read - 4096, read);
 		assertEquals(avatarData, data);
-
-		jaxmpp1.disconnect();
-		jaxmpp2.disconnect();
-	
 	}
 }

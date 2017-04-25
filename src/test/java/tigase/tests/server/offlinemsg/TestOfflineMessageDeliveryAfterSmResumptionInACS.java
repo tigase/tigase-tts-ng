@@ -19,10 +19,8 @@
  */
 package tigase.tests.server.offlinemsg;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -39,6 +37,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -55,43 +54,34 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS extends AbstractTe
 
 	private static final String USER_PREFIX = "sm-resumption";
 
-	private BareJID user1Jid;
-	private BareJID user2Jid;
+	private Account user1;
+	private Account user2;
 
 	private Jaxmpp user1Jaxmpp;
 	private Jaxmpp user2Jaxmpp;
 
 	@BeforeMethod
-	@Override
 	public void setUp() throws Exception {
-		super.setUp();
-		user1Jid = createUserAccount(USER_PREFIX);
-		user1Jaxmpp = createJaxmpp(USER_PREFIX, user1Jid);
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user1Jaxmpp = user1.createJaxmpp().setConfigurator(jaxmpp -> {
+			return configureJaxmpp(jaxmpp, 0);
+		}).setConnected(true).build();
 
-		user2Jid = createUserAccount(USER_PREFIX);
-		user2Jaxmpp = createJaxmpp(USER_PREFIX, user2Jid);
-		user2Jaxmpp.getConnectionConfiguration().setResource("test-x");
-		user2Jaxmpp.getModulesManager().register(new StreamManagementModule(user2Jaxmpp));
-
-		// if we have more than 2 nodes ensure we connect to 2 different cluster nodes
-		String[] hostnames = getInstanceHostnames();
-		if (hostnames.length > 1) {
-			user1Jaxmpp.getSessionObject().setUserProperty("BOSH#SEE_OTHER_HOST_KEY", false);
-			user2Jaxmpp.getSessionObject().setUserProperty("BOSH#SEE_OTHER_HOST_KEY", false);
-
-			user1Jaxmpp.getConnectionConfiguration().setServer(hostnames[0]);
-			user2Jaxmpp.getConnectionConfiguration().setServer(hostnames[1]);
-		}
-
-		// connecting clients
-		user1Jaxmpp.login(true);
-		user2Jaxmpp.login(true);
+		user2 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user2Jaxmpp = user2.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getConnectionConfiguration().setResource("test-x");
+			jaxmpp.getModulesManager().register(new StreamManagementModule(jaxmpp));
+			return configureJaxmpp(jaxmpp, 1);
+		}).setConnected(true).build();
 	}
 
-	@AfterMethod
-	public void cleanUp() throws Exception {
-		removeUserAccount(user1Jaxmpp);
-		removeUserAccount(user2Jaxmpp);
+	private Jaxmpp configureJaxmpp(Jaxmpp jaxmpp, int pos) {
+		String[] hostnames = getInstanceHostnames();
+		if (hostnames.length > 1) {
+			jaxmpp.getSessionObject().setUserProperty("BOSH#SEE_OTHER_HOST_KEY", false);
+			jaxmpp.getConnectionConfiguration().setServer(hostnames[pos]);
+		}
+		return jaxmpp;
 	}
 
 	@Test
@@ -119,7 +109,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS extends AbstractTe
 
 		Thread.sleep(2000);
 
-		JID destination = fullJid ? JID.jidInstance(user2Jid, "test-x") : JID.jidInstance(user2Jid);
+		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
 		log( "\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n" );
 		sendMessage(user1Jaxmpp, destination, StanzaType.chat, "test1");
 

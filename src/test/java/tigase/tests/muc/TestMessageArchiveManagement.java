@@ -2,7 +2,6 @@ package tigase.tests.muc;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
@@ -26,12 +25,11 @@ import tigase.jaxmpp.core.client.xmpp.utils.RSM;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.*;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.*;
 
 /**
  * Created by andrzej on 20.12.2016.
@@ -41,13 +39,13 @@ public class TestMessageArchiveManagement
 
 	final Mutex mutex = new Mutex();
 
-	private BareJID user1Jid;
+	private Account user1;
 	private Jaxmpp user1Jaxmpp;
 	private MucModule muc1Module;
-	private BareJID user2Jid;
+	private Account user2;
 	private Jaxmpp user2Jaxmpp;
 	private MucModule muc2Module;
-	private BareJID user3Jid;
+	private Account user3;
 	private Jaxmpp user3Jaxmpp;
 	private MucModule muc3Module;
 
@@ -57,57 +55,30 @@ public class TestMessageArchiveManagement
 	private List<Item> sentMessages;
 
 	@BeforeClass
-	@Override
 	protected void setUp() throws Exception {
-		super.setUp();
-
-		user1Jid = createUserAccount("user1");
-		user1Jaxmpp = createJaxmpp("user1", user1Jid);
-		user2Jid = createUserAccount("user2");
-		user2Jaxmpp = createJaxmpp("user2", user2Jid);
-		user3Jid = createUserAccount("user3");
-		user3Jaxmpp = createJaxmpp("user3", user3Jid);
-
-		user1Jaxmpp.login(true);
-		user2Jaxmpp.login(true);
-		user3Jaxmpp.login(true);
+		user1 = createAccount().setLogPrefix("user1").build();
+		user2 = createAccount().setLogPrefix("user2").build();
+		user3 = createAccount().setLogPrefix("user3").build();
+		user1Jaxmpp = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+		user2Jaxmpp = user2.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+		user3Jaxmpp = user3.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
 
 		muc1Module = user1Jaxmpp.getModule(MucModule.class);
 		muc2Module = user2Jaxmpp.getModule(MucModule.class);
 		muc3Module = user3Jaxmpp.getModule(MucModule.class);
 		mucModules = Arrays.asList(muc1Module, muc2Module, muc3Module);
 
-		roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1Jid.getDomain());
+		roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1.getJid().getDomain());
 
 		joinAll();
 		sentMessages = sendRandomMessages(20);
 	}
 
-	@Override
-	public Jaxmpp createJaxmpp(String logPrefix, BareJID user1JID) {
-		Jaxmpp jaxmpp = super.createJaxmpp(logPrefix, user1JID);
-
+	protected Jaxmpp configureJaxmpp(Jaxmpp jaxmpp) {
 		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
-
 		return jaxmpp;
 	}
-
-	@AfterClass
-	public void cleanUpTest() throws JaxmppException, InterruptedException {
-		tearDownUser(user3Jaxmpp);
-		tearDownUser(user2Jaxmpp);
-		tearDownUser(user1Jaxmpp);
-	}
-
-	private void tearDownUser(Jaxmpp user) throws JaxmppException, InterruptedException {
-		if (null != user) {
-			if (!user.isConnected()) {
-				user.login(true);
-			}
-			removeUserAccount(user);
-		}
-	}
-
+	
 	@Test
 	public void test_MAM_retrieveAll() throws Exception {
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();

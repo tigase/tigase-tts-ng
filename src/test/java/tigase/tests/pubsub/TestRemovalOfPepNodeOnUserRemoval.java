@@ -19,7 +19,6 @@
  */
 package tigase.tests.pubsub;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
@@ -45,6 +44,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,37 +55,22 @@ import static org.testng.Assert.assertTrue;
 
 public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 
-	BareJID user1JID;
-	BareJID user2JID;
+	Account user1;
+	Account user2;
 	Jaxmpp jaxmpp1;
 	Jaxmpp jaxmpp2;
 
 	@BeforeMethod
-	@Override
 	public void setUp() throws Exception {
-		super.setUp();
-		user1JID = createUserAccount("user1");
-		user2JID = createUserAccount("user2");
-		jaxmpp1 = createJaxmpp("user1", user1JID);
-		jaxmpp2 = createJaxmpp("user2", user2JID);
+		user1 = createAccount().setLogPrefix("user1").build();
+		user2 = createAccount().setLogPrefix("user2").build();
+		jaxmpp1 = user1.createJaxmpp().setConnected(true).build();
+		jaxmpp2 = user2.createJaxmpp().setConnected(true).build();
 	}
-
-	@AfterMethod
-	public void cleanUp() throws Exception {
-		if (jaxmpp1 != null) {
-			removeUserAccount(jaxmpp1);
-		}
-		if (jaxmpp2 != null) {
-			removeUserAccount(jaxmpp2);
-		}
-	}
-
+	
 	@Test(groups = { "XMPP - PubSub" }, description = "Removal of PEP nodes on user removal")
 	public void testRemovalOfPepServiceNodesOnUserRemoval() throws Exception {
 		final Mutex mutex = new Mutex();
-
-		jaxmpp1.login(true);
-		jaxmpp2.login(true);
 
 		final RosterStore roster1 = jaxmpp1.getModule(RosterModule.class).getRosterStore();
 		jaxmpp1.getEventBus().addHandler(RosterModule.ItemAddedHandler.ItemAddedEvent.class,
@@ -96,8 +81,8 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 				mutex.notify("added:" + item.getJid());
 			}
 		});
-		roster1.add(user2JID, "User2", null);
-		mutex.waitFor(1000 * 10, "added:" + user2JID);
+		roster1.add(user2.getJid(), "User2", null);
+		mutex.waitFor(1000 * 10, "added:" + user2.getJid());
 
 		jaxmpp1.getEventBus().addHandler(RosterModule.ItemUpdatedHandler.ItemUpdatedEvent.class,
 				new RosterModule.ItemUpdatedHandler() {
@@ -142,15 +127,15 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 			}
 		};
 		jaxmpp1.getEventBus().addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscriptionHandler2);
-		jaxmpp1.getModule(PresenceModule.class).subscribe(JID.jidInstance(user2JID));
+		jaxmpp1.getModule(PresenceModule.class).subscribe(JID.jidInstance(user2.getJid()));
 
-		mutex.waitFor(10 * 1000, user2JID + ":both");
-		assertTrue(mutex.isItemNotified(user2JID + ":both"));
+		mutex.waitFor(10 * 1000, user2.getJid() + ":both");
+		assertTrue(mutex.isItemNotified(user2.getJid() + ":both"));
 
 		Element payload = ElementFactory.create("geoloc", null, "http://jabber.org/protocol/geoloc");
 		Element country = ElementFactory.create("country", "US", null);
 		payload.addChild(country);
-		jaxmpp1.getModule(PubSubModule.class).publishItem(user1JID, "http://jabber.org/protocol/geoloc", "test1", payload, new PubSubModule.PublishAsyncCallback() {
+		jaxmpp1.getModule(PubSubModule.class).publishItem(user1.getJid(), "http://jabber.org/protocol/geoloc", "test1", payload, new PubSubModule.PublishAsyncCallback() {
 
 			@Override
 			public void onPublish(String itemId) {
@@ -171,7 +156,7 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 		mutex.waitFor(10 * 1000, "published:geoloc");
 		assertTrue(mutex.isItemNotified("published:geoloc"));
 
-		jaxmpp2.getModule(PubSubModule.class).retrieveItem(user1JID, "http://jabber.org/protocol/geoloc", new RetrieveItemsAsyncCallback() {
+		jaxmpp2.getModule(PubSubModule.class).retrieveItem(user1.getJid(), "http://jabber.org/protocol/geoloc", new RetrieveItemsAsyncCallback() {
 
 			@Override
 			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
@@ -191,7 +176,7 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 		mutex.waitFor(10 * 1000, "retrieved:http://jabber.org/protocol/geoloc:1");
 		assertTrue(mutex.isItemNotified("retrieved:http://jabber.org/protocol/geoloc:1"));		
 		
-		jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1JID), new DiscoveryModule.DiscoItemsAsyncCallback() {
+		jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1.getJid()), new DiscoveryModule.DiscoItemsAsyncCallback() {
 
 			@Override
 			public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items) throws XMLException {
@@ -214,13 +199,13 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 		mutex.waitFor(10 * 1000, "discovered:1:items:1", "discovered:1:item:http://jabber.org/protocol/geoloc");
 		assertTrue(mutex.isItemNotified("discovered:1:items:1"));	
 		assertTrue(mutex.isItemNotified("discovered:1:item:http://jabber.org/protocol/geoloc"));
-		
-		removeUserAccount(jaxmpp1);
+
+		user1.unregister();
 		jaxmpp1 = null;
 				
 		Thread.sleep(2000);
 
-		jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1JID), new DiscoveryModule.DiscoItemsAsyncCallback() {
+		jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1.getJid()), new DiscoveryModule.DiscoItemsAsyncCallback() {
 
 			@Override
 			public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items) throws XMLException {

@@ -22,10 +22,9 @@
 package tigase.tests;
 
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
+import org.testng.ISuite;
+import org.testng.ITestContext;
+import org.testng.annotations.*;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.Connector.StanzaSendingHandler.StanzaSendingEvent;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
@@ -34,32 +33,19 @@ import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.eventbus.JaxmppEvent;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.forms.*;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
-import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
-import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
-import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
-import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
-import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.*;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.j2se.Jaxmpp;
-import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import tigase.tests.utils.*;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Handler;
@@ -67,7 +53,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertNull;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 import static tigase.TestLogger.log;
@@ -76,29 +62,17 @@ public abstract class AbstractTest {
 
 	private static int counter = 0;
 
-	private final static HashSet<BareJID> createdAccounts = new HashSet<BareJID>();
+	public final AccountsManager accountManager = new AccountsManager(this);
+	public final PubSubManager pubSubManager = new PubSubManager(this);
+	public final VHostManager vHostManager = new VHostManager(this);
 
 	public static final String LOG_PREFIX_KEY = "LOG_PREFIX";
 
 	private static Handler ngLogger = null;
 
 	private final static Random randomGenerator = new SecureRandom();
-
-	private final static TrustManager[] dummyTrustManagers = new X509TrustManager[] { new X509TrustManager() {
-
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return null;
-		}
-	} };
+	private static Account adminAccount;
+	private Jaxmpp jaxmppAdmin;
 
 	public static final String nextRnd() {
 		int r = randomGenerator.nextInt() & 0x7fffffff;
@@ -106,7 +80,7 @@ public abstract class AbstractTest {
 	}
 
 	protected boolean connectorLogsEnabled = true;
-	protected final EventListener connectorListener = new EventListener() {
+	public final EventListener connectorListener = new EventListener() {
 
 		@Override
 		public void onEvent(Event<? extends EventHandler> event) {
@@ -143,73 +117,18 @@ public abstract class AbstractTest {
 		}
 	};
 
-	protected Properties props;
+	protected static Properties props;
+
+	public Account getAdminAccount() {
+		return adminAccount;
+	}
+
+	public Jaxmpp getJaxmppAdmin() {
+		return jaxmppAdmin;
+	}
 
 	protected String addVhost(final Jaxmpp adminJaxmpp, final String prefix) throws JaxmppException, InterruptedException {
-		final String addVHostCommand = "comp-repo-item-add";
-		final String VHost = prefix + "_" + nextRnd().toLowerCase() + "." + getDomain();
-		final String mutexCommand = addVHostCommand + "-" + VHost;
-
-		final Mutex mutex = new Mutex();
-
-		final BareJID adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
-
-		log("jaxmppa: " + adminJaxmpp.getSessionObject().getUserBareJid());
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(JID.jidInstance("vhost-man", adminJID.getDomain()),
-				addVHostCommand, null, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
-
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-						mutex.notify("1:" + mutexCommand, "1:error");
-					}
-
-					@Override
-					protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-							throws JaxmppException {
-						mutex.notify("1:" + mutexCommand, "1:success");
-
-						((TextSingleField) data.getField("Domain name")).setFieldValue(VHost);
-
-						data.setAttribute("type", "submit");
-
-						adminJaxmpp.getModule(AdHocCommansModule.class).execute(
-								JID.jidInstance("vhost-man", adminJID.getDomain()), addVHostCommand, null, data,
-								new AdHocCommansModule.AdHocCommansAsyncCallback() {
-
-									@Override
-									public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-											throws JaxmppException {
-										mutex.notify("2:" + mutexCommand, "2:error");
-									}
-
-									@Override
-									protected void onResponseReceived(String sessionid, String node, State status,
-											JabberDataElement data) throws JaxmppException {
-										FixedField nff = data.getField("Note");
-										if (nff != null) {
-											mutex.notify(mutexCommand + ":success");
-										}
-										mutex.notify("2:" + mutexCommand);
-
-									}
-
-									@Override
-									public void onTimeout() throws JaxmppException {
-										mutex.notify("2:" + mutexCommand, "2:timeout");
-									}
-								});
-					}
-
-					@Override
-					public void onTimeout() throws JaxmppException {
-						mutex.notify("1:" + mutexCommand, "1:timeout");
-
-					}
-				});
-		mutex.waitFor(10 * 1000, "1:" + mutexCommand, "2:" + mutexCommand);
-		assertTrue(mutex.isItemNotified(addVHostCommand + "-" + VHost + ":success"), "VHost adding failed.");
-
-		return VHost;
+		return vHostManager.addVHost(prefix);
 	}
 
 	protected final void changePresenceAndWait(final Jaxmpp from, final Jaxmpp to, final Presence.Show p) throws Exception {
@@ -246,181 +165,46 @@ public abstract class AbstractTest {
 			to.getEventBus().remove(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, handler);
 		}
 	}
-
-	public Jaxmpp createJaxmpp(final String logPrefix) {
-		try {
-			Jaxmpp jaxmpp1 = new Jaxmpp();
-			jaxmpp1.getSessionObject().setProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
-			if (logPrefix != null)
-				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
-			jaxmpp1.getSessionObject().setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
-			jaxmpp1.getEventBus().addListener(connectorListener);
-
-			jaxmpp1.getModulesManager().register(new InBandRegistrationModule());
-			jaxmpp1.getModulesManager().register(new MessageModule());
-			jaxmpp1.getModulesManager().register(new MessageCarbonsModule());
-			jaxmpp1.getModulesManager().register(new MucModule());
-			jaxmpp1.getModulesManager().register(new AdHocCommansModule());
-			jaxmpp1.getModulesManager().register(new RosterModule());
-			jaxmpp1.getModulesManager().register(new MessageArchivingModule());
-			jaxmpp1.getModulesManager().register(new PubSubModule());
-
-			tigase.jaxmpp.j2se.Presence.initialize(jaxmpp1);
-
-			return jaxmpp1;
-		} catch (JaxmppException e) {
-			fail(e);
-			throw new RuntimeException(e);
-		}
+	
+	public AccountBuilder createAccount() {
+		return new AccountBuilder(this);
 	}
-
-	public Jaxmpp createJaxmpp(String logPrefix, BareJID user1JID) {
-		return createJaxmpp(logPrefix, user1JID, null, user1JID.getLocalpart());
-	}
-
-	public Jaxmpp createJaxmpp(String logPrefix, BareJID user1JID, String domain, String password) {
-		return createJaxmpp(logPrefix, user1JID, domain, null, password);
-	}
-
-	public Jaxmpp createJaxmpp(String logPrefix, BareJID user1JID, String domain, String host, String password) {
-		Jaxmpp jaxmpp1 = createJaxmpp(logPrefix);
-		jaxmpp1.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
-
-		if (null == host) {
-			String instanceHostname = getInstanceHostname();
-			if (instanceHostname != null) {
-				jaxmpp1.getConnectionConfiguration().setServer(instanceHostname);
-			}
-		} else {
-			jaxmpp1.getConnectionConfiguration().setServer(host);
-		}
-
-		if (user1JID != null)
-			jaxmpp1.getConnectionConfiguration().setUserJID(user1JID);
-		if (password != null)
-			jaxmpp1.getConnectionConfiguration().setUserPassword(password);
-		if (domain != null)
-			jaxmpp1.getConnectionConfiguration().setDomain(domain);
-
-		jaxmpp1.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
-
-		return jaxmpp1;
-	}
-
-	public Jaxmpp createJaxmppAdmin() {
-		return createJaxmppAdmin(null);
-	}
-
-	public Jaxmpp createJaxmppAdmin(String hostname) {
-		Jaxmpp adminJaxmpp = null;
+	
+	protected void ensureAdminAccountExists() {
 		String user = props.getProperty("test.admin.username");
 		String pass = props.getProperty("test.admin.password");
 		String domain = (String) props.getOrDefault("test.admin.domain", getDomain(0));
-		BareJID jidInstance;
 		if (null == user) {
 			user = "admin";
 		}
 		if (null == pass) {
 			pass = user;
 		}
-		jidInstance = BareJID.bareJIDInstance(user, domain);
-		if (null != jidInstance) {
-			adminJaxmpp = createJaxmpp("admin", jidInstance, null, hostname, pass);
-		}
-		return adminJaxmpp;
-	}
-
-	public BareJID createUserAccount(String logPrefix) throws JaxmppException, InterruptedException {
-		return createUserAccount(logPrefix, 0);
-	}
-
-	public BareJID createUserAccount(String logPrefix, int domainNumber) throws JaxmppException, InterruptedException {
-		final String domain = getDomain(domainNumber);
-		return createUserAccount(logPrefix, logPrefix + "_" + nextRnd(), domain);
-	}
-
-	public BareJID createUserAccount(String logPrefix, final String username, final String domain) throws JaxmppException,
-			InterruptedException {
-		return createUserAccount(logPrefix, username, domain, username + "@wp.pl");
-	}
-
-	public BareJID createUserAccount(String logPrefix, final String username, final String domain, final String email)
-			throws JaxmppException, InterruptedException {
-		return createUserAccount(logPrefix, username, username, domain, username + "@wp.pl");
-	}
-
-	public BareJID createUserAccount(String logPrefix, final String username, final String password,
-																																						final String domain, final String email)
-			throws JaxmppException, InterruptedException {
-		final String server = getInstanceHostname();
-
-		final Jaxmpp jaxmpp1 = createJaxmpp(logPrefix);
-		jaxmpp1.getEventBus().addListener(new EventListener() {
-
-			@Override
-			public void onEvent(Event<? extends EventHandler> event) {
-				log(event != null ? event.toString() : "null event!");
-			}
-		});
-		jaxmpp1.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
-		if (server != null)
-			jaxmpp1.getConnectionConfiguration().setServer(server);
-		jaxmpp1.getConnectionConfiguration().setDomain(domain);
-		jaxmpp1.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
-		jaxmpp1.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
-
-		final Mutex mutex = new Mutex();
-		jaxmpp1.getEventBus().addHandler(
-				InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,
-				new InBandRegistrationModule.ReceivedRequestedFieldsHandler() {
-
-					@Override
-					public void onReceivedRequestedFields(SessionObject sessionObject, IQ responseStanza) {
-
-						try {
-							jaxmpp1.getModule(InBandRegistrationModule.class).register(username, password, email,
-									new AsyncCallback() {
-
-										@Override
-										public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-											mutex.notify("registration");
-											log("Account registration error: " + error);
-											Assert.fail("Account registration error: " + error);
-										}
-
-										@Override
-										public void onSuccess(Stanza responseStanza) throws JaxmppException {
-											mutex.notify("registrationSuccess");
-											mutex.notify("registration");
-										}
-
-										@Override
-										public void onTimeout() throws JaxmppException {
-											mutex.notify("registration");
-											log("Account registration failed.");
-											Assert.fail("Account registration failed.");
-										}
-									});
-						} catch (JaxmppException e) {
-							fail(e);
-						}
-
+		try {
+			AccountBuilder builder = createAccount().setLogPrefix("admin").setUsername(user).setPassword(pass).setDomain(domain).setRegister(false);
+			Account adminAccount = builder.build();
+			try {
+				Jaxmpp jaxmpp = adminAccount.createJaxmpp().setConnected(true).build();
+				if (jaxmpp.isConnected()) {
+					try {
+						jaxmpp.disconnect(true);
+					} catch (Throwable ex) {
+						// we do not care! we confirmed that admin account exists!
 					}
+					this.adminAccount = adminAccount;
+				}
+				return;
+			} catch (JaxmppException ex) {
+				assertNull(ex);
+			}
 
-				});
-
-		jaxmpp1.login(false);
-		mutex.waitFor(1000 * 30, "registration");
-
-		assertTrue("Registration failed!", mutex.isItemNotified("registrationSuccess"));
-		jaxmpp1.disconnect();
-
-		createdAccounts.add(BareJID.bareJIDInstance(username, domain));
-
-		return BareJID.bareJIDInstance(username, domain);
+			this.adminAccount = builder.setRegister(true).build();
+		} catch (JaxmppException|InterruptedException e) {
+			assertNull(e);
+		}
 	}
 
-	protected void fail(Exception e) {
+	public static void fail(Exception e) {
 		e.printStackTrace();
 		Assert.fail(e.getMessage());
 	}
@@ -527,139 +311,12 @@ public abstract class AbstractTest {
 		return "http://" + hostname + ":" + port + "/";
 	}
 
-	public void removeUserAccount(final BareJID userJID) throws JaxmppException, InterruptedException {
-		final Jaxmpp jaxmpp2 = createJaxmpp(null);
-		jaxmpp2.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
-
-		final String server = getInstanceHostname();
-		if (server != null) {
-			jaxmpp2.getConnectionConfiguration().setServer(server);
-		}
-		jaxmpp2.getConnectionConfiguration().setUserJID(userJID);
-		jaxmpp2.getConnectionConfiguration().setUserPassword(userJID.getLocalpart());
-		jaxmpp2.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
-
-		jaxmpp2.login(true);
-
-		removeUserAccount(jaxmpp2);
-	}
-
 	public void removeUserAccount(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
-		final BareJID userJid = jaxmpp.getSessionObject().getUserBareJid();
-		final Mutex mutex = new Mutex();
-
-		final JID jid1 = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
-		if (jid1 == null && !jaxmpp.isConnected())
-			jaxmpp.login(true);
-		final JID jid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
-
-		if (jid.getLocalpart().equals("admin"))
-			throw new RuntimeException("Better not to remove user 'admin', don't you think?");
-
-		final JaxmppCore.LoggedOutHandler disconnectionHandler = new JaxmppCore.LoggedOutHandler() {
-
-			@Override
-			public void onLoggedOut(SessionObject sessionObject) {
-				log("Disconnected! " + userJid);
-				mutex.notifyForce();
-			}
-
-		};
-
-		try {
-			jaxmpp.getEventBus().addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
-
-			jaxmpp.getModule(InBandRegistrationModule.class).removeAccount(new AsyncCallback() {
-
-				@Override
-				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-					log("! Account " + userJid + " removing error: " + error);
-					mutex.notify("removed");
-					Assert.fail("Account removing error: " + error);
-				}
-
-				@Override
-				public void onSuccess(Stanza responseStanza) throws JaxmppException {
-					log("! Account " + userJid + " removing!! SUCCESS");
-					mutex.notify("removedSuccess");
-					mutex.notify("removed");
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					log("Account " + userJid + " removing failed. - timeout");
-					mutex.notify("removed");
-					Assert.fail("Account removing failed.");
-				}
-			});
-			mutex.waitFor(1000 * 60 * 2, "removed");
-
-			// assertTrue("Account not removed!",
-			// mutex.isItemNotified("removedSuccess"));
-
-			jaxmpp.disconnect();
-
-		} finally {
-			jaxmpp.getEventBus().remove(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
-		}
+		accountManager.unregisterAccount(jaxmpp);
 	}
 
 	protected void removeVhost(final Jaxmpp adminJaxmpp, final String VHost) throws JaxmppException, InterruptedException {
-		final String removeVHostCommand = "comp-repo-item-remove";
-
-		final Mutex mutex = new Mutex();
-
-		final BareJID userBareJid = adminJaxmpp.getSessionObject().getUserBareJid();
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(JID.jidInstance("vhost-man", userBareJid.getDomain()),
-				removeVHostCommand, null, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
-
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					}
-
-					@Override
-					protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-							throws JaxmppException {
-
-						ListSingleField ff = ((ListSingleField) data.getField("item-list"));
-
-						ff.clearOptions();
-						ff.setFieldValue(VHost);
-
-						JabberDataElement r = new JabberDataElement(data.createSubmitableElement(XDataType.submit));
-						adminJaxmpp.getModule(AdHocCommansModule.class).execute(
-								JID.jidInstance("vhost-man", userBareJid.getDomain()), removeVHostCommand, null, r,
-								new AdHocCommansModule.AdHocCommansAsyncCallback() {
-
-									@Override
-									public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-											throws JaxmppException {
-									}
-
-									@Override
-									protected void onResponseReceived(String sessionid, String node, State status,
-											JabberDataElement data) throws JaxmppException {
-										FixedField nff = data.getField("Note");
-										if (nff != null) {
-											mutex.notify("remove:" + VHost + ":" + nff.getFieldValue());
-										}
-										mutex.notify("domainRemoved:" + VHost);
-
-									}
-
-									@Override
-									public void onTimeout() throws JaxmppException {
-									}
-								});
-					}
-
-					@Override
-					public void onTimeout() throws JaxmppException {
-					}
-				});
-		mutex.waitFor(10 * 1000, "domainRemoved:" + VHost);
-
-		assertTrue(mutex.isItemNotified("remove:" + VHost + ":Operation successful"), "VHost removal failed.");
+		vHostManager.removeVHost(VHost);
 	}
 
 	protected final void sendAndFail(Jaxmpp from, Jaxmpp to) throws Exception {
@@ -865,15 +522,63 @@ public abstract class AbstractTest {
 		log.setLevel( lvl );
 	}
 
+	public final ThreadLocal<ISuite> CURRENT_SUITE = new ThreadLocal<>();
+	public final ThreadLocal<Method> CURRENT_METHOD = new ThreadLocal<>();
+	public final ThreadLocal<Class> CURRENT_CLASS = new ThreadLocal<>();
+
 	@BeforeSuite
-	@BeforeClass(alwaysRun = true)
-	@BeforeGroups
-	@BeforeMethod
-	protected void setUp() throws Exception {
+	protected void setupSuite(ITestContext context) throws Exception {
+		CURRENT_SUITE.set(context.getSuite());
+		System.out.println("setting up suite " + context.getSuite().getName());
 		loadProperties();
 		setLoggerLevel( Level.ALL, connectorLogsEnabled );
+		ensureAdminAccountExists();
 	}
 
+	@AfterSuite
+	protected void tearDownSuite(ITestContext context) {
+		pubSubManager.scopeFinished();
+		vHostManager.scopeFinished();
+		accountManager.scopeFinished();
+		CURRENT_SUITE.remove();
+	}
+
+	@BeforeClass
+	protected void setupClass(ITestContext context) throws JaxmppException {
+		CURRENT_CLASS.set(this.getClass());
+		System.out.println("setting up for class " + this.getClass().getCanonicalName() + " = " + this.toString());
+		if (jaxmppAdmin == null || !jaxmppAdmin.isConnected()) {
+			jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
+		}
+	}
+
+	@AfterClass
+	protected void tearDownClass(ITestContext context) {
+		System.out.println("tearing down class " + this.getClass().getCanonicalName() + " = " + this.toString());
+		pubSubManager.scopeFinished();
+		accountManager.scopeFinished();
+		vHostManager.scopeFinished();
+		CURRENT_CLASS.remove();
+	}
+	
+	@BeforeMethod
+	protected void setupMethod(Method method, ITestContext context) throws JaxmppException {
+		if (jaxmppAdmin == null || !jaxmppAdmin.isConnected()) {
+			jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
+		}
+		CURRENT_METHOD.set(method);
+		System.out.println("setting up for method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
+	}
+
+	@AfterMethod
+	protected void tearDownMethod(Method method, ITestContext context) {
+		System.out.println("tearing down method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
+		pubSubManager.scopeFinished();
+		accountManager.scopeFinished();
+		vHostManager.scopeFinished();
+		CURRENT_METHOD.remove();
+	}
+	
 	private String getProperty(String key) throws IOException {
 		if ( this.props == null ){
 			loadProperties();
@@ -930,31 +635,31 @@ public abstract class AbstractTest {
 		}
 	}
 
-	@BeforeSuite
-	public void registerAdmin() throws JaxmppException, InterruptedException, IOException, Exception {
-
-		Boolean register = false;
-		String registerProp = getProperty( "test.admin.register" );
-		if ( registerProp != null ){
-			register = Boolean.valueOf( registerProp.toLowerCase() );
-		}
-
-		Jaxmpp adminJaxmpp;
-		BareJID userAccount;
-		String username = getProperty( "test.admin.username" );
-		String password = getProperty( "test.admin.password" );
-		String domain = getDomain( 0 );
-		if ( register ){
-			createUserAccount( username, username, password, domain, username + "@" + domain );
-			userAccount = BareJID.bareJIDInstance( username, domain );
-			adminJaxmpp = createJaxmpp( username, userAccount, userAccount.getDomain(), password );
-			adminJaxmpp.login( true );
-
-			assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
-			if ( adminJaxmpp.isConnected() ){
-				adminJaxmpp.disconnect();
-			}
-		}
-	}
+//	@BeforeSuite
+//	public void registerAdmin() throws JaxmppException, InterruptedException, IOException, Exception {
+//
+//		Boolean register = false;
+//		String registerProp = getProperty( "test.admin.register" );
+//		if ( registerProp != null ){
+//			register = Boolean.valueOf( registerProp.toLowerCase() );
+//		}
+//
+//		Jaxmpp adminJaxmpp;
+//		BareJID userAccount;
+//		String username = getProperty( "test.admin.username" );
+//		String password = getProperty( "test.admin.password" );
+//		String domain = getDomain( 0 );
+//		if ( register ){
+//			createUserAccount( username, username, password, domain, username + "@" + domain );
+//			userAccount = BareJID.bareJIDInstance( username, domain );
+//			adminJaxmpp = createJaxmpp( username, userAccount, userAccount.getDomain(), password );
+//			adminJaxmpp.login( true );
+//
+//			assertTrue( adminJaxmpp.isConnected(), "contact was not connected" );
+//			if ( adminJaxmpp.isConnected() ){
+//				adminJaxmpp.disconnect();
+//			}
+//		}
+//	}
 
 }

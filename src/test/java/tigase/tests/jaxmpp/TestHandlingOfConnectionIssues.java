@@ -23,34 +23,31 @@ package tigase.tests.jaxmpp;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.j2se.ConnectionConfiguration;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractJaxmppTest;
+import tigase.tests.utils.Account;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 /**
  * Created by andrzej on 17.09.2016.
  */
 public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 
-	private BareJID userJID;
+	private Account user;
 	private Jaxmpp jaxmpp;
 
 	@BeforeMethod
 	protected void setUp() throws Exception {
-		userJID = createUserAccount("jaxmpp_");
-		jaxmpp = createJaxmppInstance(userJID);
-		super.setUp();
+		user = createAccount().setLogPrefix("jaxmpp_").build();
+		jaxmpp = user.createJaxmpp().build();
 	}
 
 	@Test

@@ -20,104 +20,52 @@
 package tigase.tests.server.offlinemsg;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.Affiliation;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.NotificationReceivedHandler;
+import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
+import tigase.tests.utils.PubSubNode;
 
+import java.util.Arrays;
 import java.util.Date;
 
-import static org.testng.AssertJUnit.assertTrue;
-
 public class TestOfflineMessageSinkProvider extends AbstractTest {
+
+	private PubSubNode testNode;
+	private Account userA;
+	private Account userB;
+
+	@BeforeMethod
+	public void setUp() throws JaxmppException, InterruptedException {
+		userA = createAccount().setLogPrefix("userA").build();
+		userB = createAccount().setLogPrefix("userB").build();
+
+		Jaxmpp adminJaxmpp = getJaxmppAdmin();
+		preparePubSubNode(adminJaxmpp);
+	}
 
 	@Test(groups = { "Offline Message" }, description = "Offline Message Sink Provider")
 	public void testOfflineMessageSinkProvider() throws Exception {
 		final Mutex mutex = new Mutex();
 
-		final BareJID userAJID = createUserAccount("userA");
-		final BareJID userBJID = createUserAccount("userB");
-
-		final Jaxmpp ownerJaxmpp = createJaxmppAdmin();
-
-//		final BareJID pubSubJID = BareJID.bareJIDInstance("pubsub."
-//				+ ownerJaxmpp.getSessionObject().getUserBareJid().getDomain());
-//		final String nodeName = "message_sink";
-
-		// final JID publisherJID = JID.jidInstance("sess-man", "coffeebean");
-
-		ownerJaxmpp.login(true);
-
-		assertTrue(ownerJaxmpp.isConnected());
-
+		Jaxmpp ownerJaxmpp = getAdminAccount().createJaxmpp().setConnected(true).build();
 		PubSubModule pubSub = ownerJaxmpp.getModule(PubSubModule.class);
-		// pubSub.createNode(pubSubJID, nodeName, new PubSubAsyncCallback() {
-		//
-		// @Override
-		// public void onTimeout() throws JaxmppException {
-		// mutex.notify("pubSubNodeCreate", "pubSubNodeCreate:timeout");
-		// }
-		//
-		// @Override
-		// public void onSuccess(Stanza responseStanza) throws JaxmppException {
-		// // TODO Auto-generated method stub
-		// mutex.notify("pubSubNodeCreate", "pubSubNodeCreate:success");
-		//
-		// }
-		//
-		// @Override
-		// protected void onEror(IQ response, ErrorCondition errorCondition,
-		// PubSubErrorCondition pubSubErrorCondition)
-		// throws JaxmppException {
-		// TestLogger.log("PubSUb error: errorCondition" + errorCondition +
-		// "; pubSubErrorCondition="
-		// + pubSubErrorCondition);
-		// Assert.fail("Node creation failed " + errorCondition);
-		// mutex.notify("pubSubNodeCreate", "pubSubNodeCreate:error");
-		// }
-		// });
-		//
-		// mutex.waitFor(10 * 1000, "pubSubNodeCreate");
-		// Assert.assertTrue(mutex.isItemNotified("pubSubNodeCreate:success"),
-		// "PubSub node is not created!");
-
-		// pubSub.setAffiliation(pubSubJID, nodeName, publisherJID,
-		// Affiliation.publisher, new PubSubAsyncCallback() {
-		//
-		// @Override
-		// public void onTimeout() throws JaxmppException {
-		// mutex.notify("pubSubSetPublisher", "pubSubSetPublisher:timeout");
-		// }
-		//
-		// @Override
-		// public void onSuccess(Stanza responseStanza) throws JaxmppException {
-		// mutex.notify("pubSubSetPublisher", "pubSubSetPublisher:success");
-		// }
-		//
-		// @Override
-		// protected void onEror(IQ response, ErrorCondition errorCondition,
-		// PubSubErrorCondition pubSubErrorCondition)
-		// throws JaxmppException {
-		// TestLogger.log("PubSub error: errorCondition" + errorCondition +
-		// "; pubSubErrorCondition="
-		// + pubSubErrorCondition);
-		// Assert.fail("Publisher set failed " + errorCondition);
-		// mutex.notify("pubSubSetPublisher", "pubSubSetPublisher:error");
-		// }
-		// });
-		// mutex.waitFor(10 * 1000, "pubSubSetPublisher");
-		// Assert.assertTrue(mutex.isItemNotified("pubSubSetPublisher:success"),
-		// "Publisher is not defined!");
-
 		pubSub.addNotificationReceivedHandler(new NotificationReceivedHandler() {
 
 			@Override
@@ -133,12 +81,11 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 			}
 		});
 
-		Jaxmpp userAJaxmpp = createJaxmpp("userA", userAJID);
-		userAJaxmpp.login(true);
+		Jaxmpp userAJaxmpp = userA.createJaxmpp().setConnected(true).build();
 
 		final String body = "body-" + nextRnd();
 		final Message msg1 = Message.create();
-		msg1.setTo(JID.jidInstance(userBJID));
+		msg1.setTo(JID.jidInstance(userB.getJid()));
 		msg1.setBody(body);
 		msg1.setType(StanzaType.chat);
 		msg1.setId(nextRnd());
@@ -147,36 +94,47 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 		mutex.waitFor(1000 * 30, "received:" + body);
 
 		Assert.assertTrue(mutex.isItemNotified("received:" + body), "Notification from PubSub not received!");
+	}
 
-		removeUserAccount(userBJID);
-		removeUserAccount(userAJaxmpp);
+	private void preparePubSubNode(Jaxmpp ownerJaxmpp) throws JaxmppException, InterruptedException {
+		testNode = pubSubManager.createNode("test").setNodeType(PubSubNode.Type.leaf).setJaxmpp(ownerJaxmpp).setReplaceIfExists(true).build();
 
-		// pubSub.deleteNode(pubSubJID, nodeName, new PubSubAsyncCallback() {
-		//
-		// @Override
-		// public void onTimeout() throws JaxmppException {
-		// mutex.notify("pubSubNodeDelete", "pubSubNodeDelete:timeout");
-		// }
-		//
-		// @Override
-		// public void onSuccess(Stanza responseStanza) throws JaxmppException {
-		// mutex.notify("pubSubNodeDelete", "pubSubNodeDelete:success");
-		// }
-		//
-		// @Override
-		// protected void onEror(IQ response, ErrorCondition errorCondition,
-		// PubSubErrorCondition pubSubErrorCondition)
-		// throws JaxmppException {
-		// TestLogger.log("PubSub error: errorCondition" + errorCondition +
-		// "; pubSubErrorCondition="
-		// + pubSubErrorCondition);
-		// Assert.fail("Node delete failed " + errorCondition);
-		// mutex.notify("pubSubNodeDelete", "pubSubNodeDelete:error");
-		// }
-		// });
-		//
-		// mutex.waitFor(10 * 1000, "pubSubNodeDelete");
-		// Assert.assertTrue(mutex.isItemNotified("pubSubNodeDelete:success"),
-		// "Node is not deleted");
+		PubSubModule pubSub = ownerJaxmpp.getModule(PubSubModule.class);
+		String[] hostnames = getInstanceHostnames();
+		if (hostnames != null) {
+			final Mutex mutex = new Mutex();
+			Arrays.stream(hostnames).forEach(hostname -> {
+				try {
+					pubSub.setAffiliation(testNode.getPubsubJid(), testNode.getName(),
+										  JID.jidInstance("sess-man", hostname), Affiliation.publisher, new PubSubAsyncCallback() {
+								@Override
+								protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+													  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+									mutex.notify(hostname  + ":affiliation:error");
+									mutex.notify(hostname  + ":affiliation");
+								}
+
+								@Override
+								public void onSuccess(Stanza responseStanza) throws JaxmppException {
+									mutex.notify(hostname  + ":affiliation:success");
+									mutex.notify(hostname  + ":affiliation");
+								}
+
+								@Override
+								public void onTimeout() throws JaxmppException {
+									mutex.notify(hostname  + ":affiliation:timeout");
+									mutex.notify(hostname  + ":affiliation");
+								}
+							});
+
+					mutex.waitFor(30 * 1000, hostname + ":affiliation");
+					Assert.assertTrue(mutex.isItemNotified(hostname + ":affiliation:success"));
+				} catch (JaxmppException|InterruptedException ex) {
+					ex.printStackTrace();
+				}
+			});
+		}
+
+		pubSubManager.remove(testNode);
 	}
 }

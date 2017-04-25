@@ -20,9 +20,9 @@
 package tigase.tests.server;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -33,6 +33,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.nio.charset.Charset;
 
@@ -50,22 +51,26 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			Charset.forName("UTF-8"));
 
 	private static final String XMLNS = "urn:ietf:params:xml:ns:vcard-4.0";
+	private Account user1;
+	private Account user2;
+	private Jaxmpp jaxmpp1;
+	private Jaxmpp jaxmpp2;
 
 	protected void fail(String msg) {
 		log(msg);
 		Assert.fail(msg);
 	}
 
+	@BeforeMethod
+	public void setUp() throws JaxmppException, InterruptedException {
+		user1 = createAccount().setLogPrefix("user1").build();
+		user2 = createAccount().setLogPrefix("user2").build();
+		jaxmpp1 = user1.createJaxmpp().setConnected(true).build();
+		jaxmpp2 = user2.createJaxmpp().setConnected(true).build();
+	}
+
 	@Test(groups = { "Phase 1" }, description = "Test VCard4 - VCardTemp conversion integration")
 	public void testVCard4ToVCardTempConversion() throws JaxmppException, InterruptedException {
-		final BareJID user1JID = createUserAccount("user1");
-		final BareJID user2JID = createUserAccount("user2");
-		final Jaxmpp jaxmpp1 = createJaxmpp("user1", user1JID);
-		final Jaxmpp jaxmpp2 = createJaxmpp("user2", user2JID);
-
-		jaxmpp1.login(true);
-		jaxmpp2.login(true);
-
 		Element iqPublish = ElementFactory.create("iq");
 		iqPublish.setAttribute("type", "set");
 		Element vcard = ElementFactory.create("vcard", null, XMLNS);
@@ -158,7 +163,7 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
-		iqRetrieve.setAttribute("to", user1JID.toString());
+		iqRetrieve.setAttribute("to", user1.getJid().toString());
 		iqRetrieve.addChild(ElementFactory.create("vcard", null, XMLNS));
 		jaxmpp2.send((IQ) Stanza.create(iqRetrieve), new AsyncCallback() {
 
@@ -203,7 +208,7 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
-		iqRetrieve.setAttribute("to", user1JID.toString());
+		iqRetrieve.setAttribute("to", user1.getJid().toString());
 		iqRetrieve.addChild(ElementFactory.create("vCard", null, "vcard-temp"));
 		jaxmpp2.send((IQ) Stanza.create(iqRetrieve), new AsyncCallback() {
 
@@ -244,22 +249,10 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 		mutex.waitFor(1000 * 20, "vcardTempRetrieve:jaxmpp2");
 
 		assertTrue("VCardTemp retrieval by buddy failed", mutex.isItemNotified("vcardTempRetrieve:jaxmpp2"));
-
-		
-		jaxmpp1.disconnect();
-		jaxmpp2.disconnect();
 	}
 	
 	@Test(groups = { "Phase 1" }, description = "Test VCardTemp - VCard4 conversion integration")
 	public void testVCardTempToVCard4Conversion() throws JaxmppException, InterruptedException {
-		final BareJID user1JID = createUserAccount("user1");
-		final BareJID user2JID = createUserAccount("user2");
-		final Jaxmpp jaxmpp1 = createJaxmpp("user1", user1JID);
-		final Jaxmpp jaxmpp2 = createJaxmpp("user2", user2JID);
-
-		jaxmpp1.login(true);
-		jaxmpp2.login(true);
-
 		Element iqPublish = ElementFactory.create("iq");
 		iqPublish.setAttribute("type", "set");
 		Element vcard = ElementFactory.create("vCard", null, "vcard-temp");
@@ -350,7 +343,7 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
-		iqRetrieve.setAttribute("to", user1JID.toString());
+		iqRetrieve.setAttribute("to", user1.getJid().toString());
 		iqRetrieve.addChild(ElementFactory.create("vCard", null, "vcard-temp"));
 		jaxmpp2.send((IQ) Stanza.create(iqRetrieve), new AsyncCallback() {
 
@@ -394,7 +387,7 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
-		iqRetrieve.setAttribute("to", user1JID.toString());
+		iqRetrieve.setAttribute("to", user1.getJid().toString());
 		iqRetrieve.addChild(ElementFactory.create("vcard", null, XMLNS));
 		jaxmpp2.send((IQ) Stanza.create(iqRetrieve), new AsyncCallback() {
 
@@ -436,10 +429,6 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 		mutex.waitFor(1000 * 20, "vcard4Retrieve:jaxmpp2");
 
 		assertTrue("VCard4 retrieval by buddy failed", mutex.isItemNotified("vcard4Retrieve:jaxmpp2"));
-
-		
-		jaxmpp1.disconnect();
-		jaxmpp2.disconnect();
 	}
 
 }

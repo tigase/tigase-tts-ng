@@ -22,7 +22,6 @@ package tigase.tests.archive;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -41,6 +40,7 @@ import tigase.jaxmpp.core.client.xmpp.utils.RSM;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,8 +55,8 @@ public class TestMessageArchiveManagement extends AbstractTest {
 
 	private static final String USER_PREFIX = "mam-";
 
-	private BareJID user1Jid;
-	private BareJID user2Jid;
+	private Account user1;
+	private Account user2;
 
 	private Jaxmpp user1Jaxmpp;
 	private Jaxmpp user2Jaxmpp;
@@ -66,28 +66,24 @@ public class TestMessageArchiveManagement extends AbstractTest {
 	private Timer timer;
 
 	@BeforeClass
-	@Override
 	public void setUp() throws Exception {
 		timer = new Timer();
-		super.setUp();
-		user1Jid = createUserAccount(USER_PREFIX);
-		user1Jaxmpp = createJaxmpp(USER_PREFIX, user1Jid);
-		user1Jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user1Jaxmpp = user1.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
 
-		user2Jid = createUserAccount(USER_PREFIX);
-		user2Jaxmpp = createJaxmpp(USER_PREFIX, user2Jid);
-		user2Jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
-
-		// connecting clients
-		user1Jaxmpp.login(true);
-		user2Jaxmpp.login(true);
+		user2 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user2Jaxmpp = user2.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
 	}
 
 	@AfterClass
 	public void cleanUp() throws Exception {
 		timer.cancel();
-		removeUserAccount(user1Jaxmpp);
-		removeUserAccount(user2Jaxmpp);
 	}
 
 	@Test

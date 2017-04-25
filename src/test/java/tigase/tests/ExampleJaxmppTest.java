@@ -21,10 +21,9 @@
  */
 package tigase.tests;
 
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.j2se.Jaxmpp;
-
 import org.testng.annotations.Test;
+import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.utils.Account;
 
 import static org.testng.Assert.assertTrue;
 import static tigase.TestLogger.log;
@@ -37,26 +36,19 @@ public class ExampleJaxmppTest extends AbstractTest {
 		try {
 			log("This is test case");
 
-			Jaxmpp contact = createJaxmppAdmin();
-
-			contact.login( true );
-
+			Jaxmpp contact = getAdminAccount().createJaxmpp().setConnected(true).build();
+			
 			assertTrue(contact.isConnected(), "contact was not connected" );
 
 			if (contact.isConnected()) {
 				contact.disconnect();
 			}
 
-			BareJID createUserAccount = createUserAccount( "test_user" );
-			Jaxmpp createJaxmpp = createJaxmpp( createUserAccount.getLocalpart(), createUserAccount);
+			Account createUserAccount = createAccount().setLogPrefix("test_user" ).build();
+			Jaxmpp createJaxmpp = createUserAccount.createJaxmpp().build();
 			createJaxmpp.login( true );
 
 			assertTrue(createJaxmpp.isConnected(), "contact was not connected" );
-
-			if (createJaxmpp.isConnected()) {
-				removeUserAccount( createJaxmpp);
-			}
-
 
 		} catch (Exception e) {
 			fail(e);

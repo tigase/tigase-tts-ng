@@ -23,6 +23,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 public class TestLimitOfUsersPerRoom extends AbstractTest {
 
@@ -34,18 +35,14 @@ public class TestLimitOfUsersPerRoom extends AbstractTest {
     public void testMaxUsers() throws Exception {
         final Mutex mutex = new Mutex();
 
-        BareJID user1Jid = createUserAccount("user1");
-        Jaxmpp user1Jaxmpp = createJaxmpp("user1", user1Jid);
-        BareJID user2Jid = createUserAccount("user2");
-        Jaxmpp user2Jaxmpp = createJaxmpp("user2", user2Jid);
-        BareJID user3Jid = createUserAccount("user3");
-        Jaxmpp user3Jaxmpp = createJaxmpp("user3", user3Jid);
+        Account user1 = createAccount().setLogPrefix("user1").build();
+        Account user2 = createAccount().setLogPrefix("user1").build();
+        Account user3 = createAccount().setLogPrefix("user1").build();
+        Jaxmpp user1Jaxmpp = user1.createJaxmpp().setConnected(true).build();
+        Jaxmpp user2Jaxmpp = user2.createJaxmpp().setConnected(true).build();
+        Jaxmpp user3Jaxmpp = user3.createJaxmpp().setConnected(true).build();
 
-        user1Jaxmpp.login(true);
-        user2Jaxmpp.login(true);
-        user3Jaxmpp.login(true);
-
-        final BareJID roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1Jid.getDomain());
+        final BareJID roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1.getJid().getDomain());
 
         MucModule muc1Module = user1Jaxmpp.getModule(MucModule.class);
         MucModule muc2Module = user2Jaxmpp.getModule(MucModule.class);
@@ -144,11 +141,6 @@ public class TestLimitOfUsersPerRoom extends AbstractTest {
 
         joinAs(user2Jaxmpp, roomJID, "user2", "joinAs:user2");
         joinAs(user3Jaxmpp, roomJID, "user3", "notJoinAs:user3");
-
-
-        removeUserAccount(user1Jaxmpp);
-        removeUserAccount(user2Jaxmpp);
-        removeUserAccount(user3Jaxmpp);
     }
 
 

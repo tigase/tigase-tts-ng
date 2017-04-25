@@ -36,7 +36,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.testng.annotations.*;
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -44,6 +43,7 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,9 +65,6 @@ public class TestModificationOfPrivacyRulesUsingREST extends AbstractTest {
 	private HttpHost target;
 	private HttpClientContext localContext;
 
-	BareJID adminJID;
-	Jaxmpp adminJaxmpp;
-
 	BareJID userRegularJID;
 	Jaxmpp userRegularJaxmpp;
 
@@ -79,16 +76,12 @@ public class TestModificationOfPrivacyRulesUsingREST extends AbstractTest {
 
 	final Mutex mutex = new Mutex();
 
-	@BeforeClass(dependsOnMethods = { "setUp" })
+	@BeforeClass
 	public void prepareAdmin() throws JaxmppException {
-		adminJaxmpp = createJaxmppAdmin();
-		adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
-		adminJaxmpp.login( true );
-
 		target = new HttpHost( getInstanceHostname(), Integer.parseInt( getHttpPort() ), "http" );
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
-		final Object adminBareJid = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.USER_BARE_JID );
-		final String adminPassword = adminJaxmpp.getSessionObject().getUserProperty( SessionObject.PASSWORD );
+		final Object adminBareJid = getAdminAccount().getJid();
+		final String adminPassword = getAdminAccount().getPassword();
 		final AuthScope authScope = new AuthScope( target.getHostName(), target.getPort() );
 		log("authScope: " + authScope.toString());
 		final UsernamePasswordCredentials userPass = new UsernamePasswordCredentials( adminBareJid.toString(), adminPassword );
@@ -125,32 +118,12 @@ public class TestModificationOfPrivacyRulesUsingREST extends AbstractTest {
 
 	private Jaxmpp prepareUser( String domain, String username )
 			throws JaxmppException, InterruptedException {
-		BareJID tmp = createUserAccount( "user", username + nextRnd().toLowerCase(), domain );
-		Jaxmpp cnt = createJaxmpp( tmp.getLocalpart(), tmp );
-		cnt.login( true );
-		return cnt;
+		Account tmp = createAccount().setLogPrefix("user").setUsername(username + nextRnd().toLowerCase()).setDomain(domain).build();
+		return tmp.createJaxmpp().setConnected(true).build();
 	}
-
-	@AfterMethod
-	public void cleanUpTest() throws JaxmppException, InterruptedException {
-		tearDownUser( userRegularJaxmpp );
-		tearDownUser( userRegular1Jaxmpp_whitelist );
-		tearDownUser( userRegular2Jaxmpp_blacklist );
-
-	}
-
-	private void tearDownUser( Jaxmpp user ) throws JaxmppException, InterruptedException {
-		if ( null != user ){
-			if ( !user.isConnected() ){
-				user.login( true );
-			}
-			removeUserAccount( user );
-		}
-	}
-
+	
 	@AfterClass
 	public void tearDownAdmin() throws JaxmppException, IOException {
-		adminJaxmpp.disconnect();
 		httpClient.close();
 	}
 
@@ -170,7 +143,7 @@ public class TestModificationOfPrivacyRulesUsingREST extends AbstractTest {
 	)
 	public void testConfigurationUpdating() throws Exception {
 
-		String rulseString = "1|allow|self;2|allow|jid|" + adminJID.toString() + ";4|deny|all";
+		String rulseString = "1|allow|self;2|allow|jid|" + getAdminAccount().getJid().toString() + ";4|deny|all";
 		updateContactFiltering( userRegularJID, DomainFilterPolicy.CUSTOM, rulseString );
 
 		rulseString = "1|allow|all";

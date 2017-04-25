@@ -73,7 +73,6 @@ public abstract class TestRestApiAbstract extends TestPubSubAbstract {
 
 	@AfterClass
 	public void tearDown() throws Exception {
-		super.tearDown();
 		httpClient.close();
 		httpClient = null;
 		localContext = null;

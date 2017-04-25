@@ -19,7 +19,6 @@
  */
 package tigase.tests.archive;
 
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
@@ -28,11 +27,13 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.*;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.Account;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +48,8 @@ public class TestMessageArchivingBasic extends AbstractTest {
 
 	private static final String USER_PREFIX = "MaM-";
 
-	private BareJID user1Jid;
-	private BareJID user2Jid;
+	private Account user1;
+	private Account user2;
 
 	private Jaxmpp user1Jaxmpp;
 	private Jaxmpp user2Jaxmpp;
@@ -60,32 +61,22 @@ public class TestMessageArchivingBasic extends AbstractTest {
 	private Mutex mutex;
 
 	@BeforeClass
-	@Override
 	public void setUp() throws Exception {
 		mutex = new Mutex();
-		super.setUp();
-		user1Jid = createUserAccount(USER_PREFIX);
-		user1Jaxmpp = createJaxmpp(USER_PREFIX, user1Jid);
-		user1Jaxmpp.getModulesManager().register(new MessageArchivingModule());
+		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user1Jaxmpp = user1.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
 
-		user2Jid = createUserAccount(USER_PREFIX);
-		user2Jaxmpp = createJaxmpp(USER_PREFIX, user2Jid);
-		user2Jaxmpp.getModulesManager().register(new MessageArchivingModule());
-
-		// connecting clients
-		user1Jaxmpp.login(true);
-		user2Jaxmpp.login(true);
-
+		user2 = createAccount().setLogPrefix(USER_PREFIX).build();
+		user2Jaxmpp = user2.createJaxmpp().setConfigurator(jaxmpp -> {
+			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+			return jaxmpp;
+		}).setConnected(true).build();
 		id = UUID.randomUUID().toString();
 	}
-
-	@AfterClass
-	public void cleanUp() throws Exception {
-		removeUserAccount(user1Jaxmpp);
-		removeUserAccount(user2Jaxmpp);
-		mutex = null;
-	}
-
+	
 	@Test
 	public void testChangeArchiveSettings() throws Exception {
 		setArchiveSettings(user1Jaxmpp, id, true);

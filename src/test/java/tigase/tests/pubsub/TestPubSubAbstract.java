@@ -19,7 +19,6 @@
  */
 package tigase.tests.pubsub;
 
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
@@ -37,6 +36,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
+import tigase.tests.utils.PubSubNode;
 
 import java.util.*;
 
@@ -67,23 +67,18 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		super.setUp();
 		pubsubJid = JID.jidInstance("pubsub." + getDomain(0));
 		initConnections();
 		ensureNodeItemExists(null, null, null, false);
 	}
-
-	@AfterClass
-	public void tearDown() throws Exception {
-		closeConnections();
-	}
-
+	
 	@Test
 	public void createNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni  = new NodeInfo();
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
 			createNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), ni.getNode(), ni.getName(), false);
+			pubSubManager.add(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), ni.getName()), this.getClass());
 			createdNodes.put(hostname, ni);
 			// on old version we need to wait
 			//Thread.sleep(5000);
@@ -98,6 +93,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			NodeInfo ni  = new NodeInfo();
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
 			createNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), ni.getNode(), ni.getName(), true);
+			pubSubManager.add(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), ni.getName()), getClass());
 			parentNodes.put(hostname, ni);
 			// on old version we need to wait
 			//Thread.sleep(5000);
@@ -146,6 +142,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			NodeInfo ni = createdNodes.get(hostname);
 			NodeInfo pni = parentNodes.get(hostname);
 			deleteNode(hostname, ni.getNode());
+			pubSubManager.remove(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), ni.getName()), this.getClass());
 			// on old version we need to wait
 			//Thread.sleep(5000);
 			Thread.sleep(1000);
@@ -160,6 +157,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			NodeInfo ni = parentNodes.get(hostname);
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
 			deleteNode(hostname, ni.getNode());
+			pubSubManager.remove(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), ni.getName()), this.getClass());
 			// on old version we need to wait
 			//Thread.sleep(5000);
 			Thread.sleep(1000);
@@ -306,21 +304,14 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 
 	private void initConnections() throws JaxmppException {
 		for (String hostname : this.getInstanceHostnames()) {
-			Jaxmpp jaxmpp = createJaxmppAdmin(hostname);
-			jaxmpp.getModulesManager().register(new DiscoveryModule());
-			jaxmpp.login(true);
+			Jaxmpp jaxmpp = getAdminAccount().createJaxmpp().setConfigurator(jaxmpp1 -> {
+				jaxmpp1.getModulesManager().register(new DiscoveryModule());
+				return jaxmpp1;
+			}).setConnected(true).build();
 			jaxmpps.put(hostname, jaxmpp);
 		}
 	}
-
-	private void closeConnections() throws JaxmppException {
-		for (String hostname : this.getInstanceHostnames()) {
-			Jaxmpp jaxmpp = jaxmpps.get(hostname);
-			if (jaxmpp != null && jaxmpp.isConnected())
-				jaxmpp.disconnect(true);
-		}
-	}
-
+	
 	private class NodeInfo {
 		private String id = UUID.randomUUID().toString();
 		private String itemId = UUID.randomUUID().toString();

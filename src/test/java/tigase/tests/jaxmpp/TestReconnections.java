@@ -21,11 +21,13 @@
  */
 package tigase.tests.jaxmpp;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.j2se.ConnectionConfiguration;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractJaxmppTest;
+import tigase.tests.utils.Account;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -35,9 +37,14 @@ import static org.testng.Assert.assertTrue;
  */
 public class TestReconnections extends AbstractJaxmppTest {
 
-	private BareJID userJID;
+	private Account user;
+	private Jaxmpp jaxmpp;
 
-
+	@BeforeMethod
+	public void prepareAccountAndJaxmpp() throws JaxmppException, InterruptedException {
+		user = createAccount().setLogPrefix("jaxmpp_").build();
+		jaxmpp = user.createJaxmpp().build();
+	}
 
 	@Test
 	public void testMultipleReconnectionsWebSocket() throws Exception {
@@ -58,9 +65,6 @@ public class TestReconnections extends AbstractJaxmppTest {
 	}
 
 	private void testMultipleReconnections(ConnectionConfiguration.ConnectionType connectionType) throws Exception {
-		userJID = createUserAccount("jaxmpp_");
-		Jaxmpp jaxmpp = createJaxmppInstance(userJID);
-
 		jaxmpp.getConnectionConfiguration().setConnectionType(connectionType);
 
 		switch (connectionType) {
