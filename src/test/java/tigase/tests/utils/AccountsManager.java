@@ -37,6 +37,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
+import tigase.jaxmpp.core.client.xmpp.modules.registration.UnifiedRegistrationForm;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
@@ -154,7 +155,8 @@ public class AccountsManager {
 							new InBandRegistrationModule.ReceivedRequestedFieldsHandler() {
 
 								@Override
-								public void onReceivedRequestedFields(SessionObject sessionObject, IQ responseStanza) {
+								public void onReceivedRequestedFields(SessionObject sessionObject, IQ responseStanza,
+																	  UnifiedRegistrationForm form) {
 
 									try {
 										jaxmpp1.getModule(InBandRegistrationModule.class)
