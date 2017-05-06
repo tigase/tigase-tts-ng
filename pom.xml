@@ -132,7 +132,7 @@
 					<properties>
 						<property>
 							<name>listener</name>
-							<value>org.uncommons.reportng.HTMLReporter, org.uncommons.reportng.JUnitXMLReporter, tigase.DotTestListener, tigase.server.ServerBootstrap</value>
+							<value>org.uncommons.reportng.HTMLReporter, org.uncommons.reportng.JUnitXMLReporter, tigase.DotTestListener</value>
 						</property>
 					</properties>
 				</configuration>
