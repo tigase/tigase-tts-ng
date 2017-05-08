@@ -239,8 +239,6 @@ public class AccountsManager {
 			if (jid1 == null && !jaxmpp.isConnected()) jaxmpp.login(true);
 			final JID jid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
 
-			if (jid.getLocalpart().equals("admin")) throw new RuntimeException("Better not to remove user 'admin', don't you think?");
-
 			final JaxmppCore.LoggedOutHandler disconnectionHandler = sessionObject -> {
 				log("Disconnected! " + userJid);
 				mutex.notifyForce();
