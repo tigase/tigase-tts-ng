@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Handler;
@@ -580,18 +581,28 @@ public abstract class AbstractTest {
 	}
 	
 	private String getProperty(String key) throws IOException {
-		if ( this.props == null ){
+		if ( props == null ){
 			loadProperties();
 		}
-		return this.props.getProperty( key );
+		return props.getProperty( key );
 	}
 	
 	private void loadProperties() throws IOException {
-		if ( this.props == null ){
+		if ( props == null ){
 			InputStream stream = getClass().getResourceAsStream( "/server.properties" );
-			this.props = new Properties();
-			this.props.load( stream );
+			props = new Properties();
+			props.load( stream );
 			stream.close();
+
+			final Properties sysProps = System.getProperties();
+			sysProps.stringPropertyNames()
+					.stream()
+					.filter(e -> e.matches("(?u)^(imap|test|server)[.].*"))
+					.forEach(p -> {
+						log("adding system property: " + p + ": " + sysProps.getProperty(p));
+						props.setProperty(p, sysProps.getProperty(p));
+					});
+
 		}
 	}
 
