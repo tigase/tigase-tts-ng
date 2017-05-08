@@ -103,7 +103,7 @@ public class RetrieveVersion extends AbstractTest {
 			log( " == Retrieve configuration", false );
 			iq = IQ.create();
 			iq.setType( StanzaType.set );
-			iq.setTo( JID.jidInstance( "basic-conf", adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
+			iq.setTo( JID.jidInstance( adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
 
 			JabberDataElement jde = new JabberDataElement( XDataType.submit );
 			Element command = ElementFactory.create( "command", null, "http://jabber.org/protocol/commands" );
@@ -156,7 +156,7 @@ public class RetrieveVersion extends AbstractTest {
 			log( " == Retrieve components", false );
 			iq = IQ.create();
 			iq.setType( StanzaType.set );
-			iq.setTo( JID.jidInstance( "basic-conf", adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
+			iq.setTo( JID.jidInstance( adminJaxmpp.getSessionObject().getUserBareJid().getDomain() ) );
 
 			jde = new JabberDataElement( XDataType.submit );
 			command = ElementFactory.create( "command", null, "http://jabber.org/protocol/commands" );
