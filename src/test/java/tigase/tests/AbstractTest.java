@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Handler;
@@ -196,7 +195,7 @@ public abstract class AbstractTest {
 				}
 				return;
 			} catch (JaxmppException ex) {
-				assertNull(ex);
+				log("Could not connect with admin account credentials (" + ex.getMessage() + "), trying to register account...");
 			}
 
 			this.adminAccount = builder.setRegister(true).build();
