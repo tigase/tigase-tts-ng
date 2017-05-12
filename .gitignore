@@ -6,3 +6,10 @@ config-dump.properties
 .settings/
 test-output/
 tigase-tts-ng.iml
+tmp
+tigase_test_db
+derby.log
+unzip.log
+test-results
+files
+tests-runner-settings.sh
