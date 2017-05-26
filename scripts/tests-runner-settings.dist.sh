@@ -10,7 +10,7 @@ db_root_pass="root"
 
 database_host="localhost"
 
-DATABASES=("derby" "mysql" "pgsql" "mssql" "mongodb")
+DATABASES=("derby" "mysql" "postgresql" "sqlserver" "mongodb")
 DATABASES_IPS=("127.0.0.1" "127.0.0.1" "127.0.0.1" "sqlserverhost" "127.0.0.1")
 IPS=("127.0.0.1" "127.0.0.1" "127.0.0.1" "127.0.0.1" "127.0.0.1")
 
