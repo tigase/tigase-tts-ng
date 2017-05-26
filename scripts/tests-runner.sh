@@ -148,7 +148,7 @@ fi
 unzip -o ${server_dir}/jars/tigase-server.jar -d ${server_dir}/jars/tigase-server >> unzip.log
 ver=`grep -m 1 "Tigase-Version:" ${server_dir}/jars/tigase-server/META-INF/MANIFEST.MF | sed -e "s/Tigase-Version: \(.*\)/\\1/" | sed 's/[[:space:]]//'`
 
-ROOT_DIR="${ROOT_DIR}files/"
+[[ -z "${ROOT_DIR}" ]] && ROOT_DIR="files/"
 
 output_dir="${ROOT_DIR}test-results/${ver}"
 
