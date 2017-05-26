@@ -140,8 +140,12 @@ class SummaryGenarator {
 
 	static LocalDate getTestDate(Map metrics, File logFile) {
 		if (metrics?.finishedAt) {
-			def parse = LocalDate.parse(metrics?.finishedAt,
-										DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")))
+//			def parse = LocalDate.parse(metrics?.finishedAt,
+//										DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")))
+			// above throws exception under some OSs hence using forced pattern
+			def parse = LocalDate.parse(
+					metrics?.finishedAt,
+					DateTimeFormatter.ofPattern("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"))
 			metrics.remove('finishedAt')
 			return parse
 		} else if (logFile?.exists()) {
