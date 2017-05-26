@@ -119,7 +119,7 @@ function ts_start() {
 function sleep_fun() {
 	[[ -z ${1} ]] && local _sleep_timeout="1" || local _sleep_timeout=${1}
 
-    for i in $(seq -f "%03g" ${_sleep_timeout} 0); do
+    for i in $(seq -w -s' ' ${_sleep_timeout} -1 0); do
         echo -ne "Sleeping: ${i}\r"
         sleep 1
     done
