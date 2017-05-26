@@ -62,7 +62,7 @@ class SummaryGenarator {
 				.groupBy({it.testType}, {it.dbType})
 				.collectEntries {testType, dbtypes -> [(testType): dbtypes.keySet()]}
 
-		def resultHtmlPage = new File("${rootDirectory}/result.html")
+		def resultHtmlPage = new File("${rootDirectory}/index.html")
 		if (!resultHtmlPage.getParentFile().exists()) {
 			if (!resultHtmlPage.getParentFile().mkdirs()) {
 				println("Directory creation failed! Path: ${resultHtmlPage.getParentFile()}")
