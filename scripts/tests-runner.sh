@@ -25,7 +25,7 @@ JDBC_URI_sqlserver="jdbc:jtds:sqlserver://localhost:1433;databaseName=tigase_tes
 JDBC_URI_mysql="jdbc:mysql://localhost/tigase_test_db?user=tigase_test_user&password=tigase_test_pass&useSSL=false&useUnicode=true&characterEncoding=UTF-8"
 JDBC_URI_postgresql="jdbc:postgresql://localhost/tigase_test_db?user=tigase_test_user"
 
-#SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
+SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
 [[ -f ${SETTINGS_FILE} ]] && source ${SETTINGS_FILE} \
   || {
 	echo "Can't find settings file: ${SETTINGS_FILE} using defaults"
