@@ -202,7 +202,6 @@ if [[ -z "${SKIP_SUMMARY_PAGE_GET}" || ! "${SKIP_SUMMARY_PAGE_GET}" -eq 1 ]] ; t
     echo "Generating Summary page"
 
     groovy scripts/SummaryGenarator.groovy ${ROOT_DIR}
-    echo $?
 else
     echo "Skipping summary page generation"
 fi
