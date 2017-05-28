@@ -99,7 +99,7 @@ class SummaryGenarator {
 
 		def failsTotal = testResults
 				.findAll {tc -> tc?.finishedDate && LocalDate.now().until(tc.finishedDate, ChronoUnit.DAYS) == 0}
-				.count {it -> it.isFailed()}
+				.count {it -> (it.getTestResult() != TestCase.Result.PASSED)}
 
 		println("fails total: " + failsTotal)
 
@@ -244,10 +244,6 @@ class TestCase {
 		} else {
 			return Result.PASSED
 		}
-	}
-
-	boolean isFailed() {
-		!metrics ? true : metrics.failed > 0
 	}
 
 	enum Result {
