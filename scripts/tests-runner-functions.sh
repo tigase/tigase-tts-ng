@@ -126,6 +126,24 @@ function sleep_fun() {
     echo
 }
 
+function copy_results() {
+	[[ -z ${1} ]] && local _server_dir=${server_dir} || local _server_dir=${1}
+	[[ -z ${2} ]] && local _output_dir=${output_dir} || local _output_dir=${2}
+
+    [[ ! -z '${_output_dir}' &&  "/" != '${_output_dir}' ]] && rm -rf '${_output_dir}'
+
+    mkdir -p "${_output_dir}/server-log/"
+
+    for file in testng-results.xml html xml ; do
+        if [[ -e "target/surefire-reports/${file}" ]] ; then
+            cp -r target/surefire-reports/${file} "${_output_dir}/"
+        fi
+    done
+    if [[ -e "${_server_dir}/logs/tigase-console.log" ]] ; then
+        cp ${_server_dir}/logs/tigase-console.log "${_output_dir}/server-log/"
+    fi
+}
+
 function run_test() {
 
 	[[ -z ${1} ]] && local _database=${database} || local _database=${1}
@@ -187,6 +205,9 @@ function run_test() {
             cat ${_server_dir}/logs/tigase-console.log
 
             tig_stop_server ${_server_dir} "etc/tigase.conf"
+
+            copy_results ${_server_dir} ${_output_dir}
+
             return
         fi
 	else
@@ -215,16 +236,5 @@ function run_test() {
         tig_stop_server ${_server_dir} "etc/tigase.conf"
     fi
 
-    [[ ! -z '${_output_dir}' &&  "/" != '${_output_dir}' ]] && rm -rf '${_output_dir}'
-
-    mkdir -p "${_output_dir}/server-log/"
-
-    for file in testng-results.xml html xml ; do
-        if [[ -e "target/surefire-reports/${file}" ]] ; then
-            cp -r target/surefire-reports/${file} "${_output_dir}/"
-        fi
-    done
-    if [[ -e "${_server_dir}/logs/tigase-console.log" ]] ; then
-        cp ${_server_dir}/logs/tigase-console.log "${_output_dir}/server-log/"
-    fi
+    copy_results ${_server_dir} ${_output_dir}
 }
