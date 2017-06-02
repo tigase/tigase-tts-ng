@@ -1,0 +1,23 @@
+= Tigase TTS-NG
+Tigase Team <team@tigase.net>
+:toc:
+:toclevels: 3
+:numbered:
+:website: http://tigase.net
+:Date: 2017-05-31
+
+Welcome to Tigase TTS-NG guide
+
+
+== Overview
+
+TTS-NG is a NextGeneration version of Tigase TestSuite intended to run automated functionality tests.
+It's based on TestNG framework (similar to junit, serving as a basic test framework) and JaXMPP library (to provide client-side functionality)
+
+:leveloffset: +1
+
+include::text/Running_TTS-NG.asciidoc[]
+
+include::text/TTS-NG_Configuration.asciidoc[]
+
+include::text/Basic_API_Overview.asciidoc[]

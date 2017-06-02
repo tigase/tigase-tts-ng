@@ -83,6 +83,8 @@ public class TestTwoWayTLS extends AbstractTest {
 
 	/**
 	 * Number of domain. Domain must be separately configured for this test!
+	 *
+	 * @throws Exception related to loading of the certificate
 	 */
 
 	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with client certificate")

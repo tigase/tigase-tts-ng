@@ -23,10 +23,6 @@ import org.testng.Reporter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- *
- * @author Wojciech Kapcia <wojciech.kapcia@tigase.org>
- */
 public class TestLogger {
 
 	private static SimpleDateFormat dt = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
