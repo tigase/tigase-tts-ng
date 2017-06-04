@@ -94,12 +94,11 @@ public class TestRestApiWithMessageExpiration extends AbstractTest {
 
 		setLoggerLevel( Level.INFO, true);
 
-		adminJaxmpp = getJaxmppAdmin();
 		adminJID = getAdminAccount().getJid();
-//
-//		addMessageListener( adminJaxmpp );
-//
-//		adminJaxmpp.login( true );
+		adminJaxmpp = getAdminAccount().createJaxmpp().setConfigurator(jaxmpp -> {
+			addMessageListener( jaxmpp );
+			return jaxmpp;
+		}).setConnected(true).build();
 
 		target = new HttpHost( getInstanceHostname(), Integer.parseInt( getHttpPort() ), "http" );
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
