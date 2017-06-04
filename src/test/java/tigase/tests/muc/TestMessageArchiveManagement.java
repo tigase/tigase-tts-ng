@@ -216,8 +216,8 @@ public class TestMessageArchiveManagement
 
 		assertEquals(expMessages.size(), receivedMessages.size());
 		expMessages.forEach(sent -> {
-			Item recv = receivedMessages.stream().filter(sent::equals).findFirst().get();
-			assertNotNull(recv);
+			Optional<Item> recv = receivedMessages.stream().filter(sent::equals).findFirst();
+			assertTrue(recv.isPresent());
 		});
 
 		user1Jaxmpp.getEventBus()
