@@ -44,7 +44,7 @@ function get_database_uri() {
             export JDBC_URI="jdbc:derby:"`pwd`"/${_db_name};create=true"
             ;;
         mongodb)
-            export JDBC_URI="mongodb://${_database_host}/${_db_name}"
+            [[ -z ${_db_user} ]] && export JDBC_URI="mongodb://${_database_host}/${_db_name}" ||  export JDBC_URI="mongodb://${_db_user}:${_db_pass}@${_database_host}/${_db_name}"
             ;;
         *)
             echo "Unknown db: ${_db_type}"
