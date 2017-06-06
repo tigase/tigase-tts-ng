@@ -195,7 +195,7 @@ public class AccountsManager {
 		mutex.waitFor(1000 * 30, "registration");
 
 		assertTrue("Registration failed!", mutex.isItemNotified("registrationSuccess"));
-		jaxmpp1.disconnect();
+		jaxmpp1.disconnect(true);
 
 		add(account);
 		return account;
