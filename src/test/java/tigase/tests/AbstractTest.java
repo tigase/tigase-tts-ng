@@ -453,7 +453,7 @@ public abstract class AbstractTest {
 			public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
 				try {
 					result[0] = stanza;
-					mutex.notify("msg:" + uid);
+					mutex.notify("msg:" + stanza.getId());
 				} catch (Exception e) {
 					fail(e);
 				}
@@ -464,7 +464,7 @@ public abstract class AbstractTest {
 			@Override
 			public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
 				try {
-					mutex.notify("msg:" + uid);
+					mutex.notify("msg:" + stanza.getId());
 				} catch (Exception e) {
 					fail(e);
 				}
