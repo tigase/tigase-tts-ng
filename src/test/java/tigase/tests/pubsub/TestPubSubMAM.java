@@ -310,7 +310,10 @@ public class TestPubSubMAM
 		public boolean equals(Object obj) {
 			if (obj instanceof Item) {
 				Item i = (Item) obj;
-				return itemId.equals(i.itemId) && payload.equals(i.payload);
+				long t1 = timestamp.getTime() / (60 * 1000);
+				long t2 = i.timestamp.getTime() / (60 * 1000);
+				return itemId.equals(i.itemId) && payload.equals(i.payload) &&
+						t1 == t2;
 			}
 			return false;
 		}
@@ -318,7 +321,7 @@ public class TestPubSubMAM
 		@Override
 		public String toString() {
 			try {
-				return "[id: " + itemId + ", payload: " + payload.getAsString() + "]";
+				return "[id: " + itemId + ", payload: " + payload.getAsString() + ", timestamp: " + timestamp.getTime() + "]";
 			} catch (XMLException e) {
 				e.printStackTrace();
 				return e.getMessage();
