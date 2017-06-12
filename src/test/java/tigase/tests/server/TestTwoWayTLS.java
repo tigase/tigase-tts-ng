@@ -69,14 +69,11 @@ public class TestTwoWayTLS extends AbstractTest {
 				.setDomain(props.getProperty("server.client_auth.domain"))
 				.setPassword(props.getProperty("test.admin.password"))
 				.build();
-		String instanceHostname = getInstanceHostname();
-		if (instanceHostname != null) {
-			jaxmpp.getConnectionConfiguration().setServer(instanceHostname);
-		}
 
 		jaxmpp = user.createJaxmpp().setHost(getInstanceHostname()).setConfigurator(jaxmpp -> {
 			jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
 			jaxmpp.getProperties().setUserProperty(SocketConnector.HOSTNAME_VERIFIER_DISABLED_KEY, Boolean.TRUE);
+			jaxmpp.getProperties().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.FALSE);
 			return jaxmpp;
 		}).build();
 	}
