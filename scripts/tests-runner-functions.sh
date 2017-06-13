@@ -77,7 +77,17 @@ function db_reload_sql() {
 
     ./scripts/tigase.sh destroy-schema etc/tigase.conf -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
 
+    if [[ ! $? -eq 0 ]] ; then
+        cd ${tts_dir}
+        return 1
+    fi
+
     ./scripts/tigase.sh install-schema etc/tigase.conf -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
+
+    if [[ ! $? -eq 0 ]] ; then
+        cd ${tts_dir}
+        return 1
+    fi
 
 	cd ${tts_dir}
 }
@@ -181,6 +191,11 @@ function run_test() {
 				exit 1
 				;;
 		esac
+
+        if [[ ! $? -eq 0 ]] ; then
+            echo "Database reloading failed! Skipping running tests!"
+            return 1
+        fi
 	else
 		echo "Skipped database reloading."
 	fi
