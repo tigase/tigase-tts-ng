@@ -170,20 +170,20 @@ public class TestPubSubMAM
 		List<Item> expectedItems = publishedItems.stream().limit(10).collect(Collectors.toList());
 		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
 		query.setEnd(
-				new Date(((long) (expectedItems.get(expectedItems.size() - 1).timestamp.getTime() / 1000) + 1) * 1000));
+				new Date(((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(5).limit(10).collect(Collectors.toList());
 		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
 		query.setEnd(
-				new Date(((long) (expectedItems.get(expectedItems.size() - 1).timestamp.getTime() / 1000) + 1) * 1000));
+				new Date(((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
 
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(10).limit(10).collect(Collectors.toList());
 		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
 		query.setEnd(
-				new Date(((long) (expectedItems.get(expectedItems.size() - 1).timestamp.getTime() / 1000) + 1) * 1000));
+				new Date(((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 	}
 
@@ -260,6 +260,7 @@ public class TestPubSubMAM
 
 						@Override
 						public void onSuccess(Stanza responseStanza) throws JaxmppException {
+							item.publishedAt(new Date());
 							mutex.notify("publish:node:root:item-id:" + item.itemId);
 						}
 
@@ -289,6 +290,7 @@ public class TestPubSubMAM
 
 		private final String id;
 		private final Date timestamp;
+		private Date publishedAt = null;
 		private final String itemId;
 		private final Element payload;
 
@@ -306,14 +308,23 @@ public class TestPubSubMAM
 			payload = ElementFactory.create("item", "Item: " + itemId, "http://tigase.org/pubsub#test");
 		}
 
+		public void publishedAt(Date timestamp) {
+			this.publishedAt = timestamp;
+		}
+
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof Item) {
 				Item i = (Item) obj;
-				long t1 = timestamp.getTime() / (60 * 1000);
-				long t2 = i.timestamp.getTime() / (60 * 1000);
-				return itemId.equals(i.itemId) && payload.equals(i.payload) &&
-						t1 == t2;
+				if (itemId.equals(i.itemId) && payload.equals(i.payload)) {
+					if (publishedAt != null) {
+						return (Math.floor(timestamp.getTime()/1000)*1000) <= i.timestamp.getTime() && i.timestamp.getTime() <= publishedAt.getTime();
+					} else if (i.publishedAt != null) {
+						return (Math.floor(i.timestamp.getTime()/1000)*1000) <= timestamp.getTime() && timestamp.getTime() <= i.publishedAt.getTime();
+					} else {
+						return timestamp.getTime() == i.timestamp.getTime();
+					}
+				}
 			}
 			return false;
 		}
@@ -321,7 +332,11 @@ public class TestPubSubMAM
 		@Override
 		public String toString() {
 			try {
-				return "[id: " + itemId + ", payload: " + payload.getAsString() + ", timestamp: " + timestamp.getTime() + "]";
+				String result = "[id: " + itemId + ", payload: " + payload.getAsString() + ", timestamp: " + timestamp.getTime();
+				if (publishedAt != null) {
+					result += ", publishedAt: " + publishedAt.getTime();
+				}
+				return result + "]";
 			} catch (XMLException e) {
 				e.printStackTrace();
 				return e.getMessage();
