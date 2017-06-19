@@ -34,7 +34,7 @@
         <profile>
             <id>dist</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
                 <property>
                     <name>dist</name>
                 </property>
@@ -300,7 +300,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
-				<version>1.2</version>
+				<version>1.4</version>
 				<configuration>
 					<timestampFormat>{0,date} {0,time}</timestampFormat>
 					<shortRevisionLength>8</shortRevisionLength>
@@ -317,7 +317,7 @@
 
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
+				<version>3.6.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>

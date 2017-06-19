@@ -52,9 +52,14 @@ SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
     db_root_user="root"
     db_root_pass="root"
 
+    MAIL_HOST="localhost"
+    MAIL_SENDER_PASS="password"
+
     tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
+
 	MS_MEM=100
 	MX_MEM=1000
+
 	SMALL_MS_MEM=10
 	SMALL_MX_MEM=20
 
@@ -63,6 +68,8 @@ SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
 export MIN_MEM=$MS_MEM
 export MAX_MEM=$MX_MEM
 
+export MAIL_HOST=${MAIL_HOST}
+export MAIL_SENDER_PASS=${MAIL_SENDER_PASS}
 
 
 FUNCTIONS_FILE=`dirname ${0}`/tests-runner-functions.sh

@@ -18,6 +18,9 @@ server_timeout=15
 
 server_dir="../tigase-server/server"
 
+MAIL_HOST="localhost"
+MAIL_SENDER_PASS="password"
+
 tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
 
 MS_MEM=100

@@ -116,16 +116,6 @@ function tig_stop_server() {
 
 }
 
-function ts_start() {
-	[[ -z ${1} ]] || local _server_ip="-Dserver.cluster.nodes=${1}"
-	[[ -z ${2} || "all" == "${2}" ]] && local _test_case="" || local _test_case="-Dtest=${2}"
-
-    [[ -z ${SKIP_REBUILD_TTS} ]] && local _testing="clean test" || local _testing="clean surefire:test"
-
-    echo "mvn ${_testing} ${_test_case} ${_server_ip}"
-    mvn ${_testing} ${_test_case} ${_server_ip}
-}
-
 function sleep_fun() {
 	[[ -z ${1} ]] && local _sleep_timeout="1" || local _sleep_timeout=${1}
 
@@ -236,7 +226,16 @@ function run_test() {
 	echo -e "\nRunning: ${ver}-${_database} test, IP ${_server_ip}..."
 	start_test=`date +%s`
 
-	ts_start ${_server_ip} ${_test_case}
+
+
+	[[ -z ${_server_ip} ]] || local _server_ip_param="-Dserver.cluster.nodes=${_server_ip}"
+	[[ -z ${_test_case} || "all" == "${_test_case}" ]] && local _test_case_param="" || local _test_case_param="-Dtest=${_test_case}"
+	[[ -z ${MAIL_HOST} ]] || local _mail_host_param="-Dimap.server=${MAIL_HOST}"
+	[[ -z ${MAIL_SENDER_PASS} ]] || local _mail_sender_pass_param="-Dimap.password=${MAIL_SENDER_PASS}"
+
+	mvn clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_sender_pass_param}
+
+
 
 	end_test=`date +%s`
 	total_time=$((end_test-start_test))
