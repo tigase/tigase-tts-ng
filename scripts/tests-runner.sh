@@ -34,9 +34,7 @@ SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
 	server_dir="tmp/tigase-server"
 	server_ip="localhost"
 
-#	server_timeout=30
-#	server_timeout=15
-	server_timeout=5
+	server_timeout=30
 
     DATABASES=("derby" "mysql" "postgresql" "sqlserver" "mongodb")
     DATABASES_IPS=("127.0.0.1" "127.0.0.1" "127.0.0.1" "127.0.0.1" "127.0.0.1")
