@@ -147,7 +147,7 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 		try {
 			jaxmpp.login(true);
 		} catch (Exception ex) {
-
+			assertNotNull(ex);
 		}
 
 		assertNull(jaxmpp.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY));
@@ -168,7 +168,11 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 
 		jaxmpp.getSessionObject().clear();
 
-		jaxmpp.login(true);
+		try {
+			jaxmpp.login(true);
+		} catch (Exception ex) {
+			assertNull(ex);
+		}
 
 		assertTrue(jaxmpp.isConnected());
 
