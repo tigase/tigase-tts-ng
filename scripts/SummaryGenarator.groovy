@@ -45,6 +45,8 @@ class SummaryGenarator {
 			}
 		}
 
+		println sprintf("results parsing generation time: %ss", (System.currentTimeMillis() - start) / 1000)
+
 		Map<String, Map<String, Map<String, List<TestCase>>>> map
 		map = testResults.groupBy({it.testType}, {it.version}, {it.dbType})
 
@@ -58,6 +60,7 @@ class SummaryGenarator {
 			} as TreeMap]
 		} as TreeMap
 
+		println sprintf("collecting entries generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 		def testAllDBs = testResults
 				.groupBy({it.testType}, {it.dbType})
 				.collectEntries {testType, dbtypes -> [(testType): dbtypes.keySet()]}
@@ -81,6 +84,7 @@ class SummaryGenarator {
 		output.writeTo(pw)
 		pw.close()
 
+		println sprintf("summary page generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 		Path source = Paths.get("scripts/templates/assets")
 		def destination = Paths.get("${rootDirectory}/assets")
 
@@ -95,7 +99,7 @@ class SummaryGenarator {
 			}
 		}
 
-		println sprintf("generation time: %ss", (System.currentTimeMillis() - start) / 1000)
+		println sprintf("total generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		def failsTotal = testResults
 				.findAll {tc -> tc?.finishedDate && LocalDate.now().until(tc.finishedDate, ChronoUnit.DAYS) == 0}
