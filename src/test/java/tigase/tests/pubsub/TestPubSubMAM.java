@@ -318,9 +318,9 @@ public class TestPubSubMAM
 				Item i = (Item) obj;
 				if (itemId.equals(i.itemId) && payload.equals(i.payload)) {
 					if (publishedAt != null) {
-						return (Math.floor(timestamp.getTime()/1000)*1000) <= i.timestamp.getTime() && i.timestamp.getTime() <= publishedAt.getTime();
+						return (Math.floor(timestamp.getTime()/10000)*10000) <= i.timestamp.getTime() && Math.floor(i.timestamp.getTime()/10000)*10000 <= Math.ceil(publishedAt.getTime()/10000)*10000;
 					} else if (i.publishedAt != null) {
-						return (Math.floor(i.timestamp.getTime()/1000)*1000) <= timestamp.getTime() && timestamp.getTime() <= i.publishedAt.getTime();
+						return (Math.floor(i.timestamp.getTime()/10000)*10000) <= timestamp.getTime() && Math.floor(timestamp.getTime()/10000)*10000 <= Math.ceil(i.publishedAt.getTime()/10000)*10000;
 					} else {
 						return timestamp.getTime() == i.timestamp.getTime();
 					}
