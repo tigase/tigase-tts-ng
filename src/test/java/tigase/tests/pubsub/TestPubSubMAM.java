@@ -66,7 +66,7 @@ public class TestPubSubMAM
 	protected PubSubNode LEAF;
 	protected PubSubNode COLLECTION;
 	protected PubSubNode ROOT;
-
+	
 	@BeforeClass
 	public void setUp() throws Exception {
 		user = createAccount().setLogPrefix("user1").build();
@@ -286,7 +286,7 @@ public class TestPubSubMAM
 		assertArrayEquals(expected.toArray(), actual.toArray());
 	}
 
-	protected class Item {
+	protected static class Item {
 
 		private final String id;
 		private final Date timestamp;
@@ -318,9 +318,15 @@ public class TestPubSubMAM
 				Item i = (Item) obj;
 				if (itemId.equals(i.itemId) && payload.equals(i.payload)) {
 					if (publishedAt != null) {
-						return (Math.floor(timestamp.getTime()/10000)*10000) <= i.timestamp.getTime() && Math.floor(i.timestamp.getTime()/10000)*10000 <= Math.ceil(publishedAt.getTime()/10000)*10000;
+						double i11 = Math.floor(((double) timestamp.getTime())/10000)*10000;
+						double i12 = Math.ceil(((double) publishedAt.getTime())/10000)*10000;
+						double i2 = Math.floor(((double) i.timestamp.getTime())/10000)*10000;
+						return i11 <= i2 && i2 <= i12;
 					} else if (i.publishedAt != null) {
-						return (Math.floor(i.timestamp.getTime()/10000)*10000) <= timestamp.getTime() && Math.floor(timestamp.getTime()/10000)*10000 <= Math.ceil(i.publishedAt.getTime()/10000)*10000;
+						double i11 = Math.floor(((double) i.timestamp.getTime())/10000)*10000;
+						double i12 = Math.ceil(((double) i.publishedAt.getTime())/10000)*10000;
+						double i2 = Math.floor(((double) timestamp.getTime())/10000)*10000;
+						return i11 <= i2 && i2 <= i12;
 					} else {
 						return timestamp.getTime() == i.timestamp.getTime();
 					}
