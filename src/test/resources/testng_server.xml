@@ -66,9 +66,12 @@
 		</classes>
 	</test>
 
-	<test name="Retrieve server statistics 2">
-		<classes>
-			<class name="tigase.tests.util.RetrieveStatistics" />
-		</classes>
-	</test>
+
+    <!--Admin ad-hocs-->
+    <test name="Admin ad-hoc tests">
+        <packages>
+            <package name="tigase.tests.server.adhoc"/>
+        </packages>
+    </test>
+
 </suite>
