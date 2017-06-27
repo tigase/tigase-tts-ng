@@ -229,6 +229,7 @@ public class TestAdminUI extends AbstractTest {
 	public void testGetUserInfoUserOnline() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
 		System.out.println("##### Check get user info - online");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
+		accountManager.remove(user1);
 		Jaxmpp userJaxmpp1 = user1.createJaxmpp().setConnected(true).build();
 
 		HtmlPage p = webClient.getPage(getAdminUrl());
@@ -240,7 +241,7 @@ public class TestAdminUI extends AbstractTest {
 		HtmlForm form = p.getForms().get(0);
 		HtmlTextInput accountJid = form.getInputByName("accountjid");
 		accountJid.setValueAttribute(user1.getJid().toString());
-		
+
 		HtmlSubmitInput button = form.getInputByName("submit");
 		p = button.click();
 		
@@ -250,12 +251,12 @@ public class TestAdminUI extends AbstractTest {
 		assertEquals(form.getInputByName("Active connections").getValueAttribute(), "Active connections: 1");
 		assertEquals(form.getInputByName("Offline messages: 0").getValueAttribute(), "Offline messages: 0");
 		DomNodeList<HtmlElement> tables = form.getElementsByTagName("table");
-		//DomNodeList<HtmlElement> tbody = tables.get(0).getElementsByTagName("tbody");
-		DomNodeList<HtmlElement> trs = tables.get(0).getElementsByTagName("tr");
+		DomNodeList<HtmlElement> tbody = tables.get(0).getElementsByTagName("tbody");
+		DomNodeList<HtmlElement> trs = tbody.get(0).getElementsByTagName("tr");
 		Iterator<DomElement> tds = trs.get(0).getChildElements().iterator();
 		assertEquals(tds.next().asText(), ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource());
 		
-		trs = tables.get(0).getElementsByTagName("tr");
+		trs = tbody.get(0).getElementsByTagName("tr");
 		tds = trs.get(0).getChildElements().iterator();
 		assertEquals(tds.next().asText(), ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource());
 	}	
