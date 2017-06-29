@@ -22,6 +22,16 @@
 			<class name="tigase.tests.server.TestVCard4AndTempIntrgration" />
 		</classes>
 	</test>
+	<test name="MotD: Message of the Day">
+		<classes>
+			<class name="tigase.tests.server.TestMotD"/>
+		</classes>
+	</test>
+	<test name="Welcome: Welcome message">
+		<classes>
+			<class name="tigase.tests.server.TestWelcomeMessage"/>
+		</classes>
+	</test>
 
 	<!-- Offline Messages -->
 	<test name="Offline Messages: Setting offline messages limit to 3 - #2944">
