@@ -312,8 +312,12 @@ public class TestMessageArchivingMUC extends AbstractTest {
 				gotMsgs.add(item.getBody());
 			Element itemEl = item.getItem();
 			Element subjectEl = itemEl.getFirstChild("subject");
-			if (subjectEl != null)
-				gotSubjects.add(subjectEl.getValue());
+			if (subjectEl != null) {
+				String subject = subjectEl.getValue();
+				if (subject != null && !subject.isEmpty()) {
+					gotSubjects.add(subjectEl.getValue());
+				}
+			}
 		}
 		Assert.assertEquals(gotMsgs, msgs);
 		Assert.assertEquals(gotSubjects, subjects);
