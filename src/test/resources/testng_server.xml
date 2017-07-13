@@ -77,11 +77,20 @@
 	</test>
 
 
-    <!--Admin ad-hocs-->
+    <!-- Admin ad-hocs -->
     <test name="Admin ad-hoc tests">
         <packages>
             <package name="tigase.tests.server.adhoc"/>
         </packages>
     </test>
+
+    <!-- Presence -->
+    <test name="Presence tests">
+        <packages>
+            <package name="tigase.tests.server.presence"/>
+        </packages>
+    </test>
+
+
 
 </suite>
