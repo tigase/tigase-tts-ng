@@ -21,4 +21,9 @@
 			<class name="tigase.tests.http.TestRetrievalOfUserAvatarUsingREST" />
 		</classes>
 	</test>
+	<test name="Upload: Test support for XEP-0363: HTTP File Upload">
+		<classes>
+			<class name="tigase.tests.http.TestHTTPFileUpload" />
+		</classes>
+	</test>
 </suite>

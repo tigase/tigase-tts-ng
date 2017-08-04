@@ -599,8 +599,13 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+        <dependency>
+            <groupId>tigase</groupId>
+            <artifactId>jaxmpp-httpfileupload</artifactId>
+            <version>3.2.0-SNAPSHOT</version>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 	<repositories>
 		<repository>
 			<id>tigase</id>
