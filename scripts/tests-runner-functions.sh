@@ -24,11 +24,12 @@ function get_database_uri() {
 	[[ -z ${1} ]] && local _db_type="${db_type}" || local _db_type=${1}
 	[[ -z ${2} ]] && local _database_host="${database_host}" || local _database_host=${2}
 	[[ -z ${3} ]] && local _src_dir="${server_dir}" || local _src_dir=${3}
-	[[ -z ${4} ]] && local _db_name="${db_name}" || local _db_name=${4}
-	[[ -z ${5} ]] && local _db_user="${db_user}" || local _db_user=${5}
-	[[ -z ${6} ]] && local _db_pass="${db_pass}" || local _db_pass=${6}
-	[[ -z ${7} ]] && local _db_root_user="${db_root_user}" || local _db_root_user=${7}
-	[[ -z ${8} ]] && local _db_root_pass="${db_root_pass}" || local _db_root_pass=${8}
+	[[ -z ${4} ]] && local _config_file="etc/tigase.conf" || local _config_file=${4}
+	[[ -z ${5} ]] && local _db_name="${db_name}" || local _db_name=${5}
+	[[ -z ${6} ]] && local _db_user="${db_user}" || local _db_user=${6}
+	[[ -z ${7} ]] && local _db_pass="${db_pass}" || local _db_pass=${7}
+	[[ -z ${8} ]] && local _db_root_user="${db_root_user}" || local _db_root_user=${8}
+	[[ -z ${9} ]] && local _db_root_pass="${db_root_pass}" || local _db_root_pass=${9}
 
     case ${_db_type} in
         mysql)
@@ -61,11 +62,12 @@ function db_reload_sql() {
 	[[ -z ${1} ]] && local _db_type="${db_type}" || local _db_type=${1}
 	[[ -z ${2} ]] && local _database_host="${database_host}" || local _database_host=${2}
 	[[ -z ${3} ]] && local _src_dir="${server_dir}" || local _src_dir=${3}
-	[[ -z ${4} ]] && local _db_name="${db_name}" || local _db_name=${4}
-	[[ -z ${5} ]] && local _db_user="${db_user}" || local _db_user=${5}
-	[[ -z ${6} ]] && local _db_pass="${db_pass}" || local _db_pass=${6}
-	[[ -z ${7} ]] && local _db_root_user="${db_root_user}" || local _db_root_user=${7}
-	[[ -z ${8} ]] && local _db_root_pass="${db_root_pass}" || local _db_root_pass=${8}
+	[[ -z ${4} ]] && local _config_file="etc/tigase.conf" || local _config_file=${4}
+	[[ -z ${5} ]] && local _db_name="${db_name}" || local _db_name=${5}
+	[[ -z ${6} ]] && local _db_user="${db_user}" || local _db_user=${6}
+	[[ -z ${7} ]] && local _db_pass="${db_pass}" || local _db_pass=${7}
+	[[ -z ${8} ]] && local _db_root_user="${db_root_user}" || local _db_root_user=${8}
+	[[ -z ${9} ]] && local _db_root_pass="${db_root_pass}" || local _db_root_pass=${9}
 
 	tts_dir=`pwd`
 	cd ${_src_dir}
@@ -75,14 +77,14 @@ function db_reload_sql() {
 	fi
 
 
-    ./scripts/tigase.sh destroy-schema etc/tigase.conf -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
+    ./scripts/tigase.sh destroy-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
 
     if [[ ! $? -eq 0 ]] ; then
         cd ${tts_dir}
         return 1
     fi
 
-    ./scripts/tigase.sh install-schema etc/tigase.conf -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
+    ./scripts/tigase.sh install-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
 
     if [[ ! $? -eq 0 ]] ; then
         cd ${tts_dir}
@@ -169,11 +171,13 @@ function run_test() {
     # to clear variables from other tests
     unset JDBC_URI
 
+    export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
+
 	if [ ! -z "${DB_RELOAD}" ] ; then
 	  echo "Re-creating database: ${_database}"
 		case ${_database} in
 			derby|mongodb|mysql|postgresql|sqlserver)
-				db_reload_sql ${_database} ${_database_host}
+				db_reload_sql ${_database} ${_database_host} ${_server_dir} "${CONFIG_BASE_DIR}/etc/tigase.conf"
 				;;
 			*)
 				echo "Not supported database: '${database}'"
@@ -190,7 +194,7 @@ function run_test() {
 		echo "Skipped database reloading."
 	fi
 
-    get_database_uri ${_database} ${_database_host}
+    get_database_uri ${_database} ${_database_host} ${_server_dir} "${CONFIG_BASE_DIR}/etc/tigase.conf"
 
     if [ -z "${JDBC_URI}" ] ; then
         TEMP=JDBC_URI_${_database}
@@ -202,7 +206,6 @@ function run_test() {
 
 	if [ ! -z "${SERVER_START}" ] ; then
 
-	    export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
 		tig_start_server ${_server_dir} "${CONFIG_BASE_DIR}/etc/tigase.conf"
 
         _PID=$(cat ${_server_dir}/logs/tigase.pid)
