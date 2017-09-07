@@ -108,6 +108,7 @@ while [ "${found}" == "1" ] ; do
 	case "${1}" in
         --debug|-d)
 			set -x
+			export DEBUG_MODE=true
 			shift
 			;;
 		--skip-rebuild-tts|-srb)
