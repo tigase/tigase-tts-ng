@@ -84,7 +84,7 @@ function db_reload_sql() {
         return 1
     fi
 
-    ./scripts/tigase.sh install-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass} -C upload
+    ./scripts/tigase.sh upgrade-schema ${_config_file} -R ${_db_root_user} -A ${_db_root_pass}
 
     if [[ ! $? -eq 0 ]] ; then
         cd ${tts_dir}
@@ -171,6 +171,14 @@ function run_test() {
     # to clear variables from other tests
     unset JDBC_URI
 
+    get_database_uri ${_database} ${_database_host} ${_server_dir} "${CONFIG_BASE_DIR}/etc/tigase.conf"
+
+    if [ -z "${JDBC_URI}" ] ; then
+        TEMP=JDBC_URI_${_database}
+        export JDBC_URI=${!TEMP}
+        echo "Setting default JDBC_URI: ${JDBC_URI}"
+    fi
+
     export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
 
 	if [ ! -z "${DB_RELOAD}" ] ; then
@@ -193,14 +201,6 @@ function run_test() {
 	else
 		echo "Skipped database reloading."
 	fi
-
-    get_database_uri ${_database} ${_database_host} ${_server_dir} "${CONFIG_BASE_DIR}/etc/tigase.conf"
-
-    if [ -z "${JDBC_URI}" ] ; then
-        TEMP=JDBC_URI_${_database}
-        export JDBC_URI=${!TEMP}
-        echo "Setting default JDBC_URI: ${JDBC_URI}"
-    fi
 
 	sleep_fun 1
 
