@@ -84,7 +84,7 @@ function db_reload_sql() {
         return 1
     fi
 
-    ./scripts/tigase.sh install-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
+    ./scripts/tigase.sh install-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass} -C upload
 
     if [[ ! $? -eq 0 ]] ; then
         cd ${tts_dir}
