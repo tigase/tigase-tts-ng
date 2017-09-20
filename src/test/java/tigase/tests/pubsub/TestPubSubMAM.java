@@ -191,7 +191,7 @@ public class TestPubSubMAM
 								   List<Item> expectedItems, boolean complete) throws Exception {
 		List<Item> results = new ArrayList<>();
 		String queryId = UUID.randomUUID().toString();
-		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (queryid, messageId, timestamp, message) -> {
+		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (sessionObject, queryid, messageId, timestamp, message) -> {
 			if (!queryId.equals(queryid)) {
 				return;
 			}

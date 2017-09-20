@@ -256,7 +256,7 @@ public class TestMessageArchiveManagement extends AbstractTest {
 
 		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = new MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler() {
 			@Override
-			public void onArchiveItemReceived(String queryid, String messageId, Date timestamp, Message message) throws JaxmppException {
+			public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) throws JaxmppException {
 				mutex.notify("item:" + message.getFrom() + ":" + message.getTo() + ":" + message.getBody());
 				count.incrementAndGet();
 			}

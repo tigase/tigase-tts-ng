@@ -29,7 +29,8 @@ import tigase.tests.utils.Account;
 
 import java.util.*;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * Created by andrzej on 20.12.2016.
@@ -180,7 +181,7 @@ public class TestMessageArchiveManagement
 											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier)
 			throws Exception {
 		List<Item> receivedMessages = new ArrayList<>();
-		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (String queryid, String messageId, Date timestamp, Message message) -> {
+		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) -> {
 			receivedMessages.add(new Item(message.getFrom().getResource(), timestamp, message.getBody(), messageId));
 		};
 		user1Jaxmpp.getEventBus()
