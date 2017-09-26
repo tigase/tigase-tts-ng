@@ -185,6 +185,8 @@ public class TestMessageArchivingRSM extends AbstractTest {
 			String msg = msgPrefix + " " + i;
 			sendAndWait(sender, receiver, msg);
 			sendMessages.add(msg);
+			// we need to delay sending next message as in other case messages may be reordered during querying
+			Thread.sleep(1000);
 		}
 		return sendMessages;
 	}
