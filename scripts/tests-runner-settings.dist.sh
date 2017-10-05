@@ -18,8 +18,11 @@ server_timeout=15
 
 server_dir="../tigase-server/server"
 
-MAIL_HOST="localhost"
-MAIL_SENDER_PASS="password"
+MAIL_SMTP_HOST="smtp.tigase.org"
+MAIL_IMAP_HOST="imap.tigase.org"
+MAIL_SENDER_ADDRESS="sender@localhost"
+MAIL_SENDER_PASS="bt555ml"
+MAIL_RECEIVER_ADDRESS="receiver@localhost"
 
 tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
 

@@ -233,10 +233,11 @@ function run_test() {
 
 	[[ -z ${_server_ip} ]] || local _server_ip_param="-Dserver.cluster.nodes=${_server_ip}"
 	[[ -z ${_test_case} || "all" == "${_test_case}" ]] && local _test_case_param="" || local _test_case_param="-Dtest=${_test_case}"
-	[[ -z ${MAIL_HOST} ]] || local _mail_host_param="-Dimap.server=${MAIL_HOST}"
+	[[ -z ${MAIL_IMAP_HOST} ]] || local _mail_host_param="-Dimap.server=${MAIL_IMAP_HOST}"
+	[[ -z ${MAIL_RECEIVER_ADDRESS} ]] || local _mail_receiver_user_address_param="-Dimap.username=${MAIL_RECEIVER_ADDRESS}"
 	[[ -z ${MAIL_SENDER_PASS} ]] || local _mail_sender_pass_param="-Dimap.password=${MAIL_SENDER_PASS}"
 
-	mvn clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_sender_pass_param}
+	mvn clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_sender_pass_param} ${_mail_receiver_user_address_param}
 
 
 

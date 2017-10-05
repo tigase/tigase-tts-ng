@@ -62,15 +62,15 @@ muc () {
 }
 monitor () {
     'monitor-mailer' (class: tigase.server.ext.monitor.MonitorMailer) {
-        'from-address' = 'sender@' + env('MAIL_HOST', 'localhost')
-        'to-addresses' = 'receiver@' + env('MAIL_HOST', 'localhost')
+        'from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+        'to-addresses' = env('MAIL_RECEIVER_ADDRESS', 'receiver@localhost')
     }
     mailer (class: tigase.extras.mailer.Mailer) {
-        'mailer-from-address' = 'sender' + env('MAIL_HOST', 'localhost')
-        'mailer-smtp-host' = env('MAIL_HOST', 'localhost')
+        'mailer-from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+        'mailer-smtp-host' = env('MAIL_SMTP_HOST', 'localhost')
         'mailer-smtp-password' = env('MAIL_SENDER_PASS', 'password')
         'mailer-smtp-port' = '587'
-        'mailer-smtp-username' = 'sender'
+        'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
     }
 }
 
