@@ -47,6 +47,11 @@ httpServer {
 
 http () {
     'api-keys' = [ 'test-api-key' ]
+    rest () {
+        'password-reset-form' {
+            captchaRequired = false
+        }
+    }
 }
 
 upload () {}
@@ -73,4 +78,11 @@ monitor () {
         'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
     }
 }
-
+'account-email-password-resetter' () {}
+mailer (class: tigase.extras.mailer.Mailer) {
+    'mailer-from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+    'mailer-smtp-host' = env('MAIL_SMTP_HOST', 'localhost')
+    'mailer-smtp-password' = env('MAIL_SENDER_PASS', 'password')
+    'mailer-smtp-port' = '587'
+    'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+}

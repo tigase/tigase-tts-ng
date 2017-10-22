@@ -21,6 +21,11 @@
 			<class name="tigase.tests.http.TestRetrievalOfUserAvatarUsingREST" />
 		</classes>
 	</test>
+	<test name="Password reset over email">
+		<classes>
+			<class name="tigase.tests.http.TestPasswordReset" />
+		</classes>
+	</test>
 	<test name="Upload: Test support for XEP-0363: HTTP File Upload">
 		<classes>
 			<class name="tigase.tests.http.TestHTTPFileUpload" />

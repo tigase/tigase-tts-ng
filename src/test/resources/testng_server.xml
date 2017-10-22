@@ -12,6 +12,16 @@
 			<class name="tigase.tests.util.RetrieveStatistics" />
 		</classes>
 	</test>
+	<test name="SASL authentication">
+		<classes>
+			<class name="tigase.tests.server.TestSaslAuthentication"/>
+		</classes>
+	</test>
+	<test name="Password change">
+		<classes>
+			<class name="tigase.tests.server.TestPasswordChange"/>
+		</classes>
+	</test>
 	<test name="VCard: VCard4 support - #2407, #2410">
 		<classes>
 			<class name="tigase.tests.server.TestVCard4" />

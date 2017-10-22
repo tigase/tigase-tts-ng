@@ -103,7 +103,10 @@ public class AccountBuilder {
 			password = username;
 		}
 		if (email == null) {
-			email = username + "@wp.pl";
+			email = test.getEmailAddressForUser(username);
+			if (email == null) {
+				email = username + "@wp.pl";
+			}
 		}
 
 		Account account = new Account(test, logPrefix, BareJID.bareJIDInstance(username, domain), password);

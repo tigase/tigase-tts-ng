@@ -311,6 +311,26 @@ public abstract class AbstractTest {
 		return "http://" + hostname + ":" + port + "/";
 	}
 
+	public String getEmailAddressForUser(String username) {
+		String address = props.getProperty("imap.username");
+		if (address == null) {
+			return null;
+		}
+		String localpart = address;
+		String domain = props.getProperty("imap.server");
+		if (address.contains("@")) {
+			String[] parts = address.split("@");
+			localpart = parts[0];
+			domain = parts[1];
+		}
+
+		if (username == null) {
+			return localpart + "@" + domain;
+		} else {
+			return localpart + "+" + username + "@" + domain;
+		}
+	}
+
 	public void removeUserAccount(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		accountManager.unregisterAccount(jaxmpp);
 	}

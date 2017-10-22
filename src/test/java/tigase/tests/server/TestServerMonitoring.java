@@ -35,10 +35,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
+import javax.mail.*;
 import java.util.Properties;
 
 public class TestServerMonitoring extends AbstractTest {
@@ -87,7 +84,7 @@ public class TestServerMonitoring extends AbstractTest {
 					this.props.getProperty("imap.password"));
 
 			Folder inbox = store.getFolder("inbox");
-			inbox.open(Folder.READ_ONLY);
+			inbox.open(Folder.READ_WRITE);
 
 			TestLogger.log("Mail receiver connected (I hope so!)");
 
@@ -97,6 +94,9 @@ public class TestServerMonitoring extends AbstractTest {
 				TestLogger.log("Last message subject: " + msg.getSubject());
 				if (msg.getSubject().contains(expected)) {
 					TestLogger.log("Found expected pattern!");
+					msg.setFlag(Flags.Flag.DELETED, true);
+					inbox.close(true);
+					store.close();
 					return true;
 				}
 			}
@@ -114,6 +114,9 @@ public class TestServerMonitoring extends AbstractTest {
 					if (msg.getSubject().contains(expected)) {
 						TestLogger.log("Found expected pattern!");
 						result = true;
+						msg.setFlag(Flags.Flag.DELETED, true);
+						inbox.close(true);
+						store.close();
 						break;
 					}
 				}
