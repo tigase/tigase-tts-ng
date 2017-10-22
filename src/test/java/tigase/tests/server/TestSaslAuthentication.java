@@ -3,7 +3,6 @@ package tigase.tests.server;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.saslmechanisms.PlainMechanism;
@@ -76,18 +75,7 @@ public class TestSaslAuthentication
 
 		assertTrue(jaxmpp.isConnected());
 	}
-
-	@Test
-	public void testSaslCUSTOM() throws JaxmppException {
-		Jaxmpp jaxmpp = getAdminAccount().createJaxmpp().build();
-		jaxmpp.getSessionObject().setUserProperty(SaslMechanism.FORCE_AUTHZID, true);
-		jaxmpp.getConnectionConfiguration().setUserPassword("test");
-		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, "test");
-		jaxmpp.login(true);
-
-		assertTrue(jaxmpp.isConnected());
-	}
-
+	
 	private void forceAuthzid() {
 		jaxmpp.getSessionObject().setUserProperty(SaslMechanism.FORCE_AUTHZID, true);
 	}

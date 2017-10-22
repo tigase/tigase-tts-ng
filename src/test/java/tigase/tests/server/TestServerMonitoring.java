@@ -115,8 +115,6 @@ public class TestServerMonitoring extends AbstractTest {
 						TestLogger.log("Found expected pattern!");
 						result = true;
 						msg.setFlag(Flags.Flag.DELETED, true);
-						inbox.close(true);
-						store.close();
 						break;
 					}
 				}
