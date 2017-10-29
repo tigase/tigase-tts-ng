@@ -31,17 +31,17 @@ import static org.testng.Assert.*;
 /**
  * Created by andrzej on 29.06.2017.
  */
-public class TestMotD extends AbstractTest {
+public class TestMotD
+		extends AbstractTest {
 
 	private static final String EDIT_MOTD = "http://jabber.org/protocol/admin#edit-motd";
 	private static final String DELETE_MOTD = "http://jabber.org/protocol/admin#delete-motd";
 
 	private Jaxmpp adminJaxmpp;
-	private JID sessManJid;
-	private Jaxmpp userJaxmpp;
-
 	private String body;
 	private boolean configured = false;
+	private JID sessManJid;
+	private Jaxmpp userJaxmpp;
 
 	@BeforeClass
 	public void setUp() throws JaxmppException, InterruptedException {
@@ -56,27 +56,29 @@ public class TestMotD extends AbstractTest {
 		AtomicReference<JabberDataElement> form = new AtomicReference<>();
 		Mutex mutex = new Mutex();
 
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(sessManJid, EDIT_MOTD, null, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
-			@Override
-			protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-					throws JaxmppException {
-				form.set(data);
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":form:success");
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":form");
-			}
+		adminJaxmpp.getModule(AdHocCommansModule.class)
+				.execute(sessManJid, EDIT_MOTD, null, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						mutex.notify("adhoc:response:" + EDIT_MOTD + ":form:error:" + error);
+						mutex.notify("adhoc:response:" + EDIT_MOTD + ":form");
+					}
 
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":form:error:" + error);
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":form");
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("adhoc:response:" + EDIT_MOTD + ":form:timeout");
+						mutex.notify("adhoc:response:" + EDIT_MOTD + ":form");
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":form:timeout");
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":form");
-			}
-		});
+					@Override
+					protected void onResponseReceived(String sessionid, String node, State status,
+													  JabberDataElement data) throws JaxmppException {
+						form.set(data);
+						mutex.notify("adhoc:response:" + EDIT_MOTD + ":form:success");
+						mutex.notify("adhoc:response:" + EDIT_MOTD + ":form");
+					}
+				});
 
 		mutex.waitFor(20 * 1000, "adhoc:response:" + EDIT_MOTD + ":form");
 		assertTrue(mutex.isItemNotified("adhoc:response:" + EDIT_MOTD + ":form:success"));
@@ -92,30 +94,34 @@ public class TestMotD extends AbstractTest {
 		form.set(new JabberDataElement(ElementFactory.create(form.get())));
 		((TextMultiField) form.get().getField("motd")).setFieldValue(body.split("\n"));
 
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(sessManJid, EDIT_MOTD, Action.execute, form.get(), new AdHocCommansModule.AdHocCommansAsyncCallback() {
-			@Override
-			protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-					throws JaxmppException {
-				if (data != null && data.getField("Note") != null && ((FixedField)data.getField("Note")).getFieldValue().contains("error")) {
-					mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:error:exception");
-				} else {
-					mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:success");
-				}
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit");
-			}
+		adminJaxmpp.getModule(AdHocCommansModule.class)
+				.execute(sessManJid, EDIT_MOTD, Action.execute, form.get(),
+						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
+							 @Override
+							 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+									 throws JaxmppException {
+								 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:error:" + error);
+								 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit");
+							 }
 
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:error:" + error);
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit");
-			}
+							 @Override
+							 public void onTimeout() throws JaxmppException {
+								 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:timeout");
+								 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit");
+							 }
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:timeout");
-				mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit");
-			}
-		});
+							 @Override
+							 protected void onResponseReceived(String sessionid, String node, State status,
+															   JabberDataElement data) throws JaxmppException {
+								 if (data != null && data.getField("Note") != null &&
+										 ((FixedField) data.getField("Note")).getFieldValue().contains("error")) {
+									 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:error:exception");
+								 } else {
+									 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit:success");
+								 }
+								 mutex.notify("adhoc:response:" + EDIT_MOTD + ":submit");
+							 }
+						 });
 
 		mutex.waitFor(20 * 1000, "adhoc:response:" + EDIT_MOTD + ":submit");
 		assertTrue(mutex.isItemNotified("adhoc:response:" + EDIT_MOTD + ":submit:success"));
@@ -126,7 +132,7 @@ public class TestMotD extends AbstractTest {
 		if (!configured) {
 			return;
 		}
-		
+
 		Mutex mutex = new Mutex();
 		MessageModule.MessageReceivedHandler handler = new MessageModule.MessageReceivedHandler() {
 			@Override
@@ -172,30 +178,34 @@ public class TestMotD extends AbstractTest {
 	public void testDeleteMotD() throws JaxmppException, InterruptedException {
 		Mutex mutex = new Mutex();
 
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(sessManJid, DELETE_MOTD, Action.execute, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
-			@Override
-			protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-					throws JaxmppException {
-				if (data != null && data.getField("Note") != null && ((FixedField)data.getField("Note")).getFieldValue().contains("error")) {
-					mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:exception");
-				} else {
-					mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:success");
-				}
-				mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit");
-			}
+		adminJaxmpp.getModule(AdHocCommansModule.class)
+				.execute(sessManJid, DELETE_MOTD, Action.execute, null,
+						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
+							 @Override
+							 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+									 throws JaxmppException {
+								 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:error:" + error);
+								 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit");
+							 }
 
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:error:" + error);
-				mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit");
-			}
+							 @Override
+							 public void onTimeout() throws JaxmppException {
+								 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:timeout");
+								 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit");
+							 }
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:timeout");
-				mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit");
-			}
-		});
+							 @Override
+							 protected void onResponseReceived(String sessionid, String node, State status,
+															   JabberDataElement data) throws JaxmppException {
+								 if (data != null && data.getField("Note") != null &&
+										 ((FixedField) data.getField("Note")).getFieldValue().contains("error")) {
+									 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:exception");
+								 } else {
+									 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit:success");
+								 }
+								 mutex.notify("adhoc:response:" + DELETE_MOTD + ":submit");
+							 }
+						 });
 
 		mutex.waitFor(20 * 1000, "adhoc:response:" + DELETE_MOTD + ":submit");
 		assertTrue(mutex.isItemNotified("adhoc:response:" + DELETE_MOTD + ":submit:success"));

@@ -60,31 +60,26 @@ import static tigase.TestLogger.log;
 
 public abstract class AbstractTest {
 
+	public static final String LOG_PREFIX_KEY = "LOG_PREFIX";
+	private final static Random randomGenerator = new SecureRandom();
+	protected static Properties props;
+	private static Account adminAccount;
 	private static int counter = 0;
-
+	private static Handler ngLogger = null;
+	public final ThreadLocal<Class> CURRENT_CLASS = new ThreadLocal<>();
+	public final ThreadLocal<Method> CURRENT_METHOD = new ThreadLocal<>();
+	public final ThreadLocal<ISuite> CURRENT_SUITE = new ThreadLocal<>();
 	public final AccountsManager accountManager = new AccountsManager(this);
 	public final PubSubManager pubSubManager = new PubSubManager(this);
 	public final VHostManager vHostManager = new VHostManager(this);
-
-	public static final String LOG_PREFIX_KEY = "LOG_PREFIX";
-
-	private static Handler ngLogger = null;
-
-	private final static Random randomGenerator = new SecureRandom();
-	private static Account adminAccount;
-	private Jaxmpp jaxmppAdmin;
-
-	public static final String nextRnd() {
-		int r = randomGenerator.nextInt() & 0x7fffffff;
-		return Integer.toString(r, 36) + String.format("%04d", ++counter);
-	}
-
 	protected boolean connectorLogsEnabled = true;
 	public final EventListener connectorListener = new EventListener() {
 
 		@Override
 		public void onEvent(Event<? extends EventHandler> event) {
-			if (!connectorLogsEnabled) return;
+			if (!connectorLogsEnabled) {
+				return;
+			}
 			String t = "";
 			if (event instanceof JaxmppEvent<?>) {
 				JaxmppEvent<?> e = (JaxmppEvent<?>) event;
@@ -116,8 +111,17 @@ public abstract class AbstractTest {
 			}
 		}
 	};
+	private Jaxmpp jaxmppAdmin;
 
-	protected static Properties props;
+	public static void fail(Exception e) {
+		e.printStackTrace();
+		Assert.fail(e.getMessage());
+	}
+
+	public static final String nextRnd() {
+		int r = randomGenerator.nextInt() & 0x7fffffff;
+		return Integer.toString(r, 36) + String.format("%04d", ++counter);
+	}
 
 	public Account getAdminAccount() {
 		return adminAccount;
@@ -127,86 +131,8 @@ public abstract class AbstractTest {
 		return jaxmppAdmin;
 	}
 
-	protected String addVhost(final Jaxmpp adminJaxmpp, final String prefix) throws JaxmppException, InterruptedException {
-		return vHostManager.addVHost(prefix);
-	}
-
-	protected final void changePresenceAndWait(final Jaxmpp from, final Jaxmpp to, final Presence.Show p) throws Exception {
-		final Mutex mutex = new Mutex();
-		final PresenceModule.ContactChangedPresenceHandler handler = new PresenceModule.ContactChangedPresenceHandler() {
-
-			@Override
-			public void onContactChangedPresence(SessionObject sessionObject, Presence stanza, JID jid, Show show,
-					String status, Integer priority) throws JaxmppException {
-				try {
-					boolean v = jid.equals(ResourceBinderModule.getBindedJID(from.getSessionObject())) && show.equals(p);
-					if (v) {
-						log("Received presence change.");
-						mutex.notify("presence");
-						synchronized (mutex) {
-							mutex.notify();
-						}
-					}
-				} catch (Exception e) {
-					fail(e);
-				}
-			}
-
-		};
-
-		try {
-			to.getEventBus().addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, handler);
-			from.getModule(PresenceModule.class).setPresence(p, null, 1);
-
-			mutex.waitFor(1000 * 10, "presence");
-
-			assertTrue("Exchanging presence", mutex.isItemNotified("presence"));
-		} finally {
-			to.getEventBus().remove(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, handler);
-		}
-	}
-	
 	public AccountBuilder createAccount() {
 		return new AccountBuilder(this);
-	}
-	
-	protected void ensureAdminAccountExists() {
-		String user = props.getProperty("test.admin.username");
-		String pass = props.getProperty("test.admin.password");
-		String domain = (String) props.getOrDefault("test.admin.domain", getDomain(0));
-		if (null == user) {
-			user = "admin";
-		}
-		if (null == pass) {
-			pass = user;
-		}
-		try {
-			AccountBuilder builder = createAccount().setLogPrefix("admin").setUsername(user).setPassword(pass).setDomain(domain).setRegister(false);
-			Account adminAccount = builder.build();
-			try {
-				Jaxmpp jaxmpp = adminAccount.createJaxmpp().setConnected(true).build();
-				if (jaxmpp.isConnected()) {
-					try {
-						jaxmpp.disconnect(true);
-					} catch (Throwable ex) {
-						// we do not care! we confirmed that admin account exists!
-					}
-					this.adminAccount = adminAccount;
-				}
-				return;
-			} catch (JaxmppException ex) {
-				log("Could not connect with admin account credentials (" + ex.getMessage() + "), trying to register account...");
-			}
-
-			this.adminAccount = builder.setRegister(true).build();
-		} catch (JaxmppException|InterruptedException e) {
-			assertNull(e);
-		}
-	}
-
-	public static void fail(Exception e) {
-		e.printStackTrace();
-		Assert.fail(e.getMessage());
 	}
 
 	public String getHttpPort() {
@@ -218,8 +144,7 @@ public abstract class AbstractTest {
 	}
 
 	/**
-	 * Return randomly chosen domain from list of available domains in
-	 * "server.domains" property
+	 * Return randomly chosen domain from list of available domains in "server.domains" property
 	 *
 	 * @return domain name of random index
 	 */
@@ -228,14 +153,11 @@ public abstract class AbstractTest {
 	}
 
 	/**
-	 * Return domain of particular index from list of available domains in
-	 * "server.domains" property
+	 * Return domain of particular index from list of available domains in "server.domains" property
 	 *
-	 * @param i
-	 *            index of the domain from "server.domains" property
+	 * @param i index of the domain from "server.domains" property
 	 *
-	 * @return domain name of particular index, if index is missing then domain
-	 *         will be selected randomly
+	 * @return domain name of particular index, if index is missing then domain will be selected randomly
 	 */
 	public String getDomain(int i) {
 		final String domainsProp = props.getProperty("server.domains");
@@ -260,8 +182,7 @@ public abstract class AbstractTest {
 	}
 
 	/**
-	 * Return randomly chosen domain from list of available domains in
-	 * "server.cluster.nodes" property
+	 * Return randomly chosen domain from list of available domains in "server.cluster.nodes" property
 	 *
 	 * @return random domain name
 	 */
@@ -276,8 +197,7 @@ public abstract class AbstractTest {
 	}
 
 	/**
-	 * Return randomly chosen domain from list of available domains in
-	 * "server.cluster.nodes" property
+	 * Return randomly chosen domain from list of available domains in "server.cluster.nodes" property
 	 *
 	 * @return random domain name
 	 */
@@ -294,7 +214,8 @@ public abstract class AbstractTest {
 			hostname = hostnames[nextInt];
 		}
 		if (null == hostname) {
-			throw new RuntimeException("Missing of wrong configuration of server.cluster.nodes - at least one entry needed");
+			throw new RuntimeException(
+					"Missing of wrong configuration of server.cluster.nodes - at least one entry needed");
 		}
 		return hostname;
 	}
@@ -335,7 +256,92 @@ public abstract class AbstractTest {
 		accountManager.unregisterAccount(jaxmpp);
 	}
 
-	protected void removeVhost(final Jaxmpp adminJaxmpp, final String VHost) throws JaxmppException, InterruptedException {
+	protected String addVhost(final Jaxmpp adminJaxmpp, final String prefix)
+			throws JaxmppException, InterruptedException {
+		return vHostManager.addVHost(prefix);
+	}
+
+	protected final void changePresenceAndWait(final Jaxmpp from, final Jaxmpp to, final Presence.Show p)
+			throws Exception {
+		final Mutex mutex = new Mutex();
+		final PresenceModule.ContactChangedPresenceHandler handler = new PresenceModule.ContactChangedPresenceHandler() {
+
+			@Override
+			public void onContactChangedPresence(SessionObject sessionObject, Presence stanza, JID jid, Show show,
+												 String status, Integer priority) throws JaxmppException {
+				try {
+					boolean v =
+							jid.equals(ResourceBinderModule.getBindedJID(from.getSessionObject())) && show.equals(p);
+					if (v) {
+						log("Received presence change.");
+						mutex.notify("presence");
+						synchronized (mutex) {
+							mutex.notify();
+						}
+					}
+				} catch (Exception e) {
+					fail(e);
+				}
+			}
+
+		};
+
+		try {
+			to.getEventBus()
+					.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class,
+								handler);
+			from.getModule(PresenceModule.class).setPresence(p, null, 1);
+
+			mutex.waitFor(1000 * 10, "presence");
+
+			assertTrue("Exchanging presence", mutex.isItemNotified("presence"));
+		} finally {
+			to.getEventBus()
+					.remove(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, handler);
+		}
+	}
+
+	protected void ensureAdminAccountExists() {
+		String user = props.getProperty("test.admin.username");
+		String pass = props.getProperty("test.admin.password");
+		String domain = (String) props.getOrDefault("test.admin.domain", getDomain(0));
+		if (null == user) {
+			user = "admin";
+		}
+		if (null == pass) {
+			pass = user;
+		}
+		try {
+			AccountBuilder builder = createAccount().setLogPrefix("admin")
+					.setUsername(user)
+					.setPassword(pass)
+					.setDomain(domain)
+					.setRegister(false);
+			Account adminAccount = builder.build();
+			try {
+				Jaxmpp jaxmpp = adminAccount.createJaxmpp().setConnected(true).build();
+				if (jaxmpp.isConnected()) {
+					try {
+						jaxmpp.disconnect(true);
+					} catch (Throwable ex) {
+						// we do not care! we confirmed that admin account exists!
+					}
+					this.adminAccount = adminAccount;
+				}
+				return;
+			} catch (JaxmppException ex) {
+				log("Could not connect with admin account credentials (" + ex.getMessage() +
+							"), trying to register account...");
+			}
+
+			this.adminAccount = builder.setRegister(true).build();
+		} catch (JaxmppException | InterruptedException e) {
+			assertNull(e);
+		}
+	}
+
+	protected void removeVhost(final Jaxmpp adminJaxmpp, final String VHost)
+			throws JaxmppException, InterruptedException {
 		vHostManager.removeVHost(VHost);
 	}
 
@@ -343,7 +349,7 @@ public abstract class AbstractTest {
 		String rnd = nextRnd();
 		final Mutex mutex = new Mutex();
 		final String uid = nextRnd();
-		final Message[] result = new Message[] { null };
+		final Message[] result = new Message[]{null};
 		final MessageModule.MessageReceivedHandler handler = new MessageModule.MessageReceivedHandler() {
 
 			@Override
@@ -417,8 +423,9 @@ public abstract class AbstractTest {
 	protected final Message sendAndWait(Jaxmpp from, Jaxmpp to, final Message message) throws Exception {
 		message.setTo(ResourceBinderModule.getBindedJID(to.getSessionObject()));
 
-		if (message.getId() == null)
+		if (message.getId() == null) {
 			message.setId(nextRnd());
+		}
 
 		final Mutex mutex = new Mutex();
 		final Message[] result = new Message[1];
@@ -451,7 +458,8 @@ public abstract class AbstractTest {
 
 		try {
 			to.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
-			from.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, errorHandler);
+			from.getEventBus()
+					.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, errorHandler);
 			from.send(message);
 
 			mutex.waitFor(60 * 1000, "msg:" + message.getId());
@@ -466,7 +474,7 @@ public abstract class AbstractTest {
 	protected final Message sendAndWait(Jaxmpp from, Jaxmpp to, final String message) throws Exception {
 		final Mutex mutex = new Mutex();
 		final String uid = nextRnd();
-		final Message[] result = new Message[] { null };
+		final Message[] result = new Message[]{null};
 		final MessageModule.MessageReceivedHandler handler = new MessageModule.MessageReceivedHandler() {
 
 			@Override
@@ -511,13 +519,12 @@ public abstract class AbstractTest {
 		}
 	}
 
-	
-	protected void setLoggerLevel( Level lvl, boolean connectorLogsEnabled ) throws SecurityException {
+	protected void setLoggerLevel(Level lvl, boolean connectorLogsEnabled) throws SecurityException {
 		this.connectorLogsEnabled = connectorLogsEnabled;
 
-		Logger log = Logger.getLogger( "tigase.jaxmpp" );
+		Logger log = Logger.getLogger("tigase.jaxmpp");
 
-		if ( ngLogger == null ){
+		if (ngLogger == null) {
 			ngLogger = new Handler() {
 
 				@Override
@@ -529,29 +536,25 @@ public abstract class AbstractTest {
 				}
 
 				@Override
-				public void publish( LogRecord record ) {
-					log( record.getSourceClassName() + "." + record.getSourceMethodName() + ": " + record.getMessage() );
+				public void publish(LogRecord record) {
+					log(record.getSourceClassName() + "." + record.getSourceMethodName() + ": " + record.getMessage());
 				}
 			};
 
-			log.addHandler( ngLogger );
+			log.addHandler(ngLogger);
 		}
 
-		ngLogger.setLevel( lvl );
-		log.setUseParentHandlers( false );
-		log.setLevel( lvl );
+		ngLogger.setLevel(lvl);
+		log.setUseParentHandlers(false);
+		log.setLevel(lvl);
 	}
-
-	public final ThreadLocal<ISuite> CURRENT_SUITE = new ThreadLocal<>();
-	public final ThreadLocal<Method> CURRENT_METHOD = new ThreadLocal<>();
-	public final ThreadLocal<Class> CURRENT_CLASS = new ThreadLocal<>();
 
 	@BeforeSuite
 	protected void setupSuite(ITestContext context) throws Exception {
 		CURRENT_SUITE.set(context.getSuite());
 		System.out.println("setting up suite " + context.getSuite().getName());
 		loadProperties();
-		setLoggerLevel( Level.ALL, connectorLogsEnabled );
+		setLoggerLevel(Level.ALL, connectorLogsEnabled);
 		ensureAdminAccountExists();
 	}
 
@@ -580,49 +583,26 @@ public abstract class AbstractTest {
 		vHostManager.scopeFinished();
 		CURRENT_CLASS.remove();
 	}
-	
+
 	@BeforeMethod
 	protected void setupMethod(Method method, ITestContext context) throws JaxmppException {
 		if (jaxmppAdmin == null || !jaxmppAdmin.isConnected()) {
 			jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
 		}
 		CURRENT_METHOD.set(method);
-		System.out.println("setting up for method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
+		System.out.println(
+				"setting up for method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() +
+						"()");
 	}
 
 	@AfterMethod
 	protected void tearDownMethod(Method method, ITestContext context) {
-		System.out.println("tearing down method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
+		System.out.println(
+				"tearing down method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
 		pubSubManager.scopeFinished();
 		accountManager.scopeFinished();
 		vHostManager.scopeFinished();
 		CURRENT_METHOD.remove();
-	}
-	
-	private String getProperty(String key) throws IOException {
-		if ( props == null ){
-			loadProperties();
-		}
-		return props.getProperty( key );
-	}
-	
-	private void loadProperties() throws IOException {
-		if ( props == null ){
-			InputStream stream = getClass().getResourceAsStream( "/server.properties" );
-			props = new Properties();
-			props.load( stream );
-			stream.close();
-
-			final Properties sysProps = System.getProperties();
-			sysProps.stringPropertyNames()
-					.stream()
-					.filter(e -> e.matches("(?u)^(imap|test|server)[.].*"))
-					.forEach(p -> {
-						log("adding system property: " + p + ": " + sysProps.getProperty(p));
-						props.setProperty(p, sysProps.getProperty(p));
-					});
-
-		}
 	}
 
 	protected final void testSendAndWait(Jaxmpp from, Jaxmpp to) throws Exception {
@@ -662,6 +642,32 @@ public abstract class AbstractTest {
 
 		} finally {
 			to.getEventBus().remove(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, listener);
+		}
+	}
+
+	private String getProperty(String key) throws IOException {
+		if (props == null) {
+			loadProperties();
+		}
+		return props.getProperty(key);
+	}
+
+	private void loadProperties() throws IOException {
+		if (props == null) {
+			InputStream stream = getClass().getResourceAsStream("/server.properties");
+			props = new Properties();
+			props.load(stream);
+			stream.close();
+
+			final Properties sysProps = System.getProperties();
+			sysProps.stringPropertyNames()
+					.stream()
+					.filter(e -> e.matches("(?u)^(imap|test|server)[.].*"))
+					.forEach(p -> {
+						log("adding system property: " + p + ": " + sysProps.getProperty(p));
+						props.setProperty(p, sysProps.getProperty(p));
+					});
+
 		}
 	}
 

@@ -24,7 +24,8 @@ import java.util.UUID;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
-public class TestPasswordReset extends AbstractTest {
+public class TestPasswordReset
+		extends AbstractTest {
 
 	private Account user;
 	private Jaxmpp userJaxmpp;
@@ -37,7 +38,7 @@ public class TestPasswordReset extends AbstractTest {
 			return jaxmpp;
 		}).setConnected(true).build();
 	}
-	
+
 	@Test
 	public void testPasswordReset() throws Exception {
 		userJaxmpp.disconnect(true);
@@ -47,7 +48,7 @@ public class TestPasswordReset extends AbstractTest {
 
 		Page p1 = webClient.getPage(getURL());
 		HtmlPage p = (HtmlPage) p1;
-		HtmlForm form  = p.getForms().get(0);
+		HtmlForm form = p.getForms().get(0);
 		form.getInputByName("jid").setValueAttribute(user.getJid().toString());
 		form.getInputByName("email").setValueAttribute(getEmailAddressForUser(user.getJid().getLocalpart()));
 

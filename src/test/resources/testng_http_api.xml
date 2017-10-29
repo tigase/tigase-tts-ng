@@ -1,34 +1,34 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="Tigase HTTP API Component" verbose="1">
-	<test name="UI: Web Admin UI - #2955">
-		<classes>
-			<class name="tigase.tests.http.TestAdminUI" />
-		</classes>
-	</test>
-	<test name="REST: REST API for Setting/Updating Privacy Rules - #2928">
-		<classes>
-			<class name="tigase.tests.http.TestModificationOfPrivacyRulesUsingREST" />
-		</classes>
-	</test>
-	<test name="REST: Sending XMPP messages using HTTP REST API - #2936">
-		<classes>
-			<class name="tigase.tests.http.TestSendingXmppStanzaUsingREST" />
-		</classes>
-	</test>
-	<test name="REST: Test support for retrieval of XEP-0084: User Avatar using REST API call - #3258">
-		<classes>
-			<class name="tigase.tests.http.TestRetrievalOfUserAvatarUsingREST" />
-		</classes>
-	</test>
-	<test name="Password reset over email">
-		<classes>
-			<class name="tigase.tests.http.TestPasswordReset" />
-		</classes>
-	</test>
-	<test name="Upload: Test support for XEP-0363: HTTP File Upload">
-		<classes>
-			<class name="tigase.tests.http.TestHTTPFileUpload" />
-		</classes>
-	</test>
+    <test name="UI: Web Admin UI - #2955">
+        <classes>
+            <class name="tigase.tests.http.TestAdminUI"/>
+        </classes>
+    </test>
+    <test name="REST: REST API for Setting/Updating Privacy Rules - #2928">
+        <classes>
+            <class name="tigase.tests.http.TestModificationOfPrivacyRulesUsingREST"/>
+        </classes>
+    </test>
+    <test name="REST: Sending XMPP messages using HTTP REST API - #2936">
+        <classes>
+            <class name="tigase.tests.http.TestSendingXmppStanzaUsingREST"/>
+        </classes>
+    </test>
+    <test name="REST: Test support for retrieval of XEP-0084: User Avatar using REST API call - #3258">
+        <classes>
+            <class name="tigase.tests.http.TestRetrievalOfUserAvatarUsingREST"/>
+        </classes>
+    </test>
+    <test name="Password reset over email">
+        <classes>
+            <class name="tigase.tests.http.TestPasswordReset"/>
+        </classes>
+    </test>
+    <test name="Upload: Test support for XEP-0363: HTTP File Upload">
+        <classes>
+            <class name="tigase.tests.http.TestHTTPFileUpload"/>
+        </classes>
+    </test>
 </suite>

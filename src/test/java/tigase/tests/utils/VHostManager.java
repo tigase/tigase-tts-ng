@@ -50,7 +50,7 @@ import static tigase.tests.AbstractTest.nextRnd;
 public class VHostManager {
 
 	private final AbstractTest test;
-	private final ConcurrentHashMap<Object,Set<String>> vhosts = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Object, Set<String>> vhosts = new ConcurrentHashMap<>();
 
 	public VHostManager(AbstractTest test) {
 		this.test = test;
@@ -67,57 +67,62 @@ public class VHostManager {
 		final BareJID adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
 
 		log("jaxmppa: " + adminJaxmpp.getSessionObject().getUserBareJid());
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(JID.jidInstance("vhost-man", adminJID.getDomain()),
-																addVHostCommand, null, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
+		adminJaxmpp.getModule(AdHocCommansModule.class)
+				.execute(JID.jidInstance("vhost-man", adminJID.getDomain()), addVHostCommand, null, null,
+						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-						mutex.notify("1:" + mutexCommand, "1:error");
-					}
+							 @Override
+							 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+									 throws JaxmppException {
+								 mutex.notify("1:" + mutexCommand, "1:error");
+							 }
 
-					@Override
-					protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-							throws JaxmppException {
-						mutex.notify("1:" + mutexCommand, "1:success");
+							 @Override
+							 public void onTimeout() throws JaxmppException {
+								 mutex.notify("1:" + mutexCommand, "1:timeout");
 
-						((TextSingleField) data.getField("Domain name")).setFieldValue(VHost);
+							 }
 
-						data.setAttribute("type", "submit");
+							 @Override
+							 protected void onResponseReceived(String sessionid, String node, State status,
+															   JabberDataElement data) throws JaxmppException {
+								 mutex.notify("1:" + mutexCommand, "1:success");
 
-						adminJaxmpp.getModule(AdHocCommansModule.class).execute(
-								JID.jidInstance("vhost-man", adminJID.getDomain()), addVHostCommand, null, data,
-								new AdHocCommansModule.AdHocCommansAsyncCallback() {
+								 ((TextSingleField) data.getField("Domain name")).setFieldValue(VHost);
 
-									@Override
-									public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-											throws JaxmppException {
-										mutex.notify("2:" + mutexCommand, "2:error");
-									}
+								 data.setAttribute("type", "submit");
 
-									@Override
-									protected void onResponseReceived(String sessionid, String node, State status,
-																	  JabberDataElement data) throws JaxmppException {
-										FixedField nff = data.getField("Note");
-										if (nff != null) {
-											mutex.notify(mutexCommand + ":success");
-										}
-										mutex.notify("2:" + mutexCommand);
+								 adminJaxmpp.getModule(AdHocCommansModule.class)
+										 .execute(JID.jidInstance("vhost-man", adminJID.getDomain()), addVHostCommand,
+												  null, data, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
-									}
+													 @Override
+													 public void onError(Stanza responseStanza,
+																		 XMPPException.ErrorCondition error)
+															 throws JaxmppException {
+														 mutex.notify("2:" + mutexCommand, "2:error");
+													 }
 
-									@Override
-									public void onTimeout() throws JaxmppException {
-										mutex.notify("2:" + mutexCommand, "2:timeout");
-									}
-								});
-					}
+													 @Override
+													 public void onTimeout() throws JaxmppException {
+														 mutex.notify("2:" + mutexCommand, "2:timeout");
+													 }
 
-					@Override
-					public void onTimeout() throws JaxmppException {
-						mutex.notify("1:" + mutexCommand, "1:timeout");
+													 @Override
+													 protected void onResponseReceived(String sessionid, String node,
+																					   State status,
+																					   JabberDataElement data)
+															 throws JaxmppException {
+														 FixedField nff = data.getField("Note");
+														 if (nff != null) {
+															 mutex.notify(mutexCommand + ":success");
+														 }
+														 mutex.notify("2:" + mutexCommand);
 
-					}
-				});
+													 }
+												 });
+							 }
+						 });
 		mutex.waitFor(10 * 1000, "1:" + mutexCommand, "2:" + mutexCommand);
 		assertTrue(mutex.isItemNotified(addVHostCommand + "-" + VHost + ":success"), "VHost adding failed.");
 
@@ -133,75 +138,70 @@ public class VHostManager {
 		final Mutex mutex = new Mutex();
 
 		final BareJID userBareJid = adminJaxmpp.getSessionObject().getUserBareJid();
-		adminJaxmpp.getModule(AdHocCommansModule.class).execute(JID.jidInstance("vhost-man", userBareJid.getDomain()),
-																removeVHostCommand, null, null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
+		adminJaxmpp.getModule(AdHocCommansModule.class)
+				.execute(JID.jidInstance("vhost-man", userBareJid.getDomain()), removeVHostCommand, null, null,
+						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					}
+							 @Override
+							 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+									 throws JaxmppException {
+							 }
 
-					@Override
-					protected void onResponseReceived(String sessionid, String node, State status, JabberDataElement data)
-							throws JaxmppException {
+							 @Override
+							 public void onTimeout() throws JaxmppException {
+							 }
 
-						ListSingleField ff = ((ListSingleField) data.getField("item-list"));
+							 @Override
+							 protected void onResponseReceived(String sessionid, String node, State status,
+															   JabberDataElement data) throws JaxmppException {
 
-						ff.clearOptions();
-						ff.setFieldValue(VHost);
+								 ListSingleField ff = ((ListSingleField) data.getField("item-list"));
 
-						JabberDataElement r = new JabberDataElement(data.createSubmitableElement(XDataType.submit));
-						adminJaxmpp.getModule(AdHocCommansModule.class).execute(
-								JID.jidInstance("vhost-man", userBareJid.getDomain()), removeVHostCommand, null, r,
-								new AdHocCommansModule.AdHocCommansAsyncCallback() {
+								 ff.clearOptions();
+								 ff.setFieldValue(VHost);
 
-									@Override
-									public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-											throws JaxmppException {
-									}
+								 JabberDataElement r = new JabberDataElement(
+										 data.createSubmitableElement(XDataType.submit));
+								 adminJaxmpp.getModule(AdHocCommansModule.class)
+										 .execute(JID.jidInstance("vhost-man", userBareJid.getDomain()),
+												  removeVHostCommand, null, r,
+												  new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
-									@Override
-									protected void onResponseReceived(String sessionid, String node, State status,
-																	  JabberDataElement data) throws JaxmppException {
-										FixedField nff = data.getField("Note");
-										if (nff != null) {
-											mutex.notify("remove:" + VHost + ":" + nff.getFieldValue());
-										}
-										mutex.notify("domainRemoved:" + VHost);
+													  @Override
+													  public void onError(Stanza responseStanza,
+																		  XMPPException.ErrorCondition error)
+															  throws JaxmppException {
+													  }
 
-									}
+													  @Override
+													  public void onTimeout() throws JaxmppException {
+													  }
 
-									@Override
-									public void onTimeout() throws JaxmppException {
-									}
-								});
-					}
+													  @Override
+													  protected void onResponseReceived(String sessionid, String node,
+																						State status,
+																						JabberDataElement data)
+															  throws JaxmppException {
+														  FixedField nff = data.getField("Note");
+														  if (nff != null) {
+															  mutex.notify(
+																	  "remove:" + VHost + ":" + nff.getFieldValue());
+														  }
+														  mutex.notify("domainRemoved:" + VHost);
 
-					@Override
-					public void onTimeout() throws JaxmppException {
-					}
-				});
+													  }
+												  });
+							 }
+						 });
 		mutex.waitFor(10 * 1000, "domainRemoved:" + VHost);
 
 		assertTrue(mutex.isItemNotified("remove:" + VHost + ":Operation successful"), "VHost removal failed.");
 		remove(VHost);
 	}
 
-	private Object getScopeKey() {
-		Object key;
-		key = test.CURRENT_METHOD.get();
-		if (key == null) {
-			key = test.CURRENT_CLASS.get();
-			if (key == null) {
-				key = test.CURRENT_SUITE.get();
-			}
-		}
-
-		return key;
-	}
-
 	public void add(String vhost) {
 		Object key = getScopeKey();
-		if (vhosts.computeIfAbsent(key, (k)-> new CopyOnWriteArraySet<>()).add(vhost)) {
+		if (vhosts.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).add(vhost)) {
 			System.out.println("added vhost = " + vhost);
 		}
 	}
@@ -222,6 +222,19 @@ public class VHostManager {
 				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove account " + account, e);
 			}
 		});
+	}
+
+	private Object getScopeKey() {
+		Object key;
+		key = test.CURRENT_METHOD.get();
+		if (key == null) {
+			key = test.CURRENT_CLASS.get();
+			if (key == null) {
+				key = test.CURRENT_SUITE.get();
+			}
+		}
+
+		return key;
 	}
 
 }

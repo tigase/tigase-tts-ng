@@ -45,208 +45,237 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 /**
- * Test is responsible for testing PubSub component node creation
- * manipulation and removal including publication and retraction
- * of PubSub node items using PubSub protocol and AdHoc commands.
- *
- * This test is executed on one or many cluster nodes and during
- * execution checks propagation of changes between cluster nodes.
- *
+ * Test is responsible for testing PubSub component node creation manipulation and removal including publication and
+ * retraction of PubSub node items using PubSub protocol and AdHoc commands.
+ * <p>
+ * This test is executed on one or many cluster nodes and during execution checks propagation of changes between cluster
+ * nodes.
+ * <p>
  * Created by andrzej on 10.07.2016.
  */
-public class TestPubSub extends TestPubSubAbstract {
+public class TestPubSub
+		extends TestPubSubAbstract {
 
 	// Direct PubSub based implementation
-	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection) throws JaxmppException, InterruptedException {
+	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection)
+			throws JaxmppException, InterruptedException {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
 		nodeCfg.addTextSingleField("pubsub#title", name);
 		if (collection) {
 			nodeCfg.addTextSingleField("pubsub#node_type", "collection");
 		}
-		jaxmpp.getModule(PubSubModule.class).createNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+		jaxmpp.getModule(PubSubModule.class)
+				.createNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+						mutex.notify("created:node:" + nodeName + ":" + name);
+					}
 
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
 
-			@Override
-			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("created:node:" + nodeName + ":" + name);
-			}
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
 
-			}
-		});
+					}
+				});
 		mutex.waitFor(10 * 1000, "created:node:" + nodeName + ":" + name);
 
-		assertTrue("Creation of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("created:node:" + nodeName + ":" + name));
+		assertTrue(
+				"Creation of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
+						" failed", mutex.isItemNotified("created:node:" + nodeName + ":" + name));
 	}
 
 	public void deleteNode(String hostname, String nodeName) throws JaxmppException, InterruptedException {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 		jaxmpp.getModule(PubSubModule.class).deleteNode(pubsubJid.getBareJid(), nodeName, new PubSubAsyncCallback() {
 			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-
-			}
-
-			@Override
 			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("deleted:node:" + nodeName );
+				mutex.notify("deleted:node:" + nodeName);
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
 
 			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+
+			}
 		});
-		mutex.waitFor(10 * 1000, "deleted:node:" + nodeName );
-		assertTrue("Removal of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("deleted:node:" + nodeName ));
+		mutex.waitFor(10 * 1000, "deleted:node:" + nodeName);
+		assertTrue("Removal of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
+						   " failed", mutex.isItemNotified("deleted:node:" + nodeName));
 	}
 
-	public void configureNode(String hostname, String nodeName, String parentNode) throws JaxmppException, InterruptedException {
+	public void configureNode(String hostname, String nodeName, String parentNode)
+			throws JaxmppException, InterruptedException {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
 		nodeCfg.addTextSingleField("pubsub#collection", parentNode);
-		jaxmpp.getModule(PubSubModule.class).configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+		jaxmpp.getModule(PubSubModule.class)
+				.configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+						mutex.notify("configured:node:" + nodeName + ":" + parentNode);
+					}
 
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
 
-			@Override
-			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("configured:node:" + nodeName + ":" + parentNode);
-			}
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
 
-			}
-		});
+					}
+				});
 		mutex.waitFor(10 * 1000, "configured:node:" + nodeName + ":" + parentNode);
-		assertTrue("Configuration of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
+		assertTrue("Configuration of node " + nodeName + " on " +
+						   jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed",
+				   mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
 	}
 
-	public void subscribeNode(String hostname, BareJID subscriber, String node) throws JaxmppException, InterruptedException {
+	public void subscribeNode(String hostname, BareJID subscriber, String node)
+			throws JaxmppException, InterruptedException {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 		String id = UUID.randomUUID().toString();
-		jaxmpp.getModule(PubSubModule.class).subscribe(pubsubJid.getBareJid(), node, JID.jidInstance(subscriber),  new PubSubModule.SubscriptionAsyncCallback() {
-			@Override
-			public void onTimeout() throws JaxmppException {
-				assertTrue(false);
-			}
+		jaxmpp.getModule(PubSubModule.class)
+				.subscribe(pubsubJid.getBareJid(), node, JID.jidInstance(subscriber),
+						   new PubSubModule.SubscriptionAsyncCallback() {
+							   @Override
+							   public void onTimeout() throws JaxmppException {
+								   assertTrue(false);
+							   }
 
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				assertTrue(false);
-			}
+							   @Override
+							   protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+													 PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+								   assertTrue(false);
+							   }
 
-			@Override
-			protected void onSubscribe(IQ iq, PubSubModule.SubscriptionElement subscriptionElement) {
-				mutex.notify("subscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid().toString());
-			}
-		});
-		mutex.waitFor(10 * 1000, "subscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid().toString());
-		assertTrue(mutex.isItemNotified("subscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid().toString()));
+							   @Override
+							   protected void onSubscribe(IQ iq, PubSubModule.SubscriptionElement subscriptionElement) {
+								   mutex.notify("subscribed:nodes:" + id + ":" +
+														jaxmpp.getSessionObject().getUserBareJid().toString());
+							   }
+						   });
+		mutex.waitFor(10 * 1000,
+					  "subscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid().toString());
+		assertTrue(mutex.isItemNotified(
+				"subscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid().toString()));
 	}
 
-	public void unsubscribeNode(String hostname, BareJID subcriber, String node) throws JaxmppException, InterruptedException {
+	public void unsubscribeNode(String hostname, BareJID subcriber, String node)
+			throws JaxmppException, InterruptedException {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 		String id = UUID.randomUUID().toString();
-		jaxmpp.getModule(PubSubModule.class).unsubscribe(pubsubJid.getBareJid(), node, JID.jidInstance(subcriber),  new PubSubAsyncCallback() {
-			@Override
-			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				mutex.notify("unsubscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid());
-			}
+		jaxmpp.getModule(PubSubModule.class)
+				.unsubscribe(pubsubJid.getBareJid(), node, JID.jidInstance(subcriber), new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza responseStanza) throws JaxmppException {
+						mutex.notify("unsubscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid());
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				assertTrue(false);
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
+						assertTrue(false);
+					}
 
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				assertTrue(false);
-			}
-		});
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						assertTrue(false);
+					}
+				});
 		mutex.waitFor(10 * 1000, "unsubscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid());
 		Thread.sleep(200);
 		assertTrue(mutex.isItemNotified("unsubscribed:nodes:" + id + ":" + jaxmpp.getSessionObject().getUserBareJid()));
 	}
 
-	public void publishItemToNode(String hostname, BareJID publisher, String node, String itemId, Element payload) throws Exception {
+	public void publishItemToNode(String hostname, BareJID publisher, String node, String itemId, Element payload)
+			throws Exception {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
-		jaxmpp.getModule(PubSubModule.class).publishItem(pubsubJid.getBareJid(), node, itemId, payload, new PubSubModule.PublishAsyncCallback() {
-			@Override
-			public void onTimeout() throws JaxmppException {
-				assertTrue(false);
-			}
+		jaxmpp.getModule(PubSubModule.class)
+				.publishItem(pubsubJid.getBareJid(), node, itemId, payload, new PubSubModule.PublishAsyncCallback() {
+					@Override
+					public void onTimeout() throws JaxmppException {
+						assertTrue(false);
+					}
 
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				assertTrue(false);
-			}
+					@Override
+					public void onPublish(String s) {
+						mutex.notify("published:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
+					}
 
-			@Override
-			public void onPublish(String s) {
-				mutex.notify("published:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
-			}
-		});
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						assertTrue(false);
+					}
+				});
 		mutex.waitFor(10 * 1000, "published:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
 		assertTrue(mutex.isItemNotified("published:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid()));
+	}
+
+	public void retractItemFromNode(String hostname, String node, String itemId) throws Exception {
+		Jaxmpp jaxmpp = jaxmpps.get(hostname);
+		jaxmpp.getModule(PubSubModule.class)
+				.deleteItem(pubsubJid.getBareJid(), node, itemId, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza responseStanza) throws JaxmppException {
+						mutex.notify("retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						assertTrue(false);
+					}
+
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						assertTrue(false);
+					}
+				});
+		mutex.waitFor(10 * 1000, "retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
+		assertTrue(mutex.isItemNotified("retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid()));
 	}
 
 	@Override
 	protected void retrieveItemFromNode(String hostname, String node, String itemId, ResultCallback<Element> callback)
 			throws Exception {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
-		jaxmpp.getModule(PubSubModule.class).retrieveItem(pubsubJid.getBareJid(), node, itemId, new PubSubModule.RetrieveItemsAsyncCallback() {
-			@Override
-			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
-				items.forEach(item -> callback.finished(item.getPayload()));
-			}
+		jaxmpp.getModule(PubSubModule.class)
+				.retrieveItem(pubsubJid.getBareJid(), node, itemId, new PubSubModule.RetrieveItemsAsyncCallback() {
+					@Override
+					public void onTimeout() throws JaxmppException {
+						assertTrue(false);
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				assertTrue(false);
-			}
+					@Override
+					protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
+						items.forEach(item -> callback.finished(item.getPayload()));
+					}
 
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				assertTrue(false);
-			}
-		});
-	}
-
-	public void retractItemFromNode(String hostname, String node, String itemId) throws Exception {
-		Jaxmpp jaxmpp = jaxmpps.get(hostname);
-		jaxmpp.getModule(PubSubModule.class).deleteItem(pubsubJid.getBareJid(), node, itemId, new PubSubAsyncCallback() {
-			@Override
-			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				mutex.notify("retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				assertTrue(false);
-			}
-
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				assertTrue(false);
-			}
-		});
-		mutex.waitFor(10 * 1000, "retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid());
-		assertTrue(mutex.isItemNotified("retracted:item:" + itemId + ":" + jaxmpp.getSessionObject().getUserBareJid()));
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						assertTrue(false);
+					}
+				});
 	}
 
 	@Override
-	protected void retrieveUserSubscriptions(String hostname, BareJID user, String nodePattern, ResultCallback<List<String>> callback)
-			throws Exception {
+	protected void retrieveUserSubscriptions(String hostname, BareJID user, String nodePattern,
+											 ResultCallback<List<String>> callback) throws Exception {
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 
 		IQ iq = IQ.create();
@@ -272,7 +301,8 @@ public class TestPubSub extends TestPubSubAbstract {
 
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				JabberDataElement data = new JabberDataElement(responseStanza.findChild(new String[] { "iq", "command", "x" }));
+				JabberDataElement data = new JabberDataElement(
+						responseStanza.findChild(new String[]{"iq", "command", "x"}));
 				TextMultiField field = data.getField("nodes");
 				assertNotNull(field);
 				callback.finished(Arrays.asList(field.getFieldValue()));

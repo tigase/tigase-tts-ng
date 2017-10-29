@@ -31,12 +31,12 @@ import tigase.tests.AbstractTest;
 public class AccountBuilder {
 
 	private final AbstractTest test;
-	private String logPrefix;
-	private String username;
-	private String password;
 	private String domain;
 	private String email;
+	private String logPrefix;
+	private String password;
 	private boolean register = true;
+	private String username;
 
 	public AccountBuilder(AbstractTest abstractTest) {
 		this.test = abstractTest;
@@ -113,7 +113,7 @@ public class AccountBuilder {
 		if (register) {
 			return test.accountManager.registerAccount(this, account);
 		}
-		
+
 		return account;
 	}
 

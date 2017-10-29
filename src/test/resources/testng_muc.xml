@@ -1,14 +1,14 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="Tigase MUC Component Tests" verbose="1">
-	<test name="Test MAM support - #4732">
-		<classes>
-			<class name="tigase.tests.muc.TestMessageArchiveManagement" />
-		</classes>
-	</test>
-	<test name="Test limit of users per room - #3179">
-		<classes>
-			<class name="tigase.tests.muc.TestLimitOfUsersPerRoom" />
-		</classes>
-	</test>
+    <test name="Test MAM support - #4732">
+        <classes>
+            <class name="tigase.tests.muc.TestMessageArchiveManagement"/>
+        </classes>
+    </test>
+    <test name="Test limit of users per room - #3179">
+        <classes>
+            <class name="tigase.tests.muc.TestLimitOfUsersPerRoom"/>
+        </classes>
+    </test>
 </suite>

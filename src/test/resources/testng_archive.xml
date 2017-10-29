@@ -1,29 +1,29 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="Tigase Message Archiving Component" verbose="1">
-	<test name="XEP-0313 - Message Archive Management">
-		<classes>
-			<class name="tigase.tests.archive.TestMessageArchiveManagement" />
-		</classes>
-	</test>
-	<test name="XEP-0136 - Message Archiving - basic tests">
-		<classes>
-			<class name="tigase.tests.archive.TestMessageArchivingBasic" />
-		</classes>
-	</test>
-	<test name="XEP-0136 - Message Archiving - RSM">
-		<classes>
-			<class name="tigase.tests.archive.TestMessageArchivingRSM" />
-		</classes>
-	</test>
-	<test name="XEP-0136 - Message Archiving - Tags and Contains">
-		<classes>
-			<class name="tigase.tests.archive.TestMessageArchivingTagsAndContains" />
-		</classes>
-	</test>
-	<test name="XEP-0136 - Message Archiving - MUC">
-		<classes>
-			<class name="tigase.tests.archive.TestMessageArchivingMUC" />
-		</classes>
-	</test>
+    <test name="XEP-0313 - Message Archive Management">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchiveManagement"/>
+        </classes>
+    </test>
+    <test name="XEP-0136 - Message Archiving - basic tests">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchivingBasic"/>
+        </classes>
+    </test>
+    <test name="XEP-0136 - Message Archiving - RSM">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchivingRSM"/>
+        </classes>
+    </test>
+    <test name="XEP-0136 - Message Archiving - Tags and Contains">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchivingTagsAndContains"/>
+        </classes>
+    </test>
+    <test name="XEP-0136 - Message Archiving - MUC">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchivingMUC"/>
+        </classes>
+    </test>
 </suite>

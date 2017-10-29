@@ -34,18 +34,18 @@ import java.util.function.Function;
 public class JaxmppBuilder {
 
 	private final Account account;
+	private Function<Jaxmpp, Jaxmpp> configurator;
+	private boolean connected = false;
 	private String host;
 	private String logPrefix;
-	private boolean connected = false;
-
-	private Function<Jaxmpp, Jaxmpp> configurator;
 
 	JaxmppBuilder(Account account) {
 		this.account = account;
 	}
 
 	public Jaxmpp build() throws JaxmppException {
-		Jaxmpp jaxmpp1 = account.test.accountManager.createJaxmpp(logPrefix == null ? account.getLogPrefix() : logPrefix);
+		Jaxmpp jaxmpp1 = account.test.accountManager.createJaxmpp(
+				logPrefix == null ? account.getLogPrefix() : logPrefix);
 		jaxmpp1.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
 
 		if (null == host) {
@@ -86,13 +86,13 @@ public class JaxmppBuilder {
 		return this.host;
 	}
 
-	public JaxmppBuilder setLogPrefix(String logPrefix) {
-		this.logPrefix = logPrefix;
+	public JaxmppBuilder setHost(String host) {
+		this.host = host;
 		return this;
 	}
 
-	public JaxmppBuilder setHost(String host) {
-		this.host = host;
+	public JaxmppBuilder setLogPrefix(String logPrefix) {
+		this.logPrefix = logPrefix;
 		return this;
 	}
 

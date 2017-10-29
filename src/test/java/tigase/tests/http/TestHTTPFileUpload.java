@@ -56,16 +56,24 @@ public class TestHTTPFileUpload
 		extends AbstractTest {
 
 	private static final String USER_PREFIX = "HFU_";
-
+	private final Mutex mutex = new Mutex();
+	private final AtomicReference<HttpFileUploadModule.Slot> slotRef = new AtomicReference<>();
+	private JID componentJid;
+	private File fileToSend;
 	private CloseableHttpClient httpClient;
+	private byte[] sendFileHash;
 	private Account user;
 	private Jaxmpp userJaxmpp;
 
-	private JID componentJid;
-	private byte[] sendFileHash;
-	private final AtomicReference<HttpFileUploadModule.Slot> slotRef = new AtomicReference<>();
-	private final Mutex mutex = new Mutex();
-	private File fileToSend;
+	private static byte[] calculateHash(InputStream is) throws IOException, NoSuchAlgorithmException {
+		MessageDigest md = MessageDigest.getInstance("SHA-512");
+		byte[] tmp = new byte[1024];
+		int read = 0;
+		while ((read = is.read(tmp)) > -1) {
+			md.update(tmp, 0, read);
+		}
+		return md.digest();
+	}
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -177,15 +185,5 @@ public class TestHTTPFileUpload
 		}
 
 		return fileToSend;
-	}
-
-	private static byte[] calculateHash(InputStream is) throws IOException, NoSuchAlgorithmException {
-		MessageDigest md = MessageDigest.getInstance("SHA-512");
-		byte[] tmp = new byte[1024];
-		int read = 0;
-		while ((read = is.read(tmp)) > -1) {
-			md.update(tmp, 0, read);
-		}
-		return md.digest();
 	}
 }

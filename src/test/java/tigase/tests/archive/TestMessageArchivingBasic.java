@@ -44,21 +44,17 @@ import static org.testng.Assert.assertTrue;
 /**
  * Created by andrzej on 25.07.2016.
  */
-public class TestMessageArchivingBasic extends AbstractTest {
+public class TestMessageArchivingBasic
+		extends AbstractTest {
 
 	private static final String USER_PREFIX = "MaM-";
-
-	private Account user1;
-	private Account user2;
-
-	private Jaxmpp user1Jaxmpp;
-	private Jaxmpp user2Jaxmpp;
-
 	private List<String> expTags = new ArrayList<>();
-
 	private String id;
-
 	private Mutex mutex;
+	private Account user1;
+	private Jaxmpp user1Jaxmpp;
+	private Account user2;
+	private Jaxmpp user2Jaxmpp;
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -76,7 +72,7 @@ public class TestMessageArchivingBasic extends AbstractTest {
 		}).setConnected(true).build();
 		id = UUID.randomUUID().toString();
 	}
-	
+
 	@Test
 	public void testChangeArchiveSettings() throws Exception {
 		setArchiveSettings(user1Jaxmpp, id, true);
@@ -106,7 +102,7 @@ public class TestMessageArchivingBasic extends AbstractTest {
 		retrieveArchivedMessage(user1Jaxmpp, user2Jaxmpp.getSessionObject().getUserBareJid(), id, testId);
 		for (String tag : expTags) {
 			assertTrue(mutex.isItemNotified("2:" + testId + ":" + id + ":retriveCollection:success:" + tag),
-					"Retrieving message from repository failed - " + tag);
+					   "Retrieving message from repository failed - " + tag);
 		}
 	}
 
@@ -114,73 +110,92 @@ public class TestMessageArchivingBasic extends AbstractTest {
 	public void testMesssageRetrivalJidComparison() throws Exception {
 		// check that localpart and domain are compared in case insensitive way
 		String testId = UUID.randomUUID().toString();
-		retrieveArchivedMessage(user1Jaxmpp, BareJID.bareJIDInstance(user2Jaxmpp.getSessionObject().getUserBareJid().toString().toLowerCase()), id, testId);
+		retrieveArchivedMessage(user1Jaxmpp, BareJID.bareJIDInstance(
+				user2Jaxmpp.getSessionObject().getUserBareJid().toString().toLowerCase()), id, testId);
 		for (String tag : expTags) {
 			assertTrue(mutex.isItemNotified("2:" + testId + ":" + id + ":retriveCollection:success:" + tag),
-					"Retrieving message from repository failed - " + tag);
+					   "Retrieving message from repository failed - " + tag);
 		}
 	}
 
-	private void retrieveArchivedMessage(final Jaxmpp jaxmppUser1, BareJID userBareJid, final String id, final String testId) throws JaxmppException, InterruptedException {
+	private void retrieveArchivedMessage(final Jaxmpp jaxmppUser1, BareJID userBareJid, final String id,
+										 final String testId) throws JaxmppException, InterruptedException {
 		jaxmppUser1.getModule(MessageArchivingModule.class)
-				.listCollections(JID.jidInstance(userBareJid),
-						null, null, null, new MessageArchivingModule.CollectionAsyncCallback() {
+				.listCollections(JID.jidInstance(userBareJid), null, null, null,
+								 new MessageArchivingModule.CollectionAsyncCallback() {
 
-							public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-								mutex.notify("1:" + testId + ":" + id + ":retriveCollection:error");
-							}
+									 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+											 throws JaxmppException {
+										 mutex.notify("1:" + testId + ":" + id + ":retriveCollection:error");
+									 }
 
-							public void onTimeout() throws JaxmppException {
-								mutex.notify("1:" + testId + ":" + id + ":retriveCollection:timeout");
-							}
+									 public void onTimeout() throws JaxmppException {
+										 mutex.notify("1:" + testId + ":" + id + ":retriveCollection:timeout");
+									 }
 
-							@Override
-							protected void onCollectionReceived(ResultSet<Chat> vcard) throws XMLException {
-								mutex.notify("1:" + testId + ":" + id + ":retriveCollection:received");
+									 @Override
+									 protected void onCollectionReceived(ResultSet<Chat> vcard) throws XMLException {
+										 mutex.notify("1:" + testId + ":" + id + ":retriveCollection:received");
 
-								for (Chat item : vcard.getItems()) {
-									try {
-										jaxmppUser1.getModule(MessageArchivingModule.class)
-												.retriveCollection(item.getWithJid(),
-														item.getStart(),
-														null, null, null, null, new MessageArchivingModule.ItemsAsyncCallback() {
+										 for (Chat item : vcard.getItems()) {
+											 try {
+												 jaxmppUser1.getModule(MessageArchivingModule.class)
+														 .retriveCollection(item.getWithJid(), item.getStart(), null,
+																			null, null, null,
+																			new MessageArchivingModule.ItemsAsyncCallback() {
 
-															public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-																mutex.notify("2:" + testId + ":" + id + ":retriveCollection:error");
-															}
+																				public void onError(
+																						Stanza responseStanza,
+																						XMPPException.ErrorCondition error)
+																						throws JaxmppException {
+																					mutex.notify(
+																							"2:" + testId + ":" + id +
+																									":retriveCollection:error");
+																				}
 
-															public void onTimeout() throws JaxmppException {
-																mutex.notify("2:" + testId + ":" + id + ":retriveCollection:timeout");
-															}
+																				public void onTimeout()
+																						throws JaxmppException {
+																					mutex.notify(
+																							"2:" + testId + ":" + id +
+																									":retriveCollection:timeout");
+																				}
 
-															@Override
-															protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-																for (ChatItem item : chat.getItems()) {
-																	mutex.notify("2:" + testId + ":" + id + ":retriveCollection:success:" + item.getBody());
-																}
-																mutex.notify("2:" + testId + ":" + id + ":retriveCollection:received");
-															}
+																				@Override
+																				protected void onItemsReceived(
+																						ChatResultSet chat)
+																						throws XMLException {
+																					for (ChatItem item : chat.getItems()) {
+																						mutex.notify(
+																								"2:" + testId + ":" +
+																										id +
+																										":retriveCollection:success:" +
+																										item.getBody());
+																					}
+																					mutex.notify(
+																							"2:" + testId + ":" + id +
+																									":retriveCollection:received");
+																				}
 
-														});
-									} catch (JaxmppException ex) {
-										ex.printStackTrace();
-									}
-								}
-							}
+																			});
+											 } catch (JaxmppException ex) {
+												 ex.printStackTrace();
+											 }
+										 }
+									 }
 
-						});
+								 });
 
-		mutex.waitFor(20 * 1000, "1:" + testId + ":" + id + ":retriveCollection:received", "2:" + testId + ":" + id + ":retriveCollection:received");
+		mutex.waitFor(20 * 1000, "1:" + testId + ":" + id + ":retriveCollection:received",
+					  "2:" + testId + ":" + id + ":retriveCollection:received");
 	}
 
-
-	private void setArchiveSettings(Jaxmpp user, final String id, boolean enable) throws JaxmppException, InterruptedException {
+	private void setArchiveSettings(Jaxmpp user, final String id, boolean enable)
+			throws JaxmppException, InterruptedException {
 		if (user.isConnected()) {
 			user.disconnect(true);
 			Thread.sleep(500);
 			user.login(true);
 		}
-
 
 		user.getModule(MessageArchivingModule.class).setAutoArchive(enable, new AsyncCallback() {
 
@@ -200,6 +215,5 @@ public class TestMessageArchivingBasic extends AbstractTest {
 
 		Thread.sleep(2 * 1000);
 	}
-
 
 }

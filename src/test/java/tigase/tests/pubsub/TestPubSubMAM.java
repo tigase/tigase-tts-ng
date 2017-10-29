@@ -47,26 +47,22 @@ import static org.testng.AssertJUnit.*;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 /**
- * Test is responsible for checking if support for MAM in PubSub component
- * works correctly.
- *
+ * Test is responsible for checking if support for MAM in PubSub component works correctly.
+ * <p>
  * Created by andrzej on 26.12.2016.
  */
 public class TestPubSubMAM
 		extends AbstractTest {
 
-	protected Account user;
-	protected Jaxmpp jaxmpp;
-	protected JID pubsubJid;
-
 	protected final Mutex mutex = new Mutex();
-
-	protected List<Item> publishedItems;
-
-	protected PubSubNode LEAF;
 	protected PubSubNode COLLECTION;
+	protected PubSubNode LEAF;
 	protected PubSubNode ROOT;
-	
+	protected Jaxmpp jaxmpp;
+	protected List<Item> publishedItems;
+	protected JID pubsubJid;
+	protected Account user;
+
 	@BeforeClass
 	public void setUp() throws Exception {
 		user = createAccount().setLogPrefix("user1").build();
@@ -75,15 +71,26 @@ public class TestPubSubMAM
 			return jaxmpp;
 		}).setConnected(true).build();
 
-		ROOT = pubSubManager.createNode("root-" + UUID.randomUUID().toString()).setJaxmpp(jaxmpp).setNodeType(PubSubNode.Type.collection).build();
-		COLLECTION = pubSubManager.createNode("collection-" + UUID.randomUUID().toString()).setJaxmpp(jaxmpp).setNodeType(PubSubNode.Type.collection).setParentCollection(ROOT.getName()).build();
-		LEAF = pubSubManager.createNode("leaf-" + UUID.randomUUID().toString()).setJaxmpp(jaxmpp).setNodeType(PubSubNode.Type.leaf).setParentCollection(COLLECTION.getName()).build();
+		ROOT = pubSubManager.createNode("root-" + UUID.randomUUID().toString())
+				.setJaxmpp(jaxmpp)
+				.setNodeType(PubSubNode.Type.collection)
+				.build();
+		COLLECTION = pubSubManager.createNode("collection-" + UUID.randomUUID().toString())
+				.setJaxmpp(jaxmpp)
+				.setNodeType(PubSubNode.Type.collection)
+				.setParentCollection(ROOT.getName())
+				.build();
+		LEAF = pubSubManager.createNode("leaf-" + UUID.randomUUID().toString())
+				.setJaxmpp(jaxmpp)
+				.setNodeType(PubSubNode.Type.leaf)
+				.setParentCollection(COLLECTION.getName())
+				.build();
 
 		pubsubJid = JID.jidInstance(LEAF.getPubsubJid());
 
 		publishedItems = Collections.unmodifiableList(publishItems(20));
 	}
-	
+
 	@Test
 	public void testRetriveAllFromLeaf() throws Exception {
 		testRetriveAllFrom(LEAF);
@@ -169,21 +176,21 @@ public class TestPubSubMAM
 
 		List<Item> expectedItems = publishedItems.stream().limit(10).collect(Collectors.toList());
 		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
-		query.setEnd(
-				new Date(((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
+		query.setEnd(new Date(
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(5).limit(10).collect(Collectors.toList());
 		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
-		query.setEnd(
-				new Date(((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
+		query.setEnd(new Date(
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
 
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(10).limit(10).collect(Collectors.toList());
 		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
-		query.setEnd(
-				new Date(((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
+		query.setEnd(new Date(
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 	}
 
@@ -245,30 +252,32 @@ public class TestPubSubMAM
 
 		return results;
 	}
-	
+
 	protected List<Item> publishItems(int count) throws Exception {
 		List<Item> results = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
 			Item item = new Item();
 			jaxmpp.getModule(PubSubModule.class)
-					.publishItem(pubsubJid.getBareJid(), LEAF.getName(), item.itemId, item.payload, new PubSubAsyncCallback() {
-						@Override
-						protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
-											  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+					.publishItem(pubsubJid.getBareJid(), LEAF.getName(), item.itemId, item.payload,
+								 new PubSubAsyncCallback() {
+									 @Override
+									 public void onSuccess(Stanza responseStanza) throws JaxmppException {
+										 item.publishedAt(new Date());
+										 mutex.notify("publish:node:root:item-id:" + item.itemId);
+									 }
 
-						}
+									 @Override
+									 public void onTimeout() throws JaxmppException {
 
-						@Override
-						public void onSuccess(Stanza responseStanza) throws JaxmppException {
-							item.publishedAt(new Date());
-							mutex.notify("publish:node:root:item-id:" + item.itemId);
-						}
+									 }
 
-						@Override
-						public void onTimeout() throws JaxmppException {
+									 @Override
+									 protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+														   PubSubErrorCondition pubSubErrorCondition)
+											 throws JaxmppException {
 
-						}
-					});
+									 }
+								 });
 
 			mutex.waitFor(20 * 1000, "publish:node:root:item-id:" + item.itemId);
 			assertTrue(mutex.isItemNotified("publish:node:root:item-id:" + item.itemId));
@@ -289,10 +298,10 @@ public class TestPubSubMAM
 	protected static class Item {
 
 		private final String id;
-		private final Date timestamp;
-		private Date publishedAt = null;
 		private final String itemId;
 		private final Element payload;
+		private final Date timestamp;
+		private Date publishedAt = null;
 
 		public Item(String id, Date timestamp, String itemId, Element payload) {
 			this.id = id;
@@ -318,14 +327,14 @@ public class TestPubSubMAM
 				Item i = (Item) obj;
 				if (itemId.equals(i.itemId) && payload.equals(i.payload)) {
 					if (publishedAt != null) {
-						double i11 = Math.floor(((double) timestamp.getTime())/10000)*10000;
-						double i12 = Math.ceil(((double) publishedAt.getTime())/10000)*10000;
-						double i2 = Math.floor(((double) i.timestamp.getTime())/10000)*10000;
+						double i11 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
+						double i12 = Math.ceil(((double) publishedAt.getTime()) / 10000) * 10000;
+						double i2 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
 						return i11 <= i2 && i2 <= i12;
 					} else if (i.publishedAt != null) {
-						double i11 = Math.floor(((double) i.timestamp.getTime())/10000)*10000;
-						double i12 = Math.ceil(((double) i.publishedAt.getTime())/10000)*10000;
-						double i2 = Math.floor(((double) timestamp.getTime())/10000)*10000;
+						double i11 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
+						double i12 = Math.ceil(((double) i.publishedAt.getTime()) / 10000) * 10000;
+						double i2 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
 						return i11 <= i2 && i2 <= i12;
 					} else {
 						return timestamp.getTime() == i.timestamp.getTime();
@@ -338,7 +347,8 @@ public class TestPubSubMAM
 		@Override
 		public String toString() {
 			try {
-				String result = "[id: " + itemId + ", payload: " + payload.getAsString() + ", timestamp: " + timestamp.getTime();
+				String result = "[id: " + itemId + ", payload: " + payload.getAsString() + ", timestamp: " +
+						timestamp.getTime();
 				if (publishedAt != null) {
 					result += ", publishedAt: " + publishedAt.getTime();
 				}

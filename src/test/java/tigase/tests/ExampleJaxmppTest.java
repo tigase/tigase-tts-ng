@@ -28,27 +28,28 @@ import tigase.tests.utils.Account;
 import static org.testng.Assert.assertTrue;
 import static tigase.TestLogger.log;
 
-public class ExampleJaxmppTest extends AbstractTest {
+public class ExampleJaxmppTest
+		extends AbstractTest {
 
-	@Test(groups = { "examples" }, description = "Simple test verifying logging in by the user")
+	@Test(groups = {"examples"}, description = "Simple test verifying logging in by the user")
 	public void SimpleLoginTest() {
 
 		try {
 			log("This is test case");
 
 			Jaxmpp contact = getAdminAccount().createJaxmpp().setConnected(true).build();
-			
-			assertTrue(contact.isConnected(), "contact was not connected" );
+
+			assertTrue(contact.isConnected(), "contact was not connected");
 
 			if (contact.isConnected()) {
 				contact.disconnect();
 			}
 
-			Account createUserAccount = createAccount().setLogPrefix("test_user" ).build();
+			Account createUserAccount = createAccount().setLogPrefix("test_user").build();
 			Jaxmpp createJaxmpp = createUserAccount.createJaxmpp().build();
-			createJaxmpp.login( true );
+			createJaxmpp.login(true);
 
-			assertTrue(createJaxmpp.isConnected(), "contact was not connected" );
+			assertTrue(createJaxmpp.isConnected(), "contact was not connected");
 
 		} catch (Exception e) {
 			fail(e);

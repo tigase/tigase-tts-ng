@@ -39,16 +39,11 @@ import static org.testng.Assert.*;
 /**
  * Created by andrzej on 17.09.2016.
  */
-public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
+public class TestHandlingOfConnectionIssues
+		extends AbstractJaxmppTest {
 
-	private Account user;
 	private Jaxmpp jaxmpp;
-
-	@BeforeMethod
-	protected void setUp() throws Exception {
-		user = createAccount().setLogPrefix("jaxmpp_").build();
-		jaxmpp = user.createJaxmpp().build();
-	}
+	private Account user;
 
 	@Test
 	public void testStateAfterAuthTimeoutWebSocket() throws Exception {
@@ -63,6 +58,27 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 	@Test
 	public void testStateAfterAuthTimeoutSocket() throws Exception {
 		testStateAfterAuthTimeout(ConnectionConfiguration.ConnectionType.socket);
+	}
+
+	@Test
+	public void testStateAfterConnectionFailureWebSocket() throws Exception {
+		testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType.websocket);
+	}
+
+	@Test
+	public void testStateAfterConnectionFailureBosh() throws Exception {
+		testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType.bosh);
+	}
+
+	@Test
+	public void testStateAfterConnectionFailureSocket() throws Exception {
+		testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType.socket);
+	}
+
+	@BeforeMethod
+	protected void setUp() throws Exception {
+		user = createAccount().setLogPrefix("jaxmpp_").build();
+		jaxmpp = user.createJaxmpp().build();
 	}
 
 	private void testStateAfterAuthTimeout(ConnectionConfiguration.ConnectionType connectionType) throws Exception {
@@ -112,22 +128,8 @@ public class TestHandlingOfConnectionIssues extends AbstractJaxmppTest {
 		jaxmpp.disconnect();
 	}
 
-	@Test
-	public void testStateAfterConnectionFailureWebSocket() throws Exception {
-		testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType.websocket);
-	}
-
-	@Test
-	public void testStateAfterConnectionFailureBosh() throws Exception {
-		testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType.bosh);
-	}
-
-	@Test
-	public void testStateAfterConnectionFailureSocket() throws Exception {
-		testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType.socket);
-	}
-
-	private void testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType connectionType) throws Exception {
+	private void testStateAfterConnectionFailure(ConnectionConfiguration.ConnectionType connectionType)
+			throws Exception {
 		assertNull(jaxmpp.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY));
 
 		jaxmpp.getConnectionConfiguration().setConnectionType(connectionType);

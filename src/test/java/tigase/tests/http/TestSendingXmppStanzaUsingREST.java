@@ -67,52 +67,56 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
- *
  * @author andrzej
  */
-public class TestSendingXmppStanzaUsingREST extends AbstractTest {
-	
+public class TestSendingXmppStanzaUsingREST
+		extends AbstractTest {
+
 	private static final String USER_PREFIX = "http_";
-	
+
 	private CloseableHttpClient httpClient;
 	private Account user;
 	private Jaxmpp userJaxmpp;
-	
+
 	@BeforeMethod
 	public void setUp() throws Exception {
-        HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(target.getHostName(), target.getPort()),
-                new UsernamePasswordCredentials(getAdminAccount().getJid().toString(),
-						getAdminAccount().getPassword()));
-		httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(5000).build()).build();
+		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
+		CredentialsProvider credsProvider = new BasicCredentialsProvider();
+		credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()),
+									 new UsernamePasswordCredentials(getAdminAccount().getJid().toString(),
+																	 getAdminAccount().getPassword()));
+		httpClient = HttpClients.custom()
+				.setDefaultCredentialsProvider(credsProvider)
+				.setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(5000).build())
+				.build();
 		user = createAccount().setLogPrefix(USER_PREFIX).build();
 		userJaxmpp = user.createJaxmpp().setConnected(true).build();
 	}
-	
+
 	@AfterMethod
 	public void cleanUp() throws Exception {
 		httpClient.close();
 	}
-	
-	@Test(groups = { "HTTP - REST API" }, description = "Sending XMPP messages using HTTP REST API")
+
+	@Test(groups = {"HTTP - REST API"}, description = "Sending XMPP messages using HTTP REST API")
 	public void testSendingXMPPMessages() throws Exception {
 		final Mutex mutex = new Mutex();
-		userJaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, 
-				new MessageModule.MessageReceivedHandler() {
+		userJaxmpp.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-			@Override
-			public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
-				try {
-					String msg = convertMessageToStr(stanza);
-					mutex.notify("message:received:" + msg);
-				} catch (XMLException ex) {
-					Logger.getLogger(TestSendingXmppStanzaUsingREST.class.getName()).log(Level.SEVERE, null, ex);
-				}
-			}
-					
-		});
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+									try {
+										String msg = convertMessageToStr(stanza);
+										mutex.notify("message:received:" + msg);
+									} catch (XMLException ex) {
+										Logger.getLogger(TestSendingXmppStanzaUsingREST.class.getName())
+												.log(Level.SEVERE, null, ex);
+									}
+								}
+
+							});
 
 		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
 		HttpClientContext localContext = HttpClientContext.create();
@@ -120,36 +124,37 @@ public class TestSendingXmppStanzaUsingREST extends AbstractTest {
 		BasicScheme basicAuth = new BasicScheme();
 		authCache.put(target, basicAuth);
 		localContext.setAuthCache(authCache);
-		
+
 		String server = getInstanceHostname();
-		HttpPost postRequest = new HttpPost("/rest/stream/");	
+		HttpPost postRequest = new HttpPost("/rest/stream/");
 		postRequest.addHeader("Api-Key", getApiKey());
-		
+
 		String body = "Test message " + UUID.randomUUID().toString();
-		
+
 		Element messageToSendEl = ElementFactory.create("message");
 		messageToSendEl.setAttribute("xmlns", "jabber:client");
 		messageToSendEl.setAttribute("type", "chat");
 		messageToSendEl.setAttribute("to", ResourceBinderModule.getBindedJID(userJaxmpp.getSessionObject()).toString());
-		
-		Element bodyEl = ElementFactory.create("body", body, null);	
+
+		Element bodyEl = ElementFactory.create("body", body, null);
 		messageToSendEl.addChild(bodyEl);
 		String msg = convertMessageToStr(messageToSendEl);
-		
+
 		StringEntity entity = new StringEntity(messageToSendEl.getAsString());
 		entity.setContentType("application/xml");
 		postRequest.setEntity(entity);
-		
+
 		HttpResponse response = httpClient.execute(target, postRequest, localContext);
-		
+
 		assertEquals(response.getStatusLine().getStatusCode(), 200);
-	
-		mutex.waitFor(20*1000, "message:received:" + msg);
+
+		mutex.waitFor(20 * 1000, "message:received:" + msg);
 		assertTrue(mutex.isItemNotified("message:received:" + msg));
-	}	
-	
+	}
+
 	private String convertMessageToStr(Element msg) throws XMLException {
-		return "" + msg.getAttribute("type") + ":" + msg.getAttribute("to") + ":" + msg.getFirstChild("body").getValue();
+		return "" + msg.getAttribute("type") + ":" + msg.getAttribute("to") + ":" +
+				msg.getFirstChild("body").getValue();
 	}
 
 	private String inputStreamToString(InputStream is) throws IOException {
@@ -162,7 +167,7 @@ public class TestSendingXmppStanzaUsingREST extends AbstractTest {
 		}
 		return sb.toString();
 	}
-	
+
 	private Queue<Element> inputStreamToXml(InputStream is) throws IOException {
 		Reader reader = new InputStreamReader(is);
 		DomBuilderHandler handler = new DomBuilderHandler();
@@ -171,16 +176,16 @@ public class TestSendingXmppStanzaUsingREST extends AbstractTest {
 		int read = 0;
 		while ((read = reader.read(buf)) >= 0) {
 			parser.parse(handler, buf, 0, read);
-		}		
-		
+		}
+
 		Queue<tigase.xml.Element> elems = handler.getParsedElements();
 		Queue<Element> res = new ArrayDeque<>();
 		tigase.xml.Element elem;
 		while ((elem = elems.poll()) != null) {
 			res.offer(new J2seElement(elem));
 		}
-		
+
 		return res;
-	}	
-	
+	}
+
 }

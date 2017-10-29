@@ -30,9 +30,9 @@ class SummaryGenarator {
 		}
 
 		ArrayList<TestCase> testResults = new ArrayList<TestCase>()
-		getVersions(resultsDirectory).each {ver ->
-			getTestGroups(resultsDirectory, ver).each {test ->
-				getDatabases(resultsDirectory, ver, test).each {db ->
+		getVersions(resultsDirectory).each { ver ->
+			getTestGroups(resultsDirectory, ver).each { test ->
+				getDatabases(resultsDirectory, ver, test).each { db ->
 					def metrics = getTestsMetrics(resultsDirectory, ver, test, db)
 					def logFile = getLogFile(resultsDirectory, ver, test, db)
 					def reportFile = getReportFile(resultsDirectory, ver, test, db)
@@ -48,22 +48,22 @@ class SummaryGenarator {
 		println sprintf("results parsing generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		Map<String, Map<String, Map<String, List<TestCase>>>> map
-		map = testResults.groupBy({it.testType}, {it.version}, {it.dbType})
+		map = testResults.groupBy({ it.testType }, { it.version }, { it.dbType })
 
 		Map<String, Map<String, Map<String, TestCase>>> collectible
-		collectible = map.collectEntries {String testType, Map<String, Map<String, List<TestCase>>> versions ->
-			[(testType): versions.collectEntries {String version, Map<String, List<TestCase>> databaseTypes ->
-				[(version): databaseTypes.collectEntries {String dbType, List<TestCase> testCases ->
-					testCases.collectEntries {TestCase tc -> [(dbType): tc]
+		collectible = map.collectEntries { String testType, Map<String, Map<String, List<TestCase>>> versions ->
+			[ (testType): versions.collectEntries { String version, Map<String, List<TestCase>> databaseTypes ->
+				[ (version): databaseTypes.collectEntries { String dbType, List<TestCase> testCases ->
+					testCases.collectEntries { TestCase tc -> [ (dbType): tc ]
 					}
-				} as TreeMap]
-			} as TreeMap]
+				} as TreeMap ]
+			} as TreeMap ]
 		} as TreeMap
 
 		println sprintf("collecting entries generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 		def testAllDBs = testResults
-				.groupBy({it.testType}, {it.dbType})
-				.collectEntries {testType, dbtypes -> [(testType): dbtypes.keySet()]}
+				.groupBy({ it.testType }, { it.dbType })
+				.collectEntries { testType, dbtypes -> [ (testType): dbtypes.keySet() ] }
 
 		def resultHtmlPage = new File("${rootDirectory}/index.html")
 		if (!resultHtmlPage.getParentFile().exists()) {
@@ -79,7 +79,7 @@ class SummaryGenarator {
 		config.setAutoNewLine(true)
 		MarkupTemplateEngine engine = new MarkupTemplateEngine(config)
 		Template template = engine.createTemplate(new File("scripts/templates/index.tpl"))
-		Map<String, Object> model = [tests: collectible, testAllDBs: testAllDBs]
+		Map<String, Object> model = [ tests: collectible, testAllDBs: testAllDBs ]
 		Writable output = template.make(model)
 		output.writeTo(pw)
 		pw.close()
@@ -102,8 +102,8 @@ class SummaryGenarator {
 		println sprintf("total generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		def failsTotal = testResults
-				.findAll {tc -> tc?.finishedDate && LocalDate.now().until(tc.finishedDate, ChronoUnit.DAYS) == 0}
-				.count {it -> (it.getTestResult() != TestCase.Result.PASSED)}
+				.findAll { tc -> tc?.finishedDate && LocalDate.now().until(tc.finishedDate, ChronoUnit.DAYS) == 0 }
+				.count { it -> (it.getTestResult() != TestCase.Result.PASSED) }
 
 		println("fails total: " + failsTotal)
 
@@ -118,12 +118,12 @@ class SummaryGenarator {
 
 		if (file.exists()) {
 			def parsed = new XmlSlurper().parse(file)
-			result = [total   : parsed.@total.toInteger(),
-					  failed  : parsed.@failed.toInteger(),
-					  ignored : parsed.@ignored.toInteger(),
-					  passed  : parsed.@passed.toInteger(),
-					  skipped : parsed.@skipped.toInteger(),
-					  duration: (parsed.suite.collect {it.@"duration-ms".toInteger()}.sum() / 1000).toInteger()]
+			result = [ total   : parsed.@total.toInteger(),
+					   failed  : parsed.@failed.toInteger(),
+					   ignored : parsed.@ignored.toInteger(),
+					   passed  : parsed.@passed.toInteger(),
+					   skipped : parsed.@skipped.toInteger(),
+					   duration: (parsed.suite.collect { it.@"duration-ms".toInteger() }.sum() / 1000).toInteger() ]
 			if (parsed.suite[0]?.@"finished-at") {
 				result['finishedAt'] = parsed.suite[0].@"finished-at".toString()
 			}
@@ -147,9 +147,8 @@ class SummaryGenarator {
 //			def parse = LocalDate.parse(metrics?.finishedAt,
 //										DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")))
 			// above throws exception under some OSs hence using forced pattern
-			def parse = LocalDate.parse(
-					metrics?.finishedAt,
-					DateTimeFormatter.ofPattern("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"))
+			def parse = LocalDate.parse(metrics?.finishedAt,
+										DateTimeFormatter.ofPattern("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"))
 			metrics.remove('finishedAt')
 			return parse
 		} else if (logFile?.exists()) {
@@ -177,8 +176,8 @@ class SummaryGenarator {
 	}
 
 	private static String[] getItems(String path, String regex) {
-		def items = []
-		new File(path).eachDirMatch(~regex) {dir -> items.add(dir.name)
+		def items = [ ]
+		new File(path).eachDirMatch(~regex) { dir -> items.add(dir.name)
 		}
 
 		return items
@@ -212,7 +211,7 @@ class TestCase {
 
 		sb.append(version).append(": ")
 		if (metrics) {
-			metrics.each {k, v -> sb.append(k).append(": ").append(v).append("\n")}
+			metrics.each { k, v -> sb.append(k).append(": ").append(v).append("\n") }
 		}
 		sb.append(dbType).append(", ")
 		sb.append(finishedDate).append(", ")
@@ -229,7 +228,8 @@ class TestCase {
 	}
 
 	def getDuration() {
-		return metrics ? DateTimeFormatter.ofPattern("HH:mm:ss.S").format(LocalTime.ofSecondOfDay(metrics.duration)) : null
+		return metrics ? DateTimeFormatter.ofPattern("HH:mm:ss.S").format(LocalTime.ofSecondOfDay(metrics.duration)) :
+			   null
 	}
 
 	def getLogFile() {
@@ -243,7 +243,7 @@ class TestCase {
 	Result getTestResult() {
 		if (metrics?.failed > 0) {
 			return Result.FAILED
-		} else if (!metrics || metrics?.skipped > 0 ) {
+		} else if (!metrics || metrics?.skipped > 0) {
 			return Result.SKIPPED
 		} else {
 			return Result.PASSED

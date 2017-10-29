@@ -54,14 +54,14 @@ import static tigase.TestLogger.log;
 /**
  * Created by andrzej on 22.06.2016.
  */
-public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends AbstractTest {
+public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
+		extends AbstractTest {
 
 	private static final String USER_PREFIX = "sm-resumption";
 
 	private Account user1;
-	private Account user2;
-
 	private Jaxmpp user1Jaxmpp;
+	private Account user2;
 	private Jaxmpp user2Jaxmpp;
 
 	@BeforeMethod
@@ -76,7 +76,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 			return jaxmpp;
 		}).setConnected(true).build();
 	}
-	
+
 	// Messages type == null (normal)
 	@Test
 	public void testMessageDeliveryReliabilityWithResumptionAndWithFullJid() throws Exception {
@@ -159,30 +159,35 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 		testMessageDeliveryReliability(false, false, 2000, StanzaType.chat);
 	}
 
-//	 Message type == chat but with binding delay
+	//	 Message type == chat but with binding delay
 	@Test
 	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithFullJidWithDelayedBinding() throws Exception {
 		testMessageDeliveryReliability(false, true, 0, StanzaType.chat, 2000);
 	}
+
 	@Test
-	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithoutFullJidWithDelayedBinding() throws Exception {
+	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithoutFullJidWithDelayedBinding()
+			throws Exception {
 		testMessageDeliveryReliability(false, false, 0, StanzaType.chat, 2000);
 	}
+
 	@Test
-	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithFullJidAndDelayWithDelayedBinding() throws Exception {
+	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithFullJidAndDelayWithDelayedBinding()
+			throws Exception {
 		testMessageDeliveryReliability(false, true, 2000, StanzaType.chat, 2000);
 	}
+
 	@Test
-	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithoutFullJidAndDelayWithDelayedBinding() throws Exception {
+	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithoutFullJidAndDelayWithDelayedBinding()
+			throws Exception {
 		testMessageDeliveryReliability(false, false, 2000, StanzaType.chat, 2000);
 	}
 
-
-
-	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayReconnectionAndPresence, StanzaType messageType) throws Exception {
+	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayReconnectionAndPresence,
+											   StanzaType messageType) throws Exception {
 		final Mutex mutex = new Mutex();
 
-		log( "\n\n\n===== simulation of connection failure \n" );
+		log("\n\n\n===== simulation of connection failure \n");
 		SocketConnector connector = (SocketConnector) ((ConnectorWrapper) user2Jaxmpp.getConnector()).getConnector();
 		Field socketField = connector.getClass().getDeclaredField("socket");
 		socketField.setAccessible(true);
@@ -206,49 +211,52 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 		assertEquals(Connector.State.disconnected, user2Jaxmpp.getConnector().getState());
 
 		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
-		log( "\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n" );
+		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");
 
 		String body = UUID.randomUUID().toString();
 
-		log( "\n\n\n===== sending message to look for \n" );
+		log("\n\n\n===== sending message to look for \n");
 		sendMessage(user1Jaxmpp, destination, messageType, body);
 
 		//Thread.sleep(delay + 65000);
 		Thread.sleep(1000);
 
-		user2Jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
-				new MessageModule.MessageReceivedHandler() {
+		user2Jaxmpp.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-					@Override
-					public void onMessageReceived(SessionObject sessionObject, Chat chat, Message message) {
-						try {
-							assertEquals("Message was delivered but with wrong destination JID", destination, message.getTo());
-							mutex.notify("message:" + message.getBody());
-						} catch (XMLException e) {
-							e.printStackTrace();
-						}
-					}
-				});
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message message) {
+									try {
+										assertEquals("Message was delivered but with wrong destination JID",
+													 destination, message.getTo());
+										mutex.notify("message:" + message.getBody());
+									} catch (XMLException e) {
+										e.printStackTrace();
+									}
+								}
+							});
 
 		user2Jaxmpp.getModule(PresenceModule.class).setInitialPresence(false);
 
-		log( "\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n" );
+		log("\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n");
 		user2Jaxmpp.login(true);
 
 		Thread.sleep(delayReconnectionAndPresence);
 
-		log( "\n\n\n===== broadcasting presence \n" );
+		log("\n\n\n===== broadcasting presence \n");
 		user2Jaxmpp.getModule(PresenceModule.class).setPresence(Presence.Show.online, null, 5);
 
 		mutex.waitFor(150 * 1000, "message:" + body);
 		assertTrue("Message was not delivered!", mutex.isItemNotified("message:" + body));
 	}
 
-	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayPresence, StanzaType messageType, long delayBinding) throws Exception {
+	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayPresence,
+											   StanzaType messageType, long delayBinding) throws Exception {
 		final Mutex mutex = new Mutex();
 
-		log( "\n\n\n===== simulation of connection failure \n" );
+		log("\n\n\n===== simulation of connection failure \n");
 		SocketConnector connector = (SocketConnector) ((ConnectorWrapper) user2Jaxmpp.getConnector()).getConnector();
 		Field socketField = connector.getClass().getDeclaredField("socket");
 		socketField.setAccessible(true);
@@ -275,58 +283,66 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout extends Abstract
 		String body = UUID.randomUUID().toString();
 		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
 
-		log( "\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n" );
+		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");
 		Thread.sleep(1000);
 
-		user2Jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
-				new MessageModule.MessageReceivedHandler() {
+		user2Jaxmpp.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-					@Override
-					public void onMessageReceived(SessionObject sessionObject, Chat chat, Message message) {
-						try {
-							assertEquals("Message was delivered but with wrong destination JID", destination, message.getTo());
-							mutex.notify("message:" + message.getBody());
-						} catch (XMLException e) {
-							e.printStackTrace();
-						}
-					}
-				});
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message message) {
+									try {
+										assertEquals("Message was delivered but with wrong destination JID",
+													 destination, message.getTo());
+										mutex.notify("message:" + message.getBody());
+									} catch (XMLException e) {
+										e.printStackTrace();
+									}
+								}
+							});
 
 		user2Jaxmpp.getModule(PresenceModule.class).setInitialPresence(false);
 
 		if (delayBinding > 0) {
-			user2Jaxmpp.getEventBus().addHandler(AuthModule.AuthSuccessHandler.AuthSuccessEvent.class, new AuthModule.AuthSuccessHandler()
-			{
-				@Override
-				public void onAuthSuccess(SessionObject sessionObject) throws JaxmppException {
-					try {
-						log( "\n\n\n===== sending message to look for \n" );
-						sendMessage(user1Jaxmpp, destination, messageType, body);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+			user2Jaxmpp.getEventBus()
+					.addHandler(AuthModule.AuthSuccessHandler.AuthSuccessEvent.class,
+								new AuthModule.AuthSuccessHandler() {
+									@Override
+									public void onAuthSuccess(SessionObject sessionObject) throws JaxmppException {
+										try {
+											log("\n\n\n===== sending message to look for \n");
+											sendMessage(user1Jaxmpp, destination, messageType, body);
+										} catch (Exception e) {
+											e.printStackTrace();
+										}
 
-					user2Jaxmpp.getEventBus().addHandler(StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent.class, new StreamFeaturesModule.StreamFeaturesReceivedHandler() {
-						@Override
-						public void onStreamFeaturesReceived(SessionObject sessionObject, Element featuresElement) throws JaxmppException {
-							try {
-								Thread.sleep(delayBinding);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					});
-				}
-			});
+										user2Jaxmpp.getEventBus()
+												.addHandler(
+														StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent.class,
+														new StreamFeaturesModule.StreamFeaturesReceivedHandler() {
+															@Override
+															public void onStreamFeaturesReceived(
+																	SessionObject sessionObject,
+																	Element featuresElement) throws JaxmppException {
+																try {
+																	Thread.sleep(delayBinding);
+																} catch (InterruptedException e) {
+																	e.printStackTrace();
+																}
+															}
+														});
+									}
+								});
 		}
 
-		log( "\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n" );
+		log("\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n");
 		user2Jaxmpp.login(true);
 
 		Thread.sleep(delayPresence);
 
-		log( "\n\n\n===== broadcasting presence \n" );
+		log("\n\n\n===== broadcasting presence \n");
 		user2Jaxmpp.getModule(PresenceModule.class).setPresence(Presence.Show.online, null, 5);
 
 		mutex.waitFor(2 * 5000, "message:" + body);

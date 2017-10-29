@@ -21,31 +21,23 @@
  */
 package tigase.tests;
 
-import static tigase.TestLogger.log;
-
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
+import static tigase.TestLogger.log;
 
 public class Mutex {
 
 	private final HashSet<String> addedItems = new HashSet<String>();
-
-	private boolean forceFinished;
-
 	private final Object locker = new Object();
+	private boolean forceFinished;
 
 	public void clear() {
 		synchronized (locker) {
 			addedItems.clear();
 		}
-	}
-
-	private boolean isDone(Collection<String> waitForItems) {
-
-		return addedItems.containsAll(waitForItems);
 	}
 
 	public boolean isItemNotified(String item) {
@@ -76,7 +68,7 @@ public class Mutex {
 		final Collection<String> waitForItems = new HashSet<String>(Arrays.asList(items));
 
 		final long start = System.currentTimeMillis();
-		final long end = start + ( timeout * 3 );
+		final long end = start + (timeout * 3);
 
 		synchronized (locker) {
 			forceFinished = false;
@@ -96,6 +88,11 @@ public class Mutex {
 			log("[Mutex] " + (forceFinished ? "forced to stop." : "received everything."));
 			return true;
 		}
+	}
+
+	private boolean isDone(Collection<String> waitForItems) {
+
+		return addedItems.containsAll(waitForItems);
 	}
 
 	private Collection<String> showMissing(String[] items) {

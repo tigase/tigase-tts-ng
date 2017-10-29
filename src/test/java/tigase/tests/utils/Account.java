@@ -37,12 +37,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class Account {
 
 	protected final AbstractTest test;
-	private final String logPrefix;
-
+	private final ConcurrentHashMap<Object, Set<Jaxmpp>> jaxmpps = new ConcurrentHashMap<>();
 	private final BareJID jid;
+	private final String logPrefix;
 	private final String password;
-
-	private final ConcurrentHashMap<Object,Set<Jaxmpp>> jaxmpps = new ConcurrentHashMap<>();
 
 	public Account(AbstractTest test, String logPrefix, BareJID jid, String password) {
 		this.test = test;
@@ -86,19 +84,6 @@ public class Account {
 		jaxmpps.getOrDefault(key, new HashSet<>()).remove(jaxmpp1);
 	}
 
-	private Object getScopeKey() {
-		Object key;
-		key = test.CURRENT_METHOD.get();
-		if (key == null) {
-			key = test.CURRENT_CLASS.get();
-			if (key == null) {
-				key = test.CURRENT_SUITE.get();
-			}
-		}
-
-		return key;
-	}
-
 	protected void scopeFinished() {
 		Object key = getScopeKey();
 		jaxmpps.getOrDefault(key, new HashSet<>()).forEach(jaxmpp -> {
@@ -111,5 +96,18 @@ public class Account {
 				ex.printStackTrace();
 			}
 		});
+	}
+
+	private Object getScopeKey() {
+		Object key;
+		key = test.CURRENT_METHOD.get();
+		if (key == null) {
+			key = test.CURRENT_CLASS.get();
+			if (key == null) {
+				key = test.CURRENT_SUITE.get();
+			}
+		}
+
+		return key;
 	}
 }

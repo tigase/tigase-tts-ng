@@ -18,10 +18,11 @@ import java.util.UUID;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
-public class TestPasswordChange extends AbstractJaxmppTest {
+public class TestPasswordChange
+		extends AbstractJaxmppTest {
 
-	private Account user;
 	private Jaxmpp jaxmpp;
+	private Account user;
 
 	@BeforeMethod
 	public void prepareAccountAndJaxmpp() throws JaxmppException, InterruptedException {
@@ -47,7 +48,7 @@ public class TestPasswordChange extends AbstractJaxmppTest {
 				if (responseStanza.getType() == StanzaType.result) {
 					mutex.notify("password:changed:success", "password:changed");
 				} else {
-					mutex.notify( "password:changed");
+					mutex.notify("password:changed");
 				}
 			}
 
@@ -61,7 +62,7 @@ public class TestPasswordChange extends AbstractJaxmppTest {
 		assertTrue(mutex.isItemNotified("password:changed:success"));
 	}
 
-	@Test(dependsOnMethods = { "testPasswordChange" })
+	@Test(dependsOnMethods = {"testPasswordChange"})
 	public void testAuthenticationAfterPasswordChange() throws JaxmppException {
 		jaxmpp = user.createJaxmpp().build();
 

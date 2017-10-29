@@ -25,12 +25,12 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Created by andrzej on 21.06.2017.
  */
-public class TestOfflineMessagesSendToUserWithNegativePriority extends AbstractTest {
+public class TestOfflineMessagesSendToUserWithNegativePriority
+		extends AbstractTest {
 
 	private Account userA;
-	private Account userB;
-
 	private Jaxmpp userAjaxmpp;
+	private Account userB;
 	private Jaxmpp userBjaxmpp;
 
 	@BeforeMethod

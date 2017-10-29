@@ -1,39 +1,39 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="Tigase PubSub Component Tests" verbose="1">
-	<test name="Node and item manipulation using PubSub procotol - #4229">
-		<classes>
-			<class name="tigase.tests.pubsub.TestPubSub"/>
-		</classes>
-	</test>
-	<test name="Removal of PEP nodes on user removal - #3544">
-		<classes>
-			<class name="tigase.tests.pubsub.TestRemovalOfPepNodeOnUserRemoval" />
-		</classes>
-	</test>
-	<test name="MAM: Support for XEP-0313 for PubSub - #4733">
-		<classes>
-			<class name="tigase.tests.pubsub.TestPubSubMAM" />
-		</classes>
-	</test>
-	<test name="REST: Node and item manipulation using REST API - XML - #4229, #4728">
-		<classes>
-			<class name="tigase.tests.pubsub.TestRestApiUsingXML"/>
-		</classes>
-	</test>
-	<test name="REST: Node and item manipulation using REST API - JSON - #4728">
-		<classes>
-			<class name="tigase.tests.pubsub.TestRestApiUsingJSON"/>
-		</classes>
-	</test>
-	<test name="REST: Item publication on PubSub node with message expiration using REST API - #2959">
-		<classes>
-			<class name="tigase.tests.pubsub.TestRestApiWithMessageExpiration"/>
-		</classes>
-	</test>
-	<test name="Testing propagation of changes to node configuration to other cluster nodes - #3993">
-		<classes>
-			<class name="tigase.tests.pubsub.TestPubSubOld" />
-		</classes>
-	</test>
+    <test name="Node and item manipulation using PubSub procotol - #4229">
+        <classes>
+            <class name="tigase.tests.pubsub.TestPubSub"/>
+        </classes>
+    </test>
+    <test name="Removal of PEP nodes on user removal - #3544">
+        <classes>
+            <class name="tigase.tests.pubsub.TestRemovalOfPepNodeOnUserRemoval"/>
+        </classes>
+    </test>
+    <test name="MAM: Support for XEP-0313 for PubSub - #4733">
+        <classes>
+            <class name="tigase.tests.pubsub.TestPubSubMAM"/>
+        </classes>
+    </test>
+    <test name="REST: Node and item manipulation using REST API - XML - #4229, #4728">
+        <classes>
+            <class name="tigase.tests.pubsub.TestRestApiUsingXML"/>
+        </classes>
+    </test>
+    <test name="REST: Node and item manipulation using REST API - JSON - #4728">
+        <classes>
+            <class name="tigase.tests.pubsub.TestRestApiUsingJSON"/>
+        </classes>
+    </test>
+    <test name="REST: Item publication on PubSub node with message expiration using REST API - #2959">
+        <classes>
+            <class name="tigase.tests.pubsub.TestRestApiWithMessageExpiration"/>
+        </classes>
+    </test>
+    <test name="Testing propagation of changes to node configuration to other cluster nodes - #3993">
+        <classes>
+            <class name="tigase.tests.pubsub.TestPubSubOld"/>
+        </classes>
+    </test>
 </suite>

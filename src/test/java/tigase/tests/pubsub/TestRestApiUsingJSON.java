@@ -43,158 +43,16 @@ import java.util.Map;
 import static org.testng.AssertJUnit.*;
 
 /**
- * Test is responsible for testing PubSub component node creation
- * manipulation and removal including publication and retraction
- * of PubSub node items using PubSub protocol and AdHoc commands.
- *
- * This test is executed on one or many cluster nodes and during
- * execution checks propagation of changes between cluster nodes.
- *
+ * Test is responsible for testing PubSub component node creation manipulation and removal including publication and
+ * retraction of PubSub node items using PubSub protocol and AdHoc commands.
+ * <p>
+ * This test is executed on one or many cluster nodes and during execution checks propagation of changes between cluster
+ * nodes.
+ * <p>
  * Created by andrzej on 10.07.2016.
  */
 public class TestRestApiUsingJSON
 		extends TestRestApiAbstract {
-
-	// HTTP API based implementation
-	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-		data.put("owner", owner.toString());
-		data.put("pubsub#node_type", collection ? "collection" : "leaf");
-		data.put("pubsub#title", name);
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "create-node", data);
-		assertNotNull(result);
-		assertValueEquals("Operation successful", result, new String[] { "Note" });
-	}
-
-	public void deleteNode(String hostname, String nodeName) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "delete-node", data);
-		assertNotNull(result);
-		assertValueEquals("Operation successful", result, new String[] { "Note" });
-	}
-
-	public void subscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-		data.put("jids", Arrays.asList(jid.toString()));
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "subscribe-node", data);
-		assertNotNull(result);
-		assertValueEquals("Operation successful", result, new String[] { "Note" });
-	}
-
-	public void unsubscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-		data.put("jids", Arrays.asList(jid.toString()));
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "unsubscribe-node", data);
-		assertNotNull(result);
-		assertValueEquals("Operation successful", result, new String[] { "Note" });
-	}
-
-	public void publishItemToNode(String hostname, BareJID owner, String nodeName, String itemId, Element payload) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-		if (itemId != null) {
-			data.put("item-id", itemId);
-		}
-		data.put("entry", payload.getAsString());
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "publish-item", data);
-		assertNotNull(result);
-		assertValueEquals("Operation successful", result, new String[] { "Note" });
-	}
-
-	@Override
-	protected void retrieveItemFromNode(String hostname, String nodeName, String itemId, ResultCallback<Element> callback)
-			throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-		data.put("item-id", itemId);
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "retrieve-item", data);
-
-		assertValueEquals(nodeName, result, new String[] { "node" });
-		assertValueEquals(itemId, result, new String[] { "item-id" });
-
-		List<String> itemElemStrList = getValueAtPath(result, new String [] {"item" });
-		assertNotNull(itemElemStrList);
-		assertEquals(1, itemElemStrList.size());
-		String itemElemStr = itemElemStrList.get(0);
-
-		assertNotNull(itemElemStr);
-		Element pubsubItem = parseXML(itemElemStr);
-		assertNotNull(pubsubItem);
-		assertEquals("item", pubsubItem.getName());
-
-		Element payload = pubsubItem.getFirstChild();
-		assertNotNull(payload);
-
-		callback.finished(payload);
-	}
-
-	public void retractItemFromNode(String hostname, String nodeName, String itemId) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("node", nodeName);
-		data.put("item-id", itemId);
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "delete-item", data);
-		assertNotNull(result);
-		assertValueEquals("Operation successful", result, new String[] { "Note" });
-	}
-
-	@Override
-	protected void retrieveUserSubscriptions(String hostname, BareJID userJid, String nodePattern,
-											 ResultCallback<List<String>> callback) throws Exception {
-		Map<String, Object> data = new HashMap<>();
-		data.put("jid", userJid.toString());
-		if (nodePattern != null) {
-			data.put("node-pattern", nodePattern);
-		}
-
-		Map<String, Object> result = executeHttpApiRequest(hostname, "retrieve-user-subscriptions", data);
-		assertNotNull(result);
-
-		callback.finished((List<String>) result.get("nodes"));
-	}
-
-	/** This is not available in HTTP API - we are doing this using PubSub protocol */
-	public void configureNode(String hostname, String nodeName, String parentNode) throws JaxmppException, InterruptedException {
-		Jaxmpp jaxmpp = jaxmpps.get(hostname);
-		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
-		nodeCfg.addTextSingleField("pubsub#collection", parentNode);
-		jaxmpp.getModule(PubSubModule.class).configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-
-			}
-
-			@Override
-			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("configured:node:" + nodeName + ":" + parentNode);
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-
-			}
-		});
-		mutex.waitFor(10 * 1000, "configured:node:" + nodeName + ":" + parentNode);
-		assertTrue("Configuration of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
-	}
-
-	protected Map<String, Object> executeHttpApiRequest(String hostname, String action, Map<String, Object> command)
-			throws XMLException, IOException {
-		String result = executeHttpApiRequest(hostname, action, new JsonCoder().encode(command), "application/json");
-		assertNotNull(result);
-
-		return (Map<String, Object>) new JsonCoder().decode(result);
-	}
 
 	protected static void assertValueEquals(Object expected, Map<String, Object> map, String[] path) {
 		assertNotNull(map);
@@ -218,5 +76,153 @@ public class TestRestApiUsingJSON
 			}
 		}
 		return (T) value;
+	}
+
+	// HTTP API based implementation
+	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection)
+			throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+		data.put("owner", owner.toString());
+		data.put("pubsub#node_type", collection ? "collection" : "leaf");
+		data.put("pubsub#title", name);
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "create-node", data);
+		assertNotNull(result);
+		assertValueEquals("Operation successful", result, new String[]{"Note"});
+	}
+
+	public void deleteNode(String hostname, String nodeName) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "delete-node", data);
+		assertNotNull(result);
+		assertValueEquals("Operation successful", result, new String[]{"Note"});
+	}
+
+	public void subscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+		data.put("jids", Arrays.asList(jid.toString()));
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "subscribe-node", data);
+		assertNotNull(result);
+		assertValueEquals("Operation successful", result, new String[]{"Note"});
+	}
+
+	public void unsubscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+		data.put("jids", Arrays.asList(jid.toString()));
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "unsubscribe-node", data);
+		assertNotNull(result);
+		assertValueEquals("Operation successful", result, new String[]{"Note"});
+	}
+
+	public void publishItemToNode(String hostname, BareJID owner, String nodeName, String itemId, Element payload)
+			throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+		if (itemId != null) {
+			data.put("item-id", itemId);
+		}
+		data.put("entry", payload.getAsString());
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "publish-item", data);
+		assertNotNull(result);
+		assertValueEquals("Operation successful", result, new String[]{"Note"});
+	}
+
+	public void retractItemFromNode(String hostname, String nodeName, String itemId) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+		data.put("item-id", itemId);
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "delete-item", data);
+		assertNotNull(result);
+		assertValueEquals("Operation successful", result, new String[]{"Note"});
+	}
+
+	/** This is not available in HTTP API - we are doing this using PubSub protocol */
+	public void configureNode(String hostname, String nodeName, String parentNode)
+			throws JaxmppException, InterruptedException {
+		Jaxmpp jaxmpp = jaxmpps.get(hostname);
+		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
+		nodeCfg.addTextSingleField("pubsub#collection", parentNode);
+		jaxmpp.getModule(PubSubModule.class)
+				.configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+						mutex.notify("configured:node:" + nodeName + ":" + parentNode);
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+
+					}
+
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+
+					}
+				});
+		mutex.waitFor(10 * 1000, "configured:node:" + nodeName + ":" + parentNode);
+		assertTrue("Configuration of node " + nodeName + " on " +
+						   jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed",
+				   mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
+	}
+
+	@Override
+	protected void retrieveItemFromNode(String hostname, String nodeName, String itemId,
+										ResultCallback<Element> callback) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("node", nodeName);
+		data.put("item-id", itemId);
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "retrieve-item", data);
+
+		assertValueEquals(nodeName, result, new String[]{"node"});
+		assertValueEquals(itemId, result, new String[]{"item-id"});
+
+		List<String> itemElemStrList = getValueAtPath(result, new String[]{"item"});
+		assertNotNull(itemElemStrList);
+		assertEquals(1, itemElemStrList.size());
+		String itemElemStr = itemElemStrList.get(0);
+
+		assertNotNull(itemElemStr);
+		Element pubsubItem = parseXML(itemElemStr);
+		assertNotNull(pubsubItem);
+		assertEquals("item", pubsubItem.getName());
+
+		Element payload = pubsubItem.getFirstChild();
+		assertNotNull(payload);
+
+		callback.finished(payload);
+	}
+
+	@Override
+	protected void retrieveUserSubscriptions(String hostname, BareJID userJid, String nodePattern,
+											 ResultCallback<List<String>> callback) throws Exception {
+		Map<String, Object> data = new HashMap<>();
+		data.put("jid", userJid.toString());
+		if (nodePattern != null) {
+			data.put("node-pattern", nodePattern);
+		}
+
+		Map<String, Object> result = executeHttpApiRequest(hostname, "retrieve-user-subscriptions", data);
+		assertNotNull(result);
+
+		callback.finished((List<String>) result.get("nodes"));
+	}
+
+	protected Map<String, Object> executeHttpApiRequest(String hostname, String action, Map<String, Object> command)
+			throws XMLException, IOException {
+		String result = executeHttpApiRequest(hostname, action, new JsonCoder().encode(command), "application/json");
+		assertNotNull(result);
+
+		return (Map<String, Object>) new JsonCoder().decode(result);
 	}
 }

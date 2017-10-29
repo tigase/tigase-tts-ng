@@ -51,19 +51,17 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Created by andrzej on 24.07.2016.
  */
-public class TestMessageArchiveManagement extends AbstractTest {
+public class TestMessageArchiveManagement
+		extends AbstractTest {
 
 	private static final String USER_PREFIX = "mam-";
-
-	private Account user1;
-	private Account user2;
-
-	private Jaxmpp user1Jaxmpp;
-	private Jaxmpp user2Jaxmpp;
-
-	private List<String> expTags = new ArrayList<>();
 	private List<Date> expDates = new ArrayList<>();
+	private List<String> expTags = new ArrayList<>();
 	private Timer timer;
+	private Account user1;
+	private Jaxmpp user1Jaxmpp;
+	private Account user2;
+	private Jaxmpp user2Jaxmpp;
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -93,7 +91,7 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		mamModule1.retrieveQueryForm(new MessageArchiveManagementModule.QueryFormCallback() {
 			@Override
 			public void onSuccess(JabberDataElement form) throws JaxmppException {
-				for(AbstractField f : form.getFields()) {
+				for (AbstractField f : form.getFields()) {
 					Element val = f.getFirstChild("value");
 					mutex.notify("form:field:" + f.getVar() + ":" + (val == null ? null : val.getValue()));
 				}
@@ -126,7 +124,8 @@ public class TestMessageArchiveManagement extends AbstractTest {
 
 		mamModule1.retrieveSettings(new MessageArchiveManagementModule.SettingsCallback() {
 			@Override
-			public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always, List<JID> never) throws JaxmppException {
+			public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+								  List<JID> never) throws JaxmppException {
 				mutex.notify("settings:1:default:" + defValue.name());
 				mutex.notify("settings:1");
 			}
@@ -149,16 +148,16 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		changeSettings(mutex, user1Jaxmpp, MessageArchiveManagementModule.DefaultValue.always);
 	}
 
-	@Test(dependsOnMethods = { "testSettingsChange" })
+	@Test(dependsOnMethods = {"testSettingsChange"})
 	public void testMessageRetrievalFromEmpty() throws Exception {
 		final Mutex mutex = new Mutex();
 		testMessageRerieval(mutex, user1Jaxmpp, expTags, true);
 	}
 
-	@Test(dependsOnMethods = { "testMessageRetrievalFromEmpty" })
+	@Test(dependsOnMethods = {"testMessageRetrievalFromEmpty"})
 	public void testMessageArchival() throws Exception {
 		final Mutex mutex = new Mutex();
-		for (int i=0; i<20; i++) {
+		for (int i = 0; i < 20; i++) {
 			Jaxmpp sender = (i % 2 == 0) ? user2Jaxmpp : user1Jaxmpp;
 			Jaxmpp recipient = (i % 2 == 1) ? user2Jaxmpp : user1Jaxmpp;
 			expDates.add(new Date());
@@ -167,13 +166,13 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "testMessageArchival" })
+	@Test(dependsOnMethods = {"testMessageArchival"})
 	public void testMessageRetrievalWithNonEmptyResults() throws Exception {
 		final Mutex mutex = new Mutex();
 		testMessageRerieval(mutex, user1Jaxmpp, expTags, true);
 	}
 
-	@Test(dependsOnMethods = { "testMessageArchival" })
+	@Test(dependsOnMethods = {"testMessageArchival"})
 	public void testMessageRetrievalWithNonEmptyResultsWithQuery() throws Exception {
 		final Mutex mutex = new Mutex();
 
@@ -183,9 +182,10 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		query.setEnd(expDates.get(18));
 
 		List<String> expTags = new ArrayList<>();
-		for (int i=0; i<this.expTags.size(); i++) {
-			if (i<2 || i>= 18)
+		for (int i = 0; i < this.expTags.size(); i++) {
+			if (i < 2 || i >= 18) {
 				continue;
+			}
 			String tag = this.expTags.get(i);
 			expTags.add(tag);
 		}
@@ -193,7 +193,7 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		testMessageRerieval(mutex, user1Jaxmpp, query, expTags, true);
 	}
 
-	@Test(dependsOnMethods = { "testMessageArchival" })
+	@Test(dependsOnMethods = {"testMessageArchival"})
 	public void testMessageRetrievalWithNonEmptyResultsWithQueryAndRsm() throws Exception {
 		final Mutex mutex = new Mutex();
 
@@ -203,9 +203,10 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		query.setEnd(expDates.get(18));
 
 		List<String> expTags = new ArrayList<>();
-		for (int i=0; i<this.expTags.size(); i++) {
-			if (i<2 || i>= 7)
+		for (int i = 0; i < this.expTags.size(); i++) {
+			if (i < 2 || i >= 7) {
 				continue;
+			}
 			String tag = this.expTags.get(i);
 			expTags.add(tag);
 		}
@@ -216,12 +217,14 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		testMessageRerieval(mutex, user1Jaxmpp, query, rsm, expTags, false);
 	}
 
-	public void changeSettings(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.DefaultValue value) throws Exception {
+	public void changeSettings(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.DefaultValue value)
+			throws Exception {
 		String id = UUID.randomUUID().toString();
 		MessageArchiveManagementModule mamModule1 = jaxmpp.getModule(MessageArchiveManagementModule.class);
 		mamModule1.updateSetttings(value, null, null, new MessageArchiveManagementModule.SettingsCallback() {
 			@Override
-			public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always, List<JID> never) throws JaxmppException {
+			public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+								  List<JID> never) throws JaxmppException {
 				mutex.notify("settings:" + id + ":default:" + defValue.name());
 				mutex.notify("settings:" + id);
 			}
@@ -241,58 +244,72 @@ public class TestMessageArchiveManagement extends AbstractTest {
 		assertTrue(mutex.isItemNotified("settings:" + id + ":default:" + value.name()));
 	}
 
-	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, List<String> expectedMessageTags, boolean complete) throws Exception {
+	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, List<String> expectedMessageTags,
+									boolean complete) throws Exception {
 		testMessageRerieval(mutex, jaxmpp, null, expectedMessageTags, complete);
 	}
 
-	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.Query query, List<String> expectedMessageTags, boolean complete) throws Exception {
+	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.Query query,
+									List<String> expectedMessageTags, boolean complete) throws Exception {
 		testMessageRerieval(mutex, jaxmpp, query, null, expectedMessageTags, complete);
 	}
 
-	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.Query query, RSM rsm, List<String> expectedMessageTags, boolean complete) throws Exception {
+	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.Query query,
+									RSM rsm, List<String> expectedMessageTags, boolean complete) throws Exception {
 		String queryid = UUID.randomUUID().toString();
 
 		final AtomicInteger count = new AtomicInteger(0);
 
 		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = new MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler() {
 			@Override
-			public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) throws JaxmppException {
+			public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId,
+											  Date timestamp, Message message) throws JaxmppException {
 				mutex.notify("item:" + message.getFrom() + ":" + message.getTo() + ":" + message.getBody());
 				count.incrementAndGet();
 			}
 		};
-		jaxmpp.getContext().getEventBus().addHandler(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class, handler);
+		jaxmpp.getContext()
+				.getEventBus()
+				.addHandler(
+						MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+						handler);
 
 		MessageArchiveManagementModule mamModule1 = jaxmpp.getModule(MessageArchiveManagementModule.class);
-		mamModule1.queryItems((MessageArchiveManagementModule.Query) query, queryid, rsm, new MessageArchiveManagementModule.ResultCallback() {
-			@Override
-			public void onSuccess(String queryid, boolean complete, RSM rsm) throws JaxmppException {
-				mutex.notify("items:received:" + queryid + ":" + complete);
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						mutex.notify("items:received");
-					}
-				}, 1000);
+		mamModule1.queryItems((MessageArchiveManagementModule.Query) query, queryid, rsm,
+							  new MessageArchiveManagementModule.ResultCallback() {
+								  @Override
+								  public void onSuccess(String queryid, boolean complete, RSM rsm)
+										  throws JaxmppException {
+									  mutex.notify("items:received:" + queryid + ":" + complete);
+									  timer.schedule(new TimerTask() {
+										  @Override
+										  public void run() {
+											  mutex.notify("items:received");
+										  }
+									  }, 1000);
 
-			}
+								  }
 
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("items:received");
-			}
+								  @Override
+								  public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										  throws JaxmppException {
+									  mutex.notify("items:received");
+								  }
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("items:received");
-			}
-		});
+								  @Override
+								  public void onTimeout() throws JaxmppException {
+									  mutex.notify("items:received");
+								  }
+							  });
 
 		mutex.waitFor(10 * 1000, "items:received");
 
 		assertTrue(mutex.isItemNotified("items:received:" + queryid + ":" + complete));
 
-		jaxmpp.getContext().getEventBus().remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class, handler);
+		jaxmpp.getContext()
+				.getEventBus()
+				.remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+						handler);
 
 		for (String tag : expectedMessageTags) {
 			assertTrue("Not returned message: " + tag, mutex.isItemNotified("item:" + tag));
@@ -317,7 +334,9 @@ public class TestMessageArchiveManagement extends AbstractTest {
 			}
 		};
 
-		recipient.getContext().getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
+		recipient.getContext()
+				.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 
 		sender.getModule(MessageModule.class).sendMessage(to, null, msg);
 
@@ -325,6 +344,8 @@ public class TestMessageArchiveManagement extends AbstractTest {
 
 		expTags.add(tag);
 
-		recipient.getContext().getEventBus().remove(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
+		recipient.getContext()
+				.getEventBus()
+				.remove(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 	}
 }

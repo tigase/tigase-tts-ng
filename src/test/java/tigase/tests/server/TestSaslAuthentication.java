@@ -17,8 +17,17 @@ import static org.testng.AssertJUnit.assertTrue;
 public class TestSaslAuthentication
 		extends AbstractJaxmppTest {
 
-	private Account user;
 	private Jaxmpp jaxmpp;
+	private Account user;
+
+	private static Jaxmpp configureJaxmpp(Jaxmpp jaxmpp, SaslMechanism mechanism) {
+		SaslModule module = jaxmpp.getModule(SaslModule.class);
+
+		module.removeAllMechanisms();
+		module.addMechanism(mechanism);
+
+		return jaxmpp;
+	}
 
 	@BeforeMethod
 	public void prepareAccountAndJaxmpp() throws JaxmppException, InterruptedException {
@@ -75,21 +84,12 @@ public class TestSaslAuthentication
 
 		assertTrue(jaxmpp.isConnected());
 	}
-	
+
 	private void forceAuthzid() {
 		jaxmpp.getSessionObject().setUserProperty(SaslMechanism.FORCE_AUTHZID, true);
 	}
 
 	private Jaxmpp createJaxmppWithMechanism(SaslMechanism mechanism) throws JaxmppException {
 		return user.createJaxmpp().setConfigurator(it -> configureJaxmpp(it, mechanism)).build();
-	}
-
-	private static Jaxmpp configureJaxmpp(Jaxmpp jaxmpp, SaslMechanism mechanism) {
-		SaslModule module = jaxmpp.getModule(SaslModule.class);
-
-		module.removeAllMechanisms();
-		module.addMechanism(mechanism);
-		
-		return jaxmpp;
 	}
 }

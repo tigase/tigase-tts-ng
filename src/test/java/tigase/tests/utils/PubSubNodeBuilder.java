@@ -39,26 +39,14 @@ public class PubSubNodeBuilder {
 	private Consumer<JabberDataElement> configurator;
 	private boolean ifNotExists;
 	private Jaxmpp jaxmpp;
-	private BareJID pubSubJid;
-	private String parentCollection;
 	private PubSubNode.Type nodeType = PubSubNode.Type.leaf;
+	private String parentCollection;
+	private BareJID pubSubJid;
 	private boolean replaceIfExists;
 
 	protected PubSubNodeBuilder(PubSubManager manager, String node) {
 		this.manager = manager;
 		this.name = node;
-	}
-
-	public PubSubNodeBuilder setJaxmpp(Jaxmpp jaxmpp) {
-		this.jaxmpp = jaxmpp;
-		if (pubSubJid == null) {
-			this.pubSubJid = BareJID.bareJIDInstance("pubsub." + jaxmpp.getSessionObject().getUserBareJid().getDomain());
-		}
-		return this;
-	}
-
-	public void setPubSubJid(BareJID pubsubJid) {
-		 this.pubSubJid = pubsubJid;
 	}
 
 	public PubSubNodeBuilder setConfigurator(Consumer<JabberDataElement> configurator) {
@@ -94,18 +82,12 @@ public class PubSubNodeBuilder {
 		return this;
 	}
 
-	public PubSubNodeBuilder setIfNotExists(boolean ifNotExists) {
-		this.ifNotExists = ifNotExists;
-		return this;
-	}
-
-	public PubSubNodeBuilder setReplaceIfExists(boolean replaceIfExists) {
-		this.replaceIfExists = replaceIfExists;
-		return this;
-	}
-
 	protected BareJID getPubSubJid() {
 		return pubSubJid;
+	}
+
+	public void setPubSubJid(BareJID pubsubJid) {
+		this.pubSubJid = pubsubJid;
 	}
 
 	protected String getName() {
@@ -116,11 +98,30 @@ public class PubSubNodeBuilder {
 		return jaxmpp;
 	}
 
+	public PubSubNodeBuilder setJaxmpp(Jaxmpp jaxmpp) {
+		this.jaxmpp = jaxmpp;
+		if (pubSubJid == null) {
+			this.pubSubJid = BareJID.bareJIDInstance(
+					"pubsub." + jaxmpp.getSessionObject().getUserBareJid().getDomain());
+		}
+		return this;
+	}
+
 	protected boolean getIfNotExists() {
 		return ifNotExists;
 	}
 
+	public PubSubNodeBuilder setIfNotExists(boolean ifNotExists) {
+		this.ifNotExists = ifNotExists;
+		return this;
+	}
+
 	protected boolean getReplaceIfExists() {
 		return replaceIfExists;
+	}
+
+	public PubSubNodeBuilder setReplaceIfExists(boolean replaceIfExists) {
+		this.replaceIfExists = replaceIfExists;
+		return this;
 	}
 }

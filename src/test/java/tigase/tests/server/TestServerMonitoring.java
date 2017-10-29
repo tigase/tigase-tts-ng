@@ -38,9 +38,57 @@ import tigase.tests.Mutex;
 import javax.mail.*;
 import java.util.Properties;
 
-public class TestServerMonitoring extends AbstractTest {
+public class TestServerMonitoring
+		extends AbstractTest {
 
-	private void disableTaskConfig(JID monitorTaskJID, AdHocCommansModule adHoc) throws JaxmppException, InterruptedException {
+	@Test(groups = {"Monitor"}, description = "Tigase XMPP server monitoring")
+	public void testTigaseXMPPServerMonitoring() throws Exception {
+		final Mutex mutex = new Mutex();
+		Jaxmpp jaxmpp = getJaxmppAdmin();
+
+		AdHocCommansModule adHoc = jaxmpp.getModule(AdHocCommansModule.class);
+		final String msgUID = "test-" + nextRnd();
+
+		final JID monitorTaskJID = JID.jidInstance("monitor",
+												   ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject())
+														   .getDomain(), "sample-task");
+
+		disableTaskConfig(monitorTaskJID, adHoc);
+
+		TestLogger.log("Turning on task");
+		final JabberDataElement form = new JabberDataElement(XDataType.submit);
+		form.addBooleanField("x-task#enabled", Boolean.TRUE);
+		form.addTextSingleField("message", msgUID);
+		adHoc.execute(monitorTaskJID, "x-config", null, form, new AsyncCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+				TestLogger.log("Error! " + error);
+				mutex.notify("enableTaskConfig", "enableTaskConfig:error");
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				mutex.notify("enableTaskConfig", "enableTaskConfig:success");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("enableTaskConfig", "enableTaskConfig:timeout");
+			}
+		});
+
+		mutex.waitFor(30 * 1000, "enableTaskConfig");
+		Assert.assertTrue(mutex.isItemNotified("enableTaskConfig:success"), "SampleTask is not enabled!");
+
+		boolean foundPattern = read(msgUID, 1000 * 120);
+		Assert.assertTrue(foundPattern, "Mail with notification not received");
+
+		disableTaskConfig(monitorTaskJID, adHoc);
+	}
+
+	private void disableTaskConfig(JID monitorTaskJID, AdHocCommansModule adHoc)
+			throws JaxmppException, InterruptedException {
 		final Mutex mutex = new Mutex();
 
 		JabberDataElement form = new JabberDataElement(XDataType.submit);
@@ -81,7 +129,7 @@ public class TestServerMonitoring extends AbstractTest {
 
 			Store store = session.getStore("imaps");
 			store.connect(this.props.getProperty("imap.server"), this.props.getProperty("imap.username"),
-					this.props.getProperty("imap.password"));
+						  this.props.getProperty("imap.password"));
 
 			Folder inbox = store.getFolder("inbox");
 			inbox.open(Folder.READ_WRITE);
@@ -134,51 +182,6 @@ public class TestServerMonitoring extends AbstractTest {
 			TestLogger.log(e.getMessage());
 			return false;
 		}
-	}
-
-	@Test(groups = { "Monitor" }, description = "Tigase XMPP server monitoring")
-	public void testTigaseXMPPServerMonitoring() throws Exception {
-		final Mutex mutex = new Mutex();
-		Jaxmpp jaxmpp = getJaxmppAdmin();
-
-		AdHocCommansModule adHoc = jaxmpp.getModule(AdHocCommansModule.class);
-		final String msgUID = "test-" + nextRnd();
-
-		final JID monitorTaskJID = JID.jidInstance("monitor",
-				ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject()).getDomain(), "sample-task");
-
-		disableTaskConfig(monitorTaskJID, adHoc);
-
-		TestLogger.log("Turning on task");
-		final JabberDataElement form = new JabberDataElement(XDataType.submit);
-		form.addBooleanField("x-task#enabled", Boolean.TRUE);
-		form.addTextSingleField("message", msgUID);
-		adHoc.execute(monitorTaskJID, "x-config", null, form, new AsyncCallback() {
-
-			@Override
-			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-				TestLogger.log("Error! " + error);
-				mutex.notify("enableTaskConfig", "enableTaskConfig:error");
-			}
-
-			@Override
-			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				mutex.notify("enableTaskConfig", "enableTaskConfig:success");
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("enableTaskConfig", "enableTaskConfig:timeout");
-			}
-		});
-
-		mutex.waitFor(30 * 1000, "enableTaskConfig");
-		Assert.assertTrue(mutex.isItemNotified("enableTaskConfig:success"), "SampleTask is not enabled!");
-
-		boolean foundPattern = read(msgUID, 1000 * 120);
-		Assert.assertTrue(foundPattern, "Mail with notification not received");
-
-		disableTaskConfig(monitorTaskJID, adHoc);
 	}
 
 }

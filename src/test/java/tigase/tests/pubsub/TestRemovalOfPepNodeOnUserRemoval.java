@@ -53,12 +53,13 @@ import java.util.Set;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
+public class TestRemovalOfPepNodeOnUserRemoval
+		extends AbstractTest {
 
-	Account user1;
-	Account user2;
 	Jaxmpp jaxmpp1;
 	Jaxmpp jaxmpp2;
+	Account user1;
+	Account user2;
 
 	@BeforeMethod
 	public void setUp() throws Exception {
@@ -67,36 +68,38 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 		jaxmpp1 = user1.createJaxmpp().setConnected(true).build();
 		jaxmpp2 = user2.createJaxmpp().setConnected(true).build();
 	}
-	
-	@Test(groups = { "XMPP - PubSub" }, description = "Removal of PEP nodes on user removal")
+
+	@Test(groups = {"XMPP - PubSub"}, description = "Removal of PEP nodes on user removal")
 	public void testRemovalOfPepServiceNodesOnUserRemoval() throws Exception {
 		final Mutex mutex = new Mutex();
 
 		final RosterStore roster1 = jaxmpp1.getModule(RosterModule.class).getRosterStore();
-		jaxmpp1.getEventBus().addHandler(RosterModule.ItemAddedHandler.ItemAddedEvent.class,
-				new RosterModule.ItemAddedHandler() {
+		jaxmpp1.getEventBus()
+				.addHandler(RosterModule.ItemAddedHandler.ItemAddedEvent.class, new RosterModule.ItemAddedHandler() {
 
-			@Override
-			public void onItemAdded(SessionObject sessionObject, RosterItem item, Set<String> modifiedGroups) {
-				mutex.notify("added:" + item.getJid());
-			}
-		});
+					@Override
+					public void onItemAdded(SessionObject sessionObject, RosterItem item, Set<String> modifiedGroups) {
+						mutex.notify("added:" + item.getJid());
+					}
+				});
 		roster1.add(user2.getJid(), "User2", null);
 		mutex.waitFor(1000 * 10, "added:" + user2.getJid());
 
-		jaxmpp1.getEventBus().addHandler(RosterModule.ItemUpdatedHandler.ItemUpdatedEvent.class,
-				new RosterModule.ItemUpdatedHandler() {
+		jaxmpp1.getEventBus()
+				.addHandler(RosterModule.ItemUpdatedHandler.ItemUpdatedEvent.class,
+							new RosterModule.ItemUpdatedHandler() {
 
-			@Override
-			public void onItemUpdated(SessionObject sessionObject, RosterItem item, RosterModule.Action action,
-					Set<String> modifiedGroups) {
+								@Override
+								public void onItemUpdated(SessionObject sessionObject, RosterItem item,
+														  RosterModule.Action action, Set<String> modifiedGroups) {
 
-				if (action != null)
-					mutex.notify(item.getJid() + ":" + action);
-				mutex.notify(item.getJid() + ":" + item.isAsk());
-				mutex.notify(item.getJid() + ":" + item.getSubscription());
-			}
-		});
+									if (action != null) {
+										mutex.notify(item.getJid() + ":" + action);
+									}
+									mutex.notify(item.getJid() + ":" + item.isAsk());
+									mutex.notify(item.getJid() + ":" + item.getSubscription());
+								}
+							});
 		PresenceModule.SubscribeRequestHandler subscriptionHandler1 = new PresenceModule.SubscribeRequestHandler() {
 
 			@Override
@@ -112,21 +115,24 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 				}
 			}
 		};
-		jaxmpp2.getEventBus().addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscriptionHandler1);
+		jaxmpp2.getEventBus()
+				.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscriptionHandler1);
 		PresenceModule.SubscribeRequestHandler subscriptionHandler2 = new PresenceModule.SubscribeRequestHandler() {
 
 			@Override
 			public void onSubscribeRequest(SessionObject sessionObject, Presence stanza, BareJID jid) {
 				try {
-					if (stanza.getType() == StanzaType.subscribe)
+					if (stanza.getType() == StanzaType.subscribe) {
 						jaxmpp1.getModule(PresenceModule.class).subscribed(JID.jidInstance(jid));
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					fail(e);
 				}
 			}
 		};
-		jaxmpp1.getEventBus().addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscriptionHandler2);
+		jaxmpp1.getEventBus()
+				.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscriptionHandler2);
 		jaxmpp1.getModule(PresenceModule.class).subscribe(JID.jidInstance(user2.getJid()));
 
 		mutex.waitFor(10 * 1000, user2.getJid() + ":both");
@@ -135,98 +141,118 @@ public class TestRemovalOfPepNodeOnUserRemoval extends AbstractTest {
 		Element payload = ElementFactory.create("geoloc", null, "http://jabber.org/protocol/geoloc");
 		Element country = ElementFactory.create("country", "US", null);
 		payload.addChild(country);
-		jaxmpp1.getModule(PubSubModule.class).publishItem(user1.getJid(), "http://jabber.org/protocol/geoloc", "test1", payload, new PubSubModule.PublishAsyncCallback() {
+		jaxmpp1.getModule(PubSubModule.class)
+				.publishItem(user1.getJid(), "http://jabber.org/protocol/geoloc", "test1", payload,
+							 new PubSubModule.PublishAsyncCallback() {
 
-			@Override
-			public void onPublish(String itemId) {
-				mutex.notify("published:geoloc");
-			}
+								 @Override
+								 public void onPublish(String itemId) {
+									 mutex.notify("published:geoloc");
+								 }
 
-			@Override
-			protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
+								 @Override
+								 public void onTimeout() throws JaxmppException {
+									 throw new UnsupportedOperationException(
+											 "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+								 }
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
-		});
+								 @Override
+								 protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+													   PubSubErrorCondition pubSubErrorCondition)
+										 throws JaxmppException {
+									 throw new UnsupportedOperationException(
+											 "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+								 }
+							 });
 
 		mutex.waitFor(10 * 1000, "published:geoloc");
 		assertTrue(mutex.isItemNotified("published:geoloc"));
 
-		jaxmpp2.getModule(PubSubModule.class).retrieveItem(user1.getJid(), "http://jabber.org/protocol/geoloc", new RetrieveItemsAsyncCallback() {
+		jaxmpp2.getModule(PubSubModule.class)
+				.retrieveItem(user1.getJid(), "http://jabber.org/protocol/geoloc", new RetrieveItemsAsyncCallback() {
 
-			@Override
-			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
-				mutex.notify("retrieved:" + nodeName + ":" + items.size());
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
+						throw new UnsupportedOperationException(
+								"Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+					}
 
-			@Override
-			protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
+					@Override
+					protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
+						mutex.notify("retrieved:" + nodeName + ":" + items.size());
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
-		});
+					@Override
+					protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						throw new UnsupportedOperationException(
+								"Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+					}
+				});
 		mutex.waitFor(10 * 1000, "retrieved:http://jabber.org/protocol/geoloc:1");
-		assertTrue(mutex.isItemNotified("retrieved:http://jabber.org/protocol/geoloc:1"));		
-		
-		jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1.getJid()), new DiscoveryModule.DiscoItemsAsyncCallback() {
+		assertTrue(mutex.isItemNotified("retrieved:http://jabber.org/protocol/geoloc:1"));
 
-			@Override
-			public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items) throws XMLException {
-				for (DiscoveryModule.Item item : items) {
-					mutex.notify("discovered:1:item:" + item.getNode());
-				}
-				mutex.notify("discovered:1:items:"+items.size());
-			}
+		jaxmpp2.getModule(DiscoveryModule.class)
+				.getItems(JID.jidInstance(user1.getJid()), new DiscoveryModule.DiscoItemsAsyncCallback() {
 
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
+					@Override
+					public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items)
+							throws XMLException {
+						for (DiscoveryModule.Item item : items) {
+							mutex.notify("discovered:1:item:" + item.getNode());
+						}
+						mutex.notify("discovered:1:items:" + items.size());
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
-		});
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						throw new UnsupportedOperationException(
+								"Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						throw new UnsupportedOperationException(
+								"Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+					}
+				});
 		mutex.waitFor(10 * 1000, "discovered:1:items:1", "discovered:1:item:http://jabber.org/protocol/geoloc");
-		assertTrue(mutex.isItemNotified("discovered:1:items:1"));	
+		assertTrue(mutex.isItemNotified("discovered:1:items:1"));
 		assertTrue(mutex.isItemNotified("discovered:1:item:http://jabber.org/protocol/geoloc"));
 
 		user1.unregister();
 		jaxmpp1 = null;
-				
+
 		Thread.sleep(2000);
 
-		jaxmpp2.getModule(DiscoveryModule.class).getItems(JID.jidInstance(user1.getJid()), new DiscoveryModule.DiscoItemsAsyncCallback() {
+		jaxmpp2.getModule(DiscoveryModule.class)
+				.getItems(JID.jidInstance(user1.getJid()), new DiscoveryModule.DiscoItemsAsyncCallback() {
 
-			@Override
-			public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items) throws XMLException {
-				for (DiscoveryModule.Item item : items) {
-					mutex.notify("discovered:2:item:" + item.getNode());
-				}
-				mutex.notify("discovered:2:items:"+items.size());
-			}
+					@Override
+					public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items)
+							throws XMLException {
+						for (DiscoveryModule.Item item : items) {
+							mutex.notify("discovered:2:item:" + item.getNode());
+						}
+						mutex.notify("discovered:2:items:" + items.size());
+					}
 
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						throw new UnsupportedOperationException(
+								"Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-			}
-		});
+					@Override
+					public void onTimeout() throws JaxmppException {
+						throw new UnsupportedOperationException(
+								"Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+					}
+				});
 		mutex.waitFor(10 * 1000, "discovered:2:items:0");
-		assertTrue(mutex.isItemNotified("discovered:2:items:0"));	
+		assertTrue(mutex.isItemNotified("discovered:2:items:0"));
 		assertFalse(mutex.isItemNotified("discovered:2:item:http://jabber.org/protocol/geoloc"));
 	}
 }

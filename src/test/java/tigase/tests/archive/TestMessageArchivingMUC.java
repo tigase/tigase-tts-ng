@@ -20,7 +20,9 @@
 package tigase.tests.archive;
 
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -49,7 +51,8 @@ import java.util.UUID;
 /**
  * Created by andrzej on 25.07.2016.
  */
-public class TestMessageArchivingMUC extends AbstractTest {
+public class TestMessageArchivingMUC
+		extends AbstractTest {
 
 	private static final String USER_PREFIX = "muc_test";
 
@@ -64,6 +67,194 @@ public class TestMessageArchivingMUC extends AbstractTest {
 	Jaxmpp user3Jaxmpp;
 	Account user4;
 	Jaxmpp user4Jaxmpp;
+
+	private static void assertArchivedMessages(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid,
+											   List<String> msgs, List<String> subjects, final String id)
+			throws JaxmppException, InterruptedException {
+		final JID bindedJid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
+		Criteria crit = new Criteria().setWith(JID.jidInstance(roomJid));
+		final List<ChatItem> items = new ArrayList<ChatItem>();
+		jaxmpp.getModule(MessageArchivingModule.class)
+				.retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
+
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						mutex.notify("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":error");
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":timeout");
+					}
+
+					@Override
+					protected void onItemsReceived(ChatResultSet chat) throws XMLException {
+						items.addAll(chat.getItems());
+						mutex.notify("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":success");
+					}
+				});
+		mutex.waitFor(20 * 1000, "archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":success");
+		Assert.assertTrue(
+				mutex.isItemNotified("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":success"));
+
+		//Assert.assertEquals(items.size(), msgs.size() + subjects.size());
+
+		List<String> gotMsgs = new ArrayList<String>();
+		List<String> gotSubjects = new ArrayList<String>();
+		for (ChatItem item : items) {
+			if (item.getBody() != null) {
+				gotMsgs.add(item.getBody());
+			}
+			Element itemEl = item.getItem();
+			Element subjectEl = itemEl.getFirstChild("subject");
+			if (subjectEl != null) {
+				String subject = subjectEl.getValue();
+				if (subject != null && !subject.isEmpty()) {
+					gotSubjects.add(subjectEl.getValue());
+				}
+			}
+		}
+		Assert.assertEquals(gotMsgs, msgs);
+		Assert.assertEquals(gotSubjects, subjects);
+	}
+
+	private static String changeMucSubject(final Mutex mutex, Jaxmpp jaxmpp, BareJID roomJid, String subject)
+			throws JaxmppException, InterruptedException {
+		Message msg = Message.create();
+		msg.setTo(JID.jidInstance(roomJid));
+		msg.setType(StanzaType.groupchat);
+		msg.setSubject(subject);
+		jaxmpp.send(msg);
+		Thread.sleep(2000);
+		return subject;
+	}
+
+	private static Room configureRoom(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid)
+			throws JaxmppException, InterruptedException {
+		Room room = jaxmpp.getModule(MucModule.class).getRoom(roomJid);
+		jaxmpp.getModule(MucModule.class).getRoomConfiguration(room, new AsyncCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				mutex.notify("muc:" + roomJid + ":configRetrieve:error");
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				Element query = responseStanza.getChildrenNS("query", "http://jabber.org/protocol/muc#owner");
+				query = ElementFactory.create(query);
+				Element x = query.getChildrenNS("x", "jabber:x:data");
+				JabberDataElement data = new JabberDataElement(x);
+				data.setAttribute("type", XDataType.submit.name());
+				((BooleanField) data.getField("muc#roomconfig_persistentroom")).setFieldValue(true);
+
+				IQ iq = IQ.createIQ();
+				iq.setTo(responseStanza.getFrom());
+				iq.setAttribute("type", "set");
+				iq.addChild(query);
+
+				jaxmpp.send(iq, new AsyncCallback() {
+
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						mutex.notify("muc:" + roomJid + ":configSet:error");
+					}
+
+					@Override
+					public void onSuccess(Stanza responseStanza) throws JaxmppException {
+						mutex.notify("muc:" + roomJid + ":configSet:success");
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("muc:" + roomJid + ":configSet:timeout");
+					}
+				});
+
+				mutex.notify("muc:" + roomJid + ":configRetrieve:success");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("muc:" + roomJid + ":configRetrieve:timeout");
+			}
+
+		});
+
+		mutex.waitFor(40 * 1000, "muc:" + roomJid + ":configRetrieve:success", "muc:" + roomJid + ":configSet:success");
+
+		Assert.assertTrue(mutex.isItemNotified("muc:" + roomJid + ":configSet:success"),
+						  "MUC room configuration failed");
+
+		return room;
+	}
+
+	private static void enableArchiving(final Mutex mutex, final Jaxmpp jaxmpp)
+			throws XMLException, JaxmppException, InterruptedException {
+		final JID bindedJid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
+		MessageArchivingModule.Settings settings = new MessageArchivingModule.Settings();
+		settings.setAutoSave(true);
+		settings.setSaveMode(SaveMode.Message);
+		settings.setChildAttr("default", "muc-save", "true");
+		jaxmpp.getModule(MessageArchivingModule.class).setSettings(settings, new AsyncCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				mutex.notify("archive:" + bindedJid + ":settingsset:error");
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				mutex.notify("archive:" + bindedJid + ":settingsset:success");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("archive:" + bindedJid + ":settingsset:timeout");
+			}
+		});
+		mutex.waitFor(20 * 1000, "archive:" + bindedJid + ":settingsset:success");
+		Assert.assertTrue(mutex.isItemNotified("archive:" + bindedJid + ":settingsset:success"),
+						  "Could not properly set message archiving settings");
+	}
+
+	private static Room joinRoom(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid)
+			throws JaxmppException, InterruptedException {
+		final JID bindedJid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
+		final String nick = bindedJid.getResource();
+		jaxmpp.getEventBus()
+				.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
+
+					@Override
+					public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
+						mutex.notify("muc:" + bindedJid + ":" + room.getRoomJid().toString() + ":joined");
+					}
+				});
+
+		Room room = jaxmpp.getModule(MucModule.class).join(roomJid.getLocalpart(), roomJid.getDomain(), nick);
+
+		mutex.waitFor(20 * 1000, "muc:" + bindedJid + ":" + roomJid.toString() + ":joined");
+
+		Assert.assertTrue(mutex.isItemNotified("muc:" + bindedJid + ":" + roomJid.toString() + ":joined"),
+						  "Could not join room " + roomJid + " as " + bindedJid);
+
+		return room;
+	}
+
+	private static void leaveRoom(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid)
+			throws JaxmppException {
+		Room room = jaxmpp.getModule(MucModule.class).getRoom(roomJid);
+		jaxmpp.getModule(MucModule.class).leave(room);
+	}
+
+	private static String sendMucMessage(final Mutex mutex, Jaxmpp jaxmpp, BareJID roomJid, String msg)
+			throws JaxmppException, InterruptedException {
+		jaxmpp.getModule(MucModule.class).getRoom(roomJid).sendMessage(msg);
+		Thread.sleep(2000);
+		return msg;
+	}
 
 	@BeforeClass
 	public void prepareAdmin() throws JaxmppException {
@@ -148,179 +339,6 @@ public class TestMessageArchivingMUC extends AbstractTest {
 		leaveRoom(mutex, user2Jaxmpp, roomJid);
 		leaveRoom(mutex, user3Jaxmpp, roomJid);
 		leaveRoom(mutex, user4Jaxmpp, roomJid);
-	}
-
-	private static Room joinRoom(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid) throws JaxmppException, InterruptedException {
-		final JID bindedJid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
-		final String nick = bindedJid.getResource();
-		jaxmpp.getEventBus().addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
-
-			@Override
-			public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
-				mutex.notify("muc:" + bindedJid + ":" + room.getRoomJid().toString() + ":joined");
-			}
-		});
-
-		Room room = jaxmpp.getModule(MucModule.class).join(roomJid.getLocalpart(), roomJid.getDomain(),
-				nick);
-
-		mutex.waitFor(20 * 1000, "muc:" + bindedJid + ":" + roomJid.toString()+":joined");
-
-		Assert.assertTrue(mutex.isItemNotified("muc:" + bindedJid + ":" + roomJid.toString()+":joined"), "Could not join room " + roomJid + " as " + bindedJid);
-
-		return room;
-	}
-
-	private static Room configureRoom(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid) throws JaxmppException, InterruptedException {
-		Room room = jaxmpp.getModule(MucModule.class).getRoom(roomJid);
-		jaxmpp.getModule(MucModule.class).getRoomConfiguration(room, new AsyncCallback() {
-
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("muc:" + roomJid + ":configRetrieve:error");
-			}
-
-			@Override
-			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				Element query = responseStanza.getChildrenNS("query", "http://jabber.org/protocol/muc#owner");
-				query = ElementFactory.create(query);
-				Element x = query.getChildrenNS("x", "jabber:x:data");
-				JabberDataElement data = new JabberDataElement(x);
-				data.setAttribute("type", XDataType.submit.name());
-				((BooleanField) data.getField("muc#roomconfig_persistentroom")).setFieldValue(true);
-
-				IQ iq = IQ.createIQ();
-				iq.setTo(responseStanza.getFrom());
-				iq.setAttribute("type", "set");
-				iq.addChild(query);
-
-				jaxmpp.send(iq, new AsyncCallback() {
-
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-						mutex.notify("muc:" + roomJid + ":configSet:error");
-					}
-
-					@Override
-					public void onSuccess(Stanza responseStanza) throws JaxmppException {
-						mutex.notify("muc:" + roomJid + ":configSet:success");
-					}
-
-					@Override
-					public void onTimeout() throws JaxmppException {
-						mutex.notify("muc:" + roomJid + ":configSet:timeout");
-					}
-				});
-
-				mutex.notify("muc:" + roomJid + ":configRetrieve:success");
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("muc:" + roomJid + ":configRetrieve:timeout");
-			}
-
-		});
-
-		mutex.waitFor(40 * 1000, "muc:" + roomJid + ":configRetrieve:success", "muc:" + roomJid + ":configSet:success");
-
-		Assert.assertTrue(mutex.isItemNotified("muc:" + roomJid + ":configSet:success"), "MUC room configuration failed");
-
-		return room;
-	}
-
-	private static void leaveRoom(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid) throws JaxmppException {
-		Room room = jaxmpp.getModule(MucModule.class).getRoom(roomJid);
-		jaxmpp.getModule(MucModule.class).leave(room);
-	}
-
-	private static void enableArchiving(final Mutex mutex, final Jaxmpp jaxmpp) throws XMLException, JaxmppException, InterruptedException {
-		final JID bindedJid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
-		MessageArchivingModule.Settings settings = new MessageArchivingModule.Settings();
-		settings.setAutoSave(true);
-		settings.setSaveMode(SaveMode.Message);
-		settings.setChildAttr("default", "muc-save", "true");
-		jaxmpp.getModule(MessageArchivingModule.class).setSettings(settings, new AsyncCallback() {
-
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("archive:" + bindedJid + ":settingsset:error");
-			}
-
-			@Override
-			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				mutex.notify("archive:" + bindedJid + ":settingsset:success");
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("archive:" + bindedJid + ":settingsset:timeout");
-			}
-		});
-		mutex.waitFor(20 * 1000, "archive:" + bindedJid + ":settingsset:success");
-		Assert.assertTrue(mutex.isItemNotified("archive:" + bindedJid + ":settingsset:success"),
-				"Could not properly set message archiving settings");
-	}
-
-	private static String sendMucMessage(final Mutex mutex, Jaxmpp jaxmpp, BareJID roomJid, String msg) throws JaxmppException, InterruptedException {
-		jaxmpp.getModule(MucModule.class).getRoom(roomJid).sendMessage(msg);
-		Thread.sleep(2000);
-		return msg;
-	}
-
-	private static String changeMucSubject(final Mutex mutex, Jaxmpp jaxmpp, BareJID roomJid, String subject) throws JaxmppException, InterruptedException {
-		Message msg = Message.create();
-		msg.setTo(JID.jidInstance(roomJid));
-		msg.setType(StanzaType.groupchat);
-		msg.setSubject(subject);
-		jaxmpp.send(msg);
-		Thread.sleep(2000);
-		return subject;
-	}
-
-	private static void assertArchivedMessages(final Mutex mutex, final Jaxmpp jaxmpp, final BareJID roomJid, List<String> msgs, List<String> subjects, final String id) throws JaxmppException, InterruptedException {
-		final JID bindedJid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
-		Criteria crit = new Criteria().setWith(JID.jidInstance(roomJid));
-		final List<ChatItem> items = new ArrayList<ChatItem>();
-		jaxmpp.getModule(MessageArchivingModule.class).retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
-
-			@Override
-			protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-				items.addAll(chat.getItems());
-				mutex.notify("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":success");
-			}
-
-			@Override
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":error");
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":timeout");
-			}
-		});
-		mutex.waitFor(20 * 1000, "archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":success");
-		Assert.assertTrue(mutex.isItemNotified("archive:" + bindedJid + ":retrieve:" + roomJid + ":" + id + ":success"));
-
-		//Assert.assertEquals(items.size(), msgs.size() + subjects.size());
-
-		List<String> gotMsgs = new ArrayList<String>();
-		List<String> gotSubjects = new ArrayList<String>();
-		for (ChatItem item : items) {
-			if (item.getBody() != null)
-				gotMsgs.add(item.getBody());
-			Element itemEl = item.getItem();
-			Element subjectEl = itemEl.getFirstChild("subject");
-			if (subjectEl != null) {
-				String subject = subjectEl.getValue();
-				if (subject != null && !subject.isEmpty()) {
-					gotSubjects.add(subjectEl.getValue());
-				}
-			}
-		}
-		Assert.assertEquals(gotMsgs, msgs);
-		Assert.assertEquals(gotSubjects, subjects);
 	}
 
 }

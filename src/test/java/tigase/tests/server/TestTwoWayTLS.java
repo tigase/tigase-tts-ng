@@ -44,7 +44,8 @@ import java.security.cert.X509Certificate;
 
 import static tigase.TestLogger.log;
 
-public class TestTwoWayTLS extends AbstractTest {
+public class TestTwoWayTLS
+		extends AbstractTest {
 
 	private Jaxmpp jaxmpp;
 	private Account user;
@@ -53,8 +54,9 @@ public class TestTwoWayTLS extends AbstractTest {
 		try (ByteArrayOutputStream os = new ByteArrayOutputStream();) {
 			byte[] buffer = new byte[0xFFFF];
 
-			for (int len; (len = is.read(buffer)) != -1;)
+			for (int len; (len = is.read(buffer)) != -1; ) {
 				os.write(buffer, 0, len);
+			}
 
 			os.flush();
 
@@ -84,7 +86,7 @@ public class TestTwoWayTLS extends AbstractTest {
 	 * @throws Exception related to loading of the certificate
 	 */
 
-	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with client certificate")
+	@Test(groups = {"TLS - Client Cert"}, description = "Two-way TLS with client certificate")
 	public void testConnectionWithCertificate() throws Exception {
 		log("== testConnectionWithCertificate");
 		InputStreamReader crtStream = new InputStreamReader(getClass().getResourceAsStream("/client.pem"));
@@ -109,7 +111,7 @@ public class TestTwoWayTLS extends AbstractTest {
 		}
 	}
 
-	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS without client certificate")
+	@Test(groups = {"TLS - Client Cert"}, description = "Two-way TLS without client certificate")
 	public void testConnectionWithoutCertificate() throws Exception {
 		log("== testConnectionWithoutCertificate");
 		try {
@@ -120,17 +122,17 @@ public class TestTwoWayTLS extends AbstractTest {
 		}
 	}
 
-	@Test(groups = { "TLS - Client Cert" }, description = "Two-way TLS with wrong client certificate")
+	@Test(groups = {"TLS - Client Cert"}, description = "Two-way TLS with wrong client certificate")
 	public void testConnectionWithWrongCertificate() throws Exception {
 		log("== testConnectionWithWrongCertificate");
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(null, "".toCharArray());
 		KeyPair keyPair = CertificateUtil.createKeyPair(1024, "");
-		X509Certificate c = CertificateUtil.createSelfSignedCertificate("alice@coffeebean.local", "domain", "org", "org", "tr",
-				"kp", "PL", keyPair);
+		X509Certificate c = CertificateUtil.createSelfSignedCertificate("alice@coffeebean.local", "domain", "org",
+																		"org", "tr", "kp", "PL", keyPair);
 		log(c.toString());
-		keyStore.setKeyEntry("client", keyPair.getPrivate(), "".toCharArray(), new Certificate[] { c });
+		keyStore.setKeyEntry("client", keyPair.getPrivate(), "".toCharArray(), new Certificate[]{c});
 		kmf.init(keyStore, "".toCharArray());
 
 		jaxmpp.getSessionObject().setProperty(SocketConnector.KEY_MANAGERS_KEY, kmf.getKeyManagers());

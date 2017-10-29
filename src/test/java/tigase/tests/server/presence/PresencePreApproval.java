@@ -32,8 +32,6 @@ import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
-import java.util.logging.Level;
-
 public class PresencePreApproval
 		extends AbstractTest {
 
@@ -65,13 +63,14 @@ public class PresencePreApproval
 		JID user2JID = JID.jidInstance(user2.getJid());
 		final Jaxmpp user2Jaxmpp = user2.createJaxmpp().setConnected(true).build();
 
-		user1Jaxmpp.getEventBus().addHandler(StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent.class,
-		                                     (sessionObject, featuresElement) -> {
-			                                     if (null != featuresElement.getChildrenNS("sub", "urn:xmpp:features:pre-approval")) {
-				                                     mutex.notify("featureReceived");
-			                                     }
+		user1Jaxmpp.getEventBus()
+				.addHandler(StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent.class,
+							(sessionObject, featuresElement) -> {
+								if (null != featuresElement.getChildrenNS("sub", "urn:xmpp:features:pre-approval")) {
+									mutex.notify("featureReceived");
+								}
 
-		                                     });
+							});
 
 		user1Jaxmpp.login(true);
 
@@ -85,50 +84,48 @@ public class PresencePreApproval
 
 			user1Jaxmpp.getEventBus()
 					.addHandler(RosterModule.ItemAddedHandler.ItemAddedEvent.class,
-					            (sessionObject, item, modifiedGroups) -> {
+								(sessionObject, item, modifiedGroups) -> {
 
-						            TestLogger.log(":: added: " + item + ", " + item.getSubscription() + ", app: " + item.isApproved());
+									TestLogger.log(":: added: " + item + ", " + item.getSubscription() + ", app: " +
+														   item.isApproved());
 
-						            mutex.notify(item.getJid() + ":"+ item.getSubscription() + ":" + item.isApproved());
-						            mutex.notify("added:" + item.getJid());
+									mutex.notify(
+											item.getJid() + ":" + item.getSubscription() + ":" + item.isApproved());
+									mutex.notify("added:" + item.getJid());
 
-					            });
-
+								});
 
 			mutex.waitFor(3 * 1000, "added:" + user2JID.getBareJid());
 			Assert.assertTrue(mutex.isItemNotified(user2JID.getBareJid() + ":none:true"), "User added correctly!");
 
 			user1Jaxmpp.getEventBus()
 					.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class,
-					            (sessionObject, stanza, jid) -> {
+								(sessionObject, stanza, jid) -> {
 
-						            mutex.notify(user1JID + ":subscribe:" + jid);
-					            });
+									mutex.notify(user1JID + ":subscribe:" + jid);
+								});
 
 			user2Jaxmpp.getModule(PresenceModule.class).subscribe(user1JID);
 
-
 			Assert.assertFalse(mutex.isItemNotified(user1JID + ":subscribe:" + user2JID), ">subscribe< not filtered!");
-
 
 			Thread.sleep(1000);
 
 			Assert.assertTrue(user1Jaxmpp.getModulesManager()
-					                  .getModule(RosterModule.class)
-					                  .getRosterStore()
-					                  .get(user2JID.getBareJid())
-					                  .getSubscription()
-					                  .isFrom(), "User has has correct subscription of the contact");
+									  .getModule(RosterModule.class)
+									  .getRosterStore()
+									  .get(user2JID.getBareJid())
+									  .getSubscription()
+									  .isFrom(), "User has has correct subscription of the contact");
 
 			Assert.assertTrue(user2Jaxmpp.getModulesManager()
-					                  .getModule(RosterModule.class)
-					                  .getRosterStore()
-					                  .get(user1JID.getBareJid())
-					                  .getSubscription()
-					                  .isTo(), "Contact has has correct subscription of the user");
+									  .getModule(RosterModule.class)
+									  .getRosterStore()
+									  .get(user1JID.getBareJid())
+									  .getSubscription()
+									  .isTo(), "Contact has has correct subscription of the user");
 
 		}
-
 
 	}
 

@@ -45,15 +45,25 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import static tigase.TestLogger.log;
+
 /**
  * Created by andrzej on 20.11.2016.
  */
-public abstract class TestRestApiAbstract extends TestPubSubAbstract {
+public abstract class TestRestApiAbstract
+		extends TestPubSubAbstract {
 
 	protected static final int SECOND = 1000;
+	protected BareJID adminBareJid;
 	protected CloseableHttpClient httpClient;
 	protected HttpClientContext localContext;
-	protected BareJID adminBareJid;
+
+	protected static Element parseXML(String result) {
+		DomBuilderHandler handler = new DomBuilderHandler();
+		SingletonFactory.getParserInstance().parse(handler, result.toCharArray(), 0, result.length());
+
+		tigase.xml.Element response = handler.getParsedElements().poll();
+		return response == null ? null : new J2seElement(response);
+	}
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -63,12 +73,14 @@ public abstract class TestRestApiAbstract extends TestPubSubAbstract {
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		localContext = HttpClientContext.create();
 		int timeout = 15;
-		httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider)
+		httpClient = HttpClients.custom()
+				.setDefaultCredentialsProvider(credsProvider)
 				.setDefaultRequestConfig(RequestConfig.custom()
 												 .setSocketTimeout(timeout * SECOND)
 												 .setConnectTimeout(timeout * SECOND)
 												 .setConnectionRequestTimeout(timeout * SECOND)
-												 .build()).build();
+												 .build())
+				.build();
 	}
 
 	@AfterClass
@@ -78,59 +90,51 @@ public abstract class TestRestApiAbstract extends TestPubSubAbstract {
 		localContext = null;
 	}
 
-	protected String executeHttpApiRequest(String hostname, String action, String command, String contentType) throws IOException,
-																								   XMLException {
+	protected String executeHttpApiRequest(String hostname, String action, String command, String contentType)
+			throws IOException, XMLException {
 		log("on {0} executing action {1} with content type {2} and payload:\n{3}",
-					new Object[]{hostname, action, contentType, command});
+			new Object[]{hostname, action, contentType, command});
 
-		HttpHost target = new HttpHost(hostname, Integer.parseInt(getHttpPort() ), "http" );
+		HttpHost target = new HttpHost(hostname, Integer.parseInt(getHttpPort()), "http");
 		HttpPost postRequest = new HttpPost("/rest/pubsub/" + pubsubJid + "/" + action);
-		postRequest.addHeader( "Api-Key", getApiKey() );
+		postRequest.addHeader("Api-Key", getApiKey());
 
 		StringEntity entity = new StringEntity(command);
-		entity.setContentType( contentType );
-		postRequest.setEntity( entity );
+		entity.setContentType(contentType);
+		postRequest.setEntity(entity);
 
 		HttpResponse response = null;
 		try {
-			response = httpClient.execute( target, postRequest, localContext );
-		} catch ( Exception ex ) {
-			fail( ex );
+			response = httpClient.execute(target, postRequest, localContext);
+		} catch (Exception ex) {
+			fail(ex);
 		}
 
-		if ( response == null ){
-			Assert.fail("Request response not received" );
+		if (response == null) {
+			Assert.fail("Request response not received");
 			return null;
 		}
 
-		String responseContent = response.getEntity() != null
-								 ? inputStreamToString( response.getEntity().getContent() ) : "";
+		String responseContent =
+				response.getEntity() != null ? inputStreamToString(response.getEntity().getContent()) : "";
 
 		log("from {0} for action {1} got result code {2} and payload\n{3}",
 			new Object[]{hostname, action, response.getStatusLine().getStatusCode(), responseContent});
 
-		Assert.assertEquals( response.getStatusLine().getStatusCode(), 200 );
+		Assert.assertEquals(response.getStatusLine().getStatusCode(), 200);
 
 		return responseContent;
 	}
 
-	protected String inputStreamToString( InputStream is ) throws IOException {
-		Reader reader = new InputStreamReader(is );
+	protected String inputStreamToString(InputStream is) throws IOException {
+		Reader reader = new InputStreamReader(is);
 		StringBuilder sb = new StringBuilder();
-		char[] buf = new char[ 1024 ];
+		char[] buf = new char[1024];
 		int read = 0;
-		while ( ( read = reader.read( buf ) ) >= 0 ) {
-			sb.append( buf, 0, read );
+		while ((read = reader.read(buf)) >= 0) {
+			sb.append(buf, 0, read);
 		}
 		return sb.toString();
-	}
-
-	protected static Element parseXML(String result) {
-		DomBuilderHandler handler = new DomBuilderHandler();
-		SingletonFactory.getParserInstance().parse(handler, result.toCharArray(), 0, result.length());
-
-		tigase.xml.Element response = handler.getParsedElements().poll();
-		return response == null ? null : new J2seElement(response);
 	}
 
 }

@@ -50,14 +50,14 @@ import static tigase.TestLogger.log;
 /**
  * Created by andrzej on 22.06.2016.
  */
-public class TestOfflineMessageDeliveryAfterSmResumptionInACS extends AbstractTest {
+public class TestOfflineMessageDeliveryAfterSmResumptionInACS
+		extends AbstractTest {
 
 	private static final String USER_PREFIX = "sm-resumption";
 
 	private Account user1;
-	private Account user2;
-
 	private Jaxmpp user1Jaxmpp;
+	private Account user2;
 	private Jaxmpp user2Jaxmpp;
 
 	@BeforeMethod
@@ -75,18 +75,9 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS extends AbstractTe
 		}).setConnected(true).build();
 	}
 
-	private Jaxmpp configureJaxmpp(Jaxmpp jaxmpp, int pos) {
-		String[] hostnames = getInstanceHostnames();
-		if (hostnames.length > 1) {
-			jaxmpp.getSessionObject().setUserProperty("BOSH#SEE_OTHER_HOST_KEY", false);
-			jaxmpp.getConnectionConfiguration().setServer(hostnames[pos]);
-		}
-		return jaxmpp;
-	}
-
 	@Test
 	public void testFullJid() throws Exception {
-		 testMessageDeliveryReliability(true);
+		testMessageDeliveryReliability(true);
 	}
 
 	@Test
@@ -97,51 +88,52 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS extends AbstractTe
 	public void testMessageDeliveryReliability(boolean fullJid) throws Exception {
 		final Mutex mutex = new Mutex();
 
-		log( "\n\n\n===== simulation of connection failure \n" );
+		log("\n\n\n===== simulation of connection failure \n");
 		breakConnection(user2Jaxmpp);
 
-		log( "\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n" );
+		log("\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n");
 		user2Jaxmpp.login(true);
 
-		log( "\n\n\n===== disconnecting client (proper disconnection) \n");
+		log("\n\n\n===== disconnecting client (proper disconnection) \n");
 		Thread.sleep(2000);
 		user2Jaxmpp.disconnect(true);
 
 		Thread.sleep(2000);
 
 		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
-		log( "\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n" );
+		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
 		sendMessage(user1Jaxmpp, destination, StanzaType.chat, "test1");
 
 		String body = UUID.randomUUID().toString();
 
-		log( "\n\n\n===== sending message to look for \n" );
+		log("\n\n\n===== sending message to look for \n");
 		sendMessage(user1Jaxmpp, destination, StanzaType.chat, body);
 
 		//Thread.sleep(delay + 65000);
 		Thread.sleep(1000);
 
-		user2Jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
-				new MessageModule.MessageReceivedHandler() {
+		user2Jaxmpp.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-					@Override
-					public void onMessageReceived(SessionObject sessionObject, Chat chat, Message message) {
-						try {
-							mutex.notify("message:" + message.getBody());
-						} catch (XMLException e) {
-							e.printStackTrace();
-						}
-					}
-				});
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message message) {
+									try {
+										mutex.notify("message:" + message.getBody());
+									} catch (XMLException e) {
+										e.printStackTrace();
+									}
+								}
+							});
 
 		user2Jaxmpp.getModule(PresenceModule.class).setInitialPresence(false);
 
-		log( "\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n" );
+		log("\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n");
 		user2Jaxmpp.login(true);
 
 		Thread.sleep(2000);
 
-		log( "\n\n\n===== broadcasting presence \n" );
+		log("\n\n\n===== broadcasting presence \n");
 		user2Jaxmpp.getModule(PresenceModule.class).setPresence(Presence.Show.online, null, 5);
 
 		mutex.waitFor(5 * 1000, "message:" + body);
@@ -168,6 +160,15 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS extends AbstractTe
 		}
 		assertEquals(Connector.State.disconnected, jaxmpp.getConnector().getState());
 
+	}
+
+	private Jaxmpp configureJaxmpp(Jaxmpp jaxmpp, int pos) {
+		String[] hostnames = getInstanceHostnames();
+		if (hostnames.length > 1) {
+			jaxmpp.getSessionObject().setUserProperty("BOSH#SEE_OTHER_HOST_KEY", false);
+			jaxmpp.getConnectionConfiguration().setServer(hostnames[pos]);
+		}
+		return jaxmpp;
 	}
 
 	private void sendMessage(Jaxmpp jaxmpp, JID destination, StanzaType type, String body) throws Exception {

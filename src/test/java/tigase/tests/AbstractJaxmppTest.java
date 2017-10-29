@@ -24,6 +24,7 @@ package tigase.tests;
 /**
  * Created by andrzej on 17.09.2016.
  */
-public class AbstractJaxmppTest extends AbstractTest {
+public class AbstractJaxmppTest
+		extends AbstractTest {
 
 }

@@ -49,24 +49,24 @@ import java.util.logging.Logger;
 import static org.testng.Assert.assertTrue;
 
 /**
- *
  * @author andrzej
  */
-public class TestWebSocketConnectivity extends AbstractTest {
+public class TestWebSocketConnectivity
+		extends AbstractTest {
 
 	private static final String USER_PREFIX = "ws_";
-	
+
 	Account user1;
 	Jaxmpp userJaxmpp1;
 	Jaxmpp userJaxmpp2;
-	
+
 	@BeforeMethod
 	public void setUp() throws Exception {
 		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
 		userJaxmpp1 = user1.createJaxmpp().setLogPrefix("non_" + USER_PREFIX).build();
 		userJaxmpp2 = user1.createJaxmpp().build();
 	}
-	
+
 	//@Test
 	@Ignore
 	public void testWebSocket_Connectivity() throws Exception {
@@ -75,24 +75,26 @@ public class TestWebSocketConnectivity extends AbstractTest {
 		userJaxmpp2.getConnectionConfiguration().setBoshService(wsUri);
 		userJaxmpp1.login(true);
 		userJaxmpp2.login(true);
-		
+
 		assertTrue(userJaxmpp1.isConnected());
 		assertTrue(userJaxmpp2.isConnected());
 		Mutex mutex = new Mutex();
 
-		userJaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, 
-				new MessageModule.MessageReceivedHandler() {
+		userJaxmpp2.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-			@Override
-			public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
-				try {
-					mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
-				} catch (XMLException ex) {
-					Logger.getLogger(TestOfflineMessagesLimit.class.getName()).log(Level.SEVERE, null, ex);
-				}
-			}
-		});
-		
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+									try {
+										mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
+									} catch (XMLException ex) {
+										Logger.getLogger(TestOfflineMessagesLimit.class.getName())
+												.log(Level.SEVERE, null, ex);
+									}
+								}
+							});
+
 		String body = UUID.randomUUID().toString();
 		Message msg = Message.createMessage();
 		msg.setTo(ResourceBinderModule.getBindedJID(userJaxmpp2.getSessionObject()));
@@ -118,18 +120,20 @@ public class TestWebSocketConnectivity extends AbstractTest {
 		assertTrue(userJaxmpp2.isConnected());
 		Mutex mutex = new Mutex();
 
-		userJaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
-											 new MessageModule.MessageReceivedHandler() {
+		userJaxmpp2.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-												 @Override
-												 public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
-													 try {
-														 mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
-													 } catch (XMLException ex) {
-														 Logger.getLogger(TestOfflineMessagesLimit.class.getName()).log(Level.SEVERE, null, ex);
-													 }
-												 }
-											 });
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+									try {
+										mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
+									} catch (XMLException ex) {
+										Logger.getLogger(TestOfflineMessagesLimit.class.getName())
+												.log(Level.SEVERE, null, ex);
+									}
+								}
+							});
 
 		String body = UUID.randomUUID().toString();
 		Message msg1 = Message.createMessage();
@@ -142,7 +146,7 @@ public class TestWebSocketConnectivity extends AbstractTest {
 
 		ByteBuffer frame1 = generateTextFrame(msg1.getAsString());
 		ByteBuffer frame2 = generateTextFrame(msg2.getAsString());
-		ByteBuffer tmp = ByteBuffer.allocate(frame1.remaining()+frame2.remaining());
+		ByteBuffer tmp = ByteBuffer.allocate(frame1.remaining() + frame2.remaining());
 		tmp.put(frame1);
 		tmp.put(frame2);
 		tmp.flip();
@@ -170,18 +174,20 @@ public class TestWebSocketConnectivity extends AbstractTest {
 		assertTrue(userJaxmpp2.isConnected());
 		Mutex mutex = new Mutex();
 
-		userJaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
-											 new MessageModule.MessageReceivedHandler() {
+		userJaxmpp2.getEventBus()
+				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
+							new MessageModule.MessageReceivedHandler() {
 
-												 @Override
-												 public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
-													 try {
-														 mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
-													 } catch (XMLException ex) {
-														 Logger.getLogger(TestOfflineMessagesLimit.class.getName()).log(Level.SEVERE, null, ex);
-													 }
-												 }
-											 });
+								@Override
+								public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+									try {
+										mutex.notify("websocket:message:to:" + stanza.getFirstChild("body").getValue());
+									} catch (XMLException ex) {
+										Logger.getLogger(TestOfflineMessagesLimit.class.getName())
+												.log(Level.SEVERE, null, ex);
+									}
+								}
+							});
 
 		String body = UUID.randomUUID().toString();
 
@@ -192,15 +198,15 @@ public class TestWebSocketConnectivity extends AbstractTest {
 		ByteBuffer frame1 = ByteBuffer.allocate(40);
 		frame1.put((byte) 0x89);
 		frame1.put((byte) 0x84);
-		byte[] payload = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-		byte[] mask = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+		byte[] payload = new byte[]{0x00, 0x00, 0x00, 0x00};
+		byte[] mask = new byte[]{0x00, 0x00, 0x00, 0x00};
 		frame1.put(mask);
-		for (int i=0; i<payload.length; i++) {
+		for (int i = 0; i < payload.length; i++) {
 			frame1.put((byte) (payload[i] ^ mask[i]));
 		}
 		frame1.flip();
 		ByteBuffer frame2 = generateTextFrame(msg2.getAsString());
-		ByteBuffer tmp = ByteBuffer.allocate(frame1.remaining()+frame2.remaining());
+		ByteBuffer tmp = ByteBuffer.allocate(frame1.remaining() + frame2.remaining());
 		tmp.put(frame1);
 		tmp.put(frame2);
 		tmp.flip();

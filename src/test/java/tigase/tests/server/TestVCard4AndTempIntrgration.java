@@ -41,25 +41,19 @@ import static org.testng.AssertJUnit.assertTrue;
 import static tigase.TestLogger.log;
 
 /**
- *
  * @author andrzej
  */
-public class TestVCard4AndTempIntrgration extends AbstractTest {
-	
-	final String helloWorld = new String(new byte[] { (byte) 0xe4, (byte) 0xbd, (byte) 0xa0, (byte) 0xe5, (byte) 0xa5,
-			(byte) 0xbd, (byte) 0xe4, (byte) 0xb8, (byte) 0x96, (byte) 0xe7, (byte) 0x95, (byte) 0x8c },
-			Charset.forName("UTF-8"));
+public class TestVCard4AndTempIntrgration
+		extends AbstractTest {
 
 	private static final String XMLNS = "urn:ietf:params:xml:ns:vcard-4.0";
-	private Account user1;
-	private Account user2;
+	final String helloWorld = new String(
+			new byte[]{(byte) 0xe4, (byte) 0xbd, (byte) 0xa0, (byte) 0xe5, (byte) 0xa5, (byte) 0xbd, (byte) 0xe4,
+					   (byte) 0xb8, (byte) 0x96, (byte) 0xe7, (byte) 0x95, (byte) 0x8c}, Charset.forName("UTF-8"));
 	private Jaxmpp jaxmpp1;
 	private Jaxmpp jaxmpp2;
-
-	protected void fail(String msg) {
-		log(msg);
-		Assert.fail(msg);
-	}
+	private Account user1;
+	private Account user2;
 
 	@BeforeMethod
 	public void setUp() throws JaxmppException, InterruptedException {
@@ -69,7 +63,7 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 		jaxmpp2 = user2.createJaxmpp().setConnected(true).build();
 	}
 
-	@Test(groups = { "Phase 1" }, description = "Test VCard4 - VCardTemp conversion integration")
+	@Test(groups = {"Phase 1"}, description = "Test VCard4 - VCardTemp conversion integration")
 	public void testVCard4ToVCardTempConversion() throws JaxmppException, InterruptedException {
 		Element iqPublish = ElementFactory.create("iq");
 		iqPublish.setAttribute("type", "set");
@@ -91,8 +85,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
 				try {
-					if (responseStanza.getType() == StanzaType.result)
+					if (responseStanza.getType() == StanzaType.result) {
 						mutex.notify("vcardSet:jaxmpp1");
+					}
 				} catch (Exception e) {
 					fail(e);
 				}
@@ -101,15 +96,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -134,8 +129,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 						Element vcard = responseStanza.getChildrenNS("vcard", XMLNS);
 						Element fn = vcard.getChildren("fn").get(0);
 						Element fnText = fn.getChildren("text").get(0);
-						if (fnText.getValue().equals("Test Example 1" + helloWorld))
+						if (fnText.getValue().equals("Test Example 1" + helloWorld)) {
 							mutex.notify("vcardRetrieve:jaxmpp1");
+						}
 					}
 				} catch (Exception e) {
 					fail(e);
@@ -145,15 +141,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -179,8 +175,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 						Element vcard = responseStanza.getChildrenNS("vcard", XMLNS);
 						Element fn = vcard.getChildren("fn").get(0);
 						Element fnText = fn.getChildren("text").get(0);
-						if (fnText.getValue().equals("Test Example 1" + helloWorld))
+						if (fnText.getValue().equals("Test Example 1" + helloWorld)) {
 							mutex.notify("vcardRetrieve:jaxmpp2");
+						}
 					}
 				} catch (Exception e) {
 					fail(e);
@@ -190,15 +187,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -223,8 +220,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 					if (responseStanza.getType() == StanzaType.result) {
 						Element vcard = responseStanza.getChildrenNS("vCard", "vcard-temp");
 						Element fn = vcard.getChildren("FN").get(0);
-						if (fn.getValue().equals("Test Example 1" + helloWorld))
+						if (fn.getValue().equals("Test Example 1" + helloWorld)) {
 							mutex.notify("vcardTempRetrieve:jaxmpp2");
+						}
 					}
 				} catch (Exception e) {
 					fail(e);
@@ -234,15 +232,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -250,8 +248,8 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 
 		assertTrue("VCardTemp retrieval by buddy failed", mutex.isItemNotified("vcardTempRetrieve:jaxmpp2"));
 	}
-	
-	@Test(groups = { "Phase 1" }, description = "Test VCardTemp - VCard4 conversion integration")
+
+	@Test(groups = {"Phase 1"}, description = "Test VCardTemp - VCard4 conversion integration")
 	public void testVCardTempToVCard4Conversion() throws JaxmppException, InterruptedException {
 		Element iqPublish = ElementFactory.create("iq");
 		iqPublish.setAttribute("type", "set");
@@ -272,8 +270,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
 				try {
-					if (responseStanza.getType() == StanzaType.result)
+					if (responseStanza.getType() == StanzaType.result) {
 						mutex.notify("vcardSet:jaxmpp1");
+					}
 				} catch (Exception e) {
 					fail(e);
 				}
@@ -282,15 +281,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -314,8 +313,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 					if (responseStanza.getType() == StanzaType.result) {
 						Element vcard = responseStanza.getChildrenNS("vCard", "vcard-temp");
 						Element fn = vcard.getChildren("FN").get(0);
-						if (fn.getValue().equals("Test Example 1" + helloWorld))
+						if (fn.getValue().equals("Test Example 1" + helloWorld)) {
 							mutex.notify("vcardRetrieve:jaxmpp1");
+						}
 					}
 				} catch (Exception e) {
 					fail(e);
@@ -325,15 +325,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -358,8 +358,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 					if (responseStanza.getType() == StanzaType.result) {
 						Element vcard = responseStanza.getChildrenNS("vCard", "vcard-temp");
 						Element fn = vcard.getChildren("FN").get(0);
-						if (fn.getValue().equals("Test Example 1" + helloWorld))
+						if (fn.getValue().equals("Test Example 1" + helloWorld)) {
 							mutex.notify("vcardRetrieve:jaxmpp2");
+						}
 					}
 				} catch (Exception e) {
 					fail(e);
@@ -369,15 +370,15 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
@@ -403,8 +404,9 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 						Element vcard = responseStanza.getChildrenNS("vcard", XMLNS);
 						Element fn = vcard.getChildren("fn").get(0);
 						Element fnText = fn.getChildren("text").get(0);
-						if (fnText.getValue().equals("Test Example 1" + helloWorld))
+						if (fnText.getValue().equals("Test Example 1" + helloWorld)) {
 							mutex.notify("vcard4Retrieve:jaxmpp2");
+						}
 					}
 				} catch (Exception e) {
 					fail(e);
@@ -414,21 +416,26 @@ public class TestVCard4AndTempIntrgration extends AbstractTest {
 			@Override
 			public void onTimeout() throws JaxmppException {
 				throw new UnsupportedOperationException("Not supported yet."); // To
-																				// change
-																				// body
-																				// of
-																				// generated
-																				// methods,
-																				// choose
-																				// Tools
-																				// |
-																				// Templates.
+				// change
+				// body
+				// of
+				// generated
+				// methods,
+				// choose
+				// Tools
+				// |
+				// Templates.
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcard4Retrieve:jaxmpp2");
 
 		assertTrue("VCard4 retrieval by buddy failed", mutex.isItemNotified("vcard4Retrieve:jaxmpp2"));
+	}
+
+	protected void fail(String msg) {
+		log(msg);
+		Assert.fail(msg);
 	}
 
 }

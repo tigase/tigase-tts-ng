@@ -69,31 +69,31 @@ public class TestChangeUserPassword
 
 		adHoc.execute(sessManJID, "http://jabber.org/protocol/admin#change-user-password", null, form,
 
-		              new AdHocCommansModule.AdHocCommansAsyncCallback() {
+					  new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
-			              @Override
-			              public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-					              throws JaxmppException {
-				              TestLogger.log("Error! " + error);
-				              mutex.notify("addUser", "addUser:error");
-			              }
+						  @Override
+						  public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+								  throws JaxmppException {
+							  TestLogger.log("Error! " + error);
+							  mutex.notify("addUser", "addUser:error");
+						  }
 
-			              @Override
-			              protected void onResponseReceived(String sessionid, String node, State status,
-			                                                JabberDataElement data) throws JaxmppException {
+						  @Override
+						  public void onTimeout() throws JaxmppException {
+							  mutex.notify("addUser", "addUser:timeout");
+						  }
 
-				              FixedField nff = data.getField("Note");
-				              if (nff != null) {
-					              mutex.notify("addUser:success");
-				              }
-				              mutex.notify("addUser");
-			              }
+						  @Override
+						  protected void onResponseReceived(String sessionid, String node, State status,
+															JabberDataElement data) throws JaxmppException {
 
-			              @Override
-			              public void onTimeout() throws JaxmppException {
-				              mutex.notify("addUser", "addUser:timeout");
-			              }
-		              });
+							  FixedField nff = data.getField("Note");
+							  if (nff != null) {
+								  mutex.notify("addUser:success");
+							  }
+							  mutex.notify("addUser");
+						  }
+					  });
 
 		mutex.waitFor(30 * 1000, "addUser");
 		Assert.assertTrue(mutex.isItemNotified("addUser:success"), "User added correctly!");

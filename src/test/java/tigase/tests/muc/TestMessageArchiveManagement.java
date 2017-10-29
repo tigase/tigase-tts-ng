@@ -39,47 +39,19 @@ public class TestMessageArchiveManagement
 		extends AbstractTest {
 
 	final Mutex mutex = new Mutex();
-
+	private MucModule muc1Module;
+	private MucModule muc2Module;
+	private MucModule muc3Module;
+	private List<MucModule> mucModules;
+	private BareJID roomJID;
+	private List<Item> sentMessages;
 	private Account user1;
 	private Jaxmpp user1Jaxmpp;
-	private MucModule muc1Module;
 	private Account user2;
 	private Jaxmpp user2Jaxmpp;
-	private MucModule muc2Module;
 	private Account user3;
 	private Jaxmpp user3Jaxmpp;
-	private MucModule muc3Module;
 
-	private BareJID roomJID;
-
-	private List<MucModule> mucModules;
-	private List<Item> sentMessages;
-
-	@BeforeClass
-	protected void setUp() throws Exception {
-		user1 = createAccount().setLogPrefix("user1").build();
-		user2 = createAccount().setLogPrefix("user2").build();
-		user3 = createAccount().setLogPrefix("user3").build();
-		user1Jaxmpp = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
-		user2Jaxmpp = user2.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
-		user3Jaxmpp = user3.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
-
-		muc1Module = user1Jaxmpp.getModule(MucModule.class);
-		muc2Module = user2Jaxmpp.getModule(MucModule.class);
-		muc3Module = user3Jaxmpp.getModule(MucModule.class);
-		mucModules = Arrays.asList(muc1Module, muc2Module, muc3Module);
-
-		roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1.getJid().getDomain());
-
-		joinAll();
-		sentMessages = sendRandomMessages(20);
-	}
-
-	protected Jaxmpp configureJaxmpp(Jaxmpp jaxmpp) {
-		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
-		return jaxmpp;
-	}
-	
 	@Test
 	public void test_MAM_retrieveAll() throws Exception {
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
@@ -136,29 +108,55 @@ public class TestMessageArchiveManagement
 		muc1Module.leave(muc1Module.getRoom(roomJID));
 		Thread.sleep(500);
 		user1Jaxmpp.getModule(MessageArchiveManagementModule.class)
-				.queryItems(new MessageArchiveManagementModule.Query(), JID.jidInstance(roomJID), null,
-							queryId, null, new MessageArchiveManagementModule.ResultCallback() {
-							@Override
-							public void onSuccess(String queryid, boolean complete, RSM rsm) throws JaxmppException {
-								assertTrue(false);
-							}
+				.queryItems(new MessageArchiveManagementModule.Query(), JID.jidInstance(roomJID), null, queryId, null,
+							new MessageArchiveManagementModule.ResultCallback() {
+								@Override
+								public void onSuccess(String queryid, boolean complete, RSM rsm)
+										throws JaxmppException {
+									assertTrue(false);
+								}
 
-							@Override
-							public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-									throws JaxmppException {
-								mutex.notify("mam:error:" + queryId + ":error=" + error.name());
-							}
+								@Override
+								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										throws JaxmppException {
+									mutex.notify("mam:error:" + queryId + ":error=" + error.name());
+								}
 
-							@Override
-							public void onTimeout() throws JaxmppException {
-								assertTrue(false);
-							}
-						});
+								@Override
+								public void onTimeout() throws JaxmppException {
+									assertTrue(false);
+								}
+							});
 
 		String id = "mam:error:" + queryId + ":error=" + XMPPException.ErrorCondition.forbidden.name();
 		mutex.waitFor(30 * 1000, id);
 
 		assertTrue(mutex.isItemNotified(id));
+	}
+
+	@BeforeClass
+	protected void setUp() throws Exception {
+		user1 = createAccount().setLogPrefix("user1").build();
+		user2 = createAccount().setLogPrefix("user2").build();
+		user3 = createAccount().setLogPrefix("user3").build();
+		user1Jaxmpp = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+		user2Jaxmpp = user2.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+		user3Jaxmpp = user3.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
+
+		muc1Module = user1Jaxmpp.getModule(MucModule.class);
+		muc2Module = user2Jaxmpp.getModule(MucModule.class);
+		muc3Module = user3Jaxmpp.getModule(MucModule.class);
+		mucModules = Arrays.asList(muc1Module, muc2Module, muc3Module);
+
+		roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1.getJid().getDomain());
+
+		joinAll();
+		sentMessages = sendRandomMessages(20);
+	}
+
+	protected Jaxmpp configureJaxmpp(Jaxmpp jaxmpp) {
+		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+		return jaxmpp;
 	}
 
 	protected List<Item> sendRandomMessages(int messages) throws Exception {
@@ -175,57 +173,6 @@ public class TestMessageArchiveManagement
 		}
 
 		return Collections.unmodifiableList(sentMessages);
-	}
-
-	private List<Item> assertRetrievedMessages(Mutex mutex, BareJID roomJID, List<Item> expMessages, Jaxmpp user1Jaxmpp,
-											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier)
-			throws Exception {
-		List<Item> receivedMessages = new ArrayList<>();
-		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) -> {
-			receivedMessages.add(new Item(message.getFrom().getResource(), timestamp, message.getBody(), messageId));
-		};
-		user1Jaxmpp.getEventBus()
-				.addHandler(
-						MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
-						handler);
-
-		String queryId = UUID.randomUUID().toString();
-		user1Jaxmpp.getModule(MessageArchiveManagementModule.class)
-				.queryItems(query, JID.jidInstance(roomJID), null, queryId, rsm,
-							new MessageArchiveManagementModule.ResultCallback() {
-								@Override
-								public void onSuccess(String queryid, boolean complete, RSM rsm)
-										throws JaxmppException {
-									verifier.check(complete, rsm);
-									mutex.notify("mam:success:" + queryid + ":count=" + rsm.getCount());
-								}
-
-								@Override
-								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-										throws JaxmppException {
-
-								}
-
-								@Override
-								public void onTimeout() throws JaxmppException {
-
-								}
-							});
-		mutex.waitFor(30 * 1000, "mam:success:" + queryId + ":count=" + expMessages.size());
-
-		Thread.sleep(500);
-
-		assertEquals(expMessages.size(), receivedMessages.size());
-		expMessages.forEach(sent -> {
-			Optional<Item> recv = receivedMessages.stream().filter(sent::equals).findFirst();
-			assertTrue(recv.isPresent());
-		});
-
-		user1Jaxmpp.getEventBus()
-				.remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
-						handler);
-
-		return receivedMessages;
 	}
 
 	protected void joinAll() throws Exception {
@@ -300,6 +247,57 @@ public class TestMessageArchiveManagement
 		joinAs(user3Jaxmpp, roomJID, "user3", "joinAs:user3");
 	}
 
+	private List<Item> assertRetrievedMessages(Mutex mutex, BareJID roomJID, List<Item> expMessages, Jaxmpp user1Jaxmpp,
+											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier)
+			throws Exception {
+		List<Item> receivedMessages = new ArrayList<>();
+		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) -> {
+			receivedMessages.add(new Item(message.getFrom().getResource(), timestamp, message.getBody(), messageId));
+		};
+		user1Jaxmpp.getEventBus()
+				.addHandler(
+						MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+						handler);
+
+		String queryId = UUID.randomUUID().toString();
+		user1Jaxmpp.getModule(MessageArchiveManagementModule.class)
+				.queryItems(query, JID.jidInstance(roomJID), null, queryId, rsm,
+							new MessageArchiveManagementModule.ResultCallback() {
+								@Override
+								public void onSuccess(String queryid, boolean complete, RSM rsm)
+										throws JaxmppException {
+									verifier.check(complete, rsm);
+									mutex.notify("mam:success:" + queryid + ":count=" + rsm.getCount());
+								}
+
+								@Override
+								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										throws JaxmppException {
+
+								}
+
+								@Override
+								public void onTimeout() throws JaxmppException {
+
+								}
+							});
+		mutex.waitFor(30 * 1000, "mam:success:" + queryId + ":count=" + expMessages.size());
+
+		Thread.sleep(500);
+
+		assertEquals(expMessages.size(), receivedMessages.size());
+		expMessages.forEach(sent -> {
+			Optional<Item> recv = receivedMessages.stream().filter(sent::equals).findFirst();
+			assertTrue(recv.isPresent());
+		});
+
+		user1Jaxmpp.getEventBus()
+				.remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+						handler);
+
+		return receivedMessages;
+	}
+
 	private void joinAs(final Jaxmpp jaxmpp, final BareJID roomJID, final String nick, String expectedEvent)
 			throws InterruptedException {
 		final Mutex mutex = new Mutex();
@@ -352,9 +350,9 @@ public class TestMessageArchiveManagement
 
 	private class Item {
 
+		public final String body;
 		public final String msgId;
 		public final String nickname;
-		public final String body;
 		public final Date ts;
 
 		private Item(String nickname, Date ts, String body) {
@@ -372,7 +370,8 @@ public class TestMessageArchiveManagement
 		public boolean equals(Object obj) {
 			if (obj instanceof Item) {
 				Item o = (Item) obj;
-				return body.equals(o.body) && nickname.equals(o.nickname) && ((ts.getTime()/1000) == (o.ts.getTime()/1000));
+				return body.equals(o.body) && nickname.equals(o.nickname) &&
+						((ts.getTime() / 1000) == (o.ts.getTime() / 1000));
 			}
 			return false;
 		}

@@ -21,12 +21,12 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Created by andrzej on 21.06.2017.
  */
-public class TestPresenceDeliveryToUserWithNegativePriority extends AbstractTest {
+public class TestPresenceDeliveryToUserWithNegativePriority
+		extends AbstractTest {
 
 	private Account userA;
-	private Account userB;
-
 	private Jaxmpp userAjaxmpp;
+	private Account userB;
 	private Jaxmpp userBjaxmpp;
 
 	@BeforeMethod
@@ -56,7 +56,8 @@ public class TestPresenceDeliveryToUserWithNegativePriority extends AbstractTest
 			}
 		};
 
-		userAjaxmpp.getEventBus().addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, handler);
+		userAjaxmpp.getEventBus()
+				.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, handler);
 
 		Presence p = Presence.createPresence();
 		p.setTo(JID.jidInstance(userA.getJid()));
@@ -64,7 +65,7 @@ public class TestPresenceDeliveryToUserWithNegativePriority extends AbstractTest
 		String id = nextRnd();
 		p.setId(id);
 		userBjaxmpp.send(p);
-		
+
 		mutex.waitFor(20 * 1000, "received:presence:" + id);
 		assertTrue(mutex.isItemNotified("received:presence:" + id));
 
@@ -79,5 +80,5 @@ public class TestPresenceDeliveryToUserWithNegativePriority extends AbstractTest
 		mutex.waitFor(20 * 1000, "received:presence:" + id);
 		assertFalse(mutex.isItemNotified("received:presence:" + id));
 	}
-	
+
 }

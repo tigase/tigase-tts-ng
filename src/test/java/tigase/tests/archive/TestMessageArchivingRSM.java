@@ -46,13 +46,14 @@ import static org.testng.Assert.assertEquals;
 /**
  * Created by andrzej on 25.07.2016.
  */
-public class TestMessageArchivingRSM extends AbstractTest {
-	private final Mutex mutex = new Mutex();
+public class TestMessageArchivingRSM
+		extends AbstractTest {
 
-	private Account user1;
-	private Account user2;
+	private final Mutex mutex = new Mutex();
 	private Jaxmpp jaxmppUser1;
 	private Jaxmpp jaxmppUser2;
+	private Account user1;
+	private Account user2;
 
 	@BeforeMethod
 	public void prepareTest() throws JaxmppException, InterruptedException {
@@ -84,30 +85,35 @@ public class TestMessageArchivingRSM extends AbstractTest {
 		msgs.addAll(generateMessages(jaxmppUser2, jaxmppUser1, "Test message 2 -", 25));
 
 		// retrieving last 10 items
-		Criteria crit = new Criteria().setWith(JID.jidInstance(user2.getJid())).setStart(start).setLastPage(true).setLimit(10);
-		jaxmppUser1.getModule(MessageArchivingModule.class).retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
+		Criteria crit = new Criteria().setWith(JID.jidInstance(user2.getJid()))
+				.setStart(start)
+				.setLastPage(true)
+				.setLimit(10);
+		jaxmppUser1.getModule(MessageArchivingModule.class)
+				.retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
 
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("1:" + id + ":retriveCollection:error");
-			}
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						mutex.notify("1:" + id + ":retriveCollection:error");
+					}
 
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("1:" + id + ":retriveCollection:timeout");
-			}
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("1:" + id + ":retriveCollection:timeout");
+					}
 
-			@Override
-			protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-				for (ChatItem item : chat.getItems()) {
-					retrievedMsgs.add(item.getBody());
-				}
-				before.append(chat.getFirst());
-				chat.getFirst();
-				mutex.notify("1:" + id + ":retriveCollection:received");
-			}
+					@Override
+					protected void onItemsReceived(ChatResultSet chat) throws XMLException {
+						for (ChatItem item : chat.getItems()) {
+							retrievedMsgs.add(item.getBody());
+						}
+						before.append(chat.getFirst());
+						chat.getFirst();
+						mutex.notify("1:" + id + ":retriveCollection:received");
+					}
 
-		});
+				});
 
-		mutex.waitFor( 20 * 1000, "1:" + id + ":retriveCollection:received" );
+		mutex.waitFor(20 * 1000, "1:" + id + ":retriveCollection:received");
 
 		assertEquals(10, retrievedMsgs.size());
 		List<String> expMsgs = msgs.subList(msgs.size() - 10, msgs.size());
@@ -117,29 +123,31 @@ public class TestMessageArchivingRSM extends AbstractTest {
 		crit.setLastPage(false);
 		crit.setBefore(before.toString());
 		retrievedMsgs.clear();
-		jaxmppUser1.getModule(MessageArchivingModule.class).retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
+		jaxmppUser1.getModule(MessageArchivingModule.class)
+				.retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
 
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("2:" + id + ":retriveCollection:error");
-			}
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						mutex.notify("2:" + id + ":retriveCollection:error");
+					}
 
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("2:" + id + ":retriveCollection:timeout");
-			}
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("2:" + id + ":retriveCollection:timeout");
+					}
 
-			@Override
-			protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-				for (ChatItem item : chat.getItems()) {
-					retrievedMsgs.add(item.getBody());
-				}
-				before.append(chat.getFirst());
-				chat.getFirst();
-				mutex.notify("2:" + id + ":retriveCollection:received");
-			}
+					@Override
+					protected void onItemsReceived(ChatResultSet chat) throws XMLException {
+						for (ChatItem item : chat.getItems()) {
+							retrievedMsgs.add(item.getBody());
+						}
+						before.append(chat.getFirst());
+						chat.getFirst();
+						mutex.notify("2:" + id + ":retriveCollection:received");
+					}
 
-		});
+				});
 
-		mutex.waitFor( 20 * 1000, "2:" + id + ":retriveCollection:received" );
+		mutex.waitFor(20 * 1000, "2:" + id + ":retriveCollection:received");
 
 		assertEquals(10, retrievedMsgs.size());
 		expMsgs = msgs.subList(msgs.size() - 20, msgs.size() - 10);
@@ -150,38 +158,41 @@ public class TestMessageArchivingRSM extends AbstractTest {
 		crit.setBefore(null);
 		before.delete(0, before.length());
 		retrievedMsgs.clear();
-		jaxmppUser1.getModule(MessageArchivingModule.class).retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
+		jaxmppUser1.getModule(MessageArchivingModule.class)
+				.retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
 
-			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				mutex.notify("3:" + id + ":retriveCollection:error");
-			}
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						mutex.notify("3:" + id + ":retriveCollection:error");
+					}
 
-			public void onTimeout() throws JaxmppException {
-				mutex.notify("3:" + id + ":retriveCollection:timeout");
-			}
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("3:" + id + ":retriveCollection:timeout");
+					}
 
-			@Override
-			protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-				for (ChatItem item : chat.getItems()) {
-					retrievedMsgs.add(item.getBody());
-				}
-				before.append(chat.getFirst());
-				chat.getFirst();
-				mutex.notify("3:" + id + ":retriveCollection:received");
-			}
+					@Override
+					protected void onItemsReceived(ChatResultSet chat) throws XMLException {
+						for (ChatItem item : chat.getItems()) {
+							retrievedMsgs.add(item.getBody());
+						}
+						before.append(chat.getFirst());
+						chat.getFirst();
+						mutex.notify("3:" + id + ":retriveCollection:received");
+					}
 
-		});
+				});
 
-		mutex.waitFor( 20 * 1000, "3:" + id + ":retriveCollection:received" );
+		mutex.waitFor(20 * 1000, "3:" + id + ":retriveCollection:received");
 
 		assertEquals(10, retrievedMsgs.size());
 		expMsgs = msgs.subList(0, 10);
 		assertEquals(expMsgs, retrievedMsgs);
 	}
 
-	private List<String> generateMessages(Jaxmpp sender, Jaxmpp receiver, String msgPrefix, int count) throws Exception {
+	private List<String> generateMessages(Jaxmpp sender, Jaxmpp receiver, String msgPrefix, int count)
+			throws Exception {
 		List<String> sendMessages = new ArrayList<String>();
-		for (int i=0; i<count; i++) {
+		for (int i = 0; i < count; i++) {
 			String msg = msgPrefix + " " + i;
 			sendAndWait(sender, receiver, msg);
 			sendMessages.add(msg);
@@ -191,30 +202,31 @@ public class TestMessageArchivingRSM extends AbstractTest {
 		return sendMessages;
 	}
 
-	private void setArchiveSettings( Jaxmpp user, final String id, boolean enable ) throws JaxmppException, InterruptedException {
-		if ( user.isConnected() ){
-			user.disconnect( true );
-			Thread.sleep( 500 );
-			user.login( true );
+	private void setArchiveSettings(Jaxmpp user, final String id, boolean enable)
+			throws JaxmppException, InterruptedException {
+		if (user.isConnected()) {
+			user.disconnect(true);
+			Thread.sleep(500);
+			user.login(true);
 		}
 
-		user.getModule( MessageArchivingModule.class ).setAutoArchive( enable, new AsyncCallback() {
+		user.getModule(MessageArchivingModule.class).setAutoArchive(enable, new AsyncCallback() {
 
-			public void onError( Stanza responseStanza, XMPPException.ErrorCondition error ) throws JaxmppException {
-				mutex.notify( "setArchiveSettings:" + id + ":error" );
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				mutex.notify("setArchiveSettings:" + id + ":error");
 			}
 
 			@Override
-			public void onSuccess( Stanza responseStanza ) throws XMLException {
-				mutex.notify( "setArchiveSettings:" + id + ":success" );
+			public void onSuccess(Stanza responseStanza) throws XMLException {
+				mutex.notify("setArchiveSettings:" + id + ":success");
 			}
 
 			public void onTimeout() throws JaxmppException {
-				mutex.notify( "setArchiveSettings:" + id + ":timeout" );
+				mutex.notify("setArchiveSettings:" + id + ":timeout");
 			}
-		} );
+		});
 
-		Thread.sleep( 2 * 1000 );
+		Thread.sleep(2 * 1000);
 	}
 
 }

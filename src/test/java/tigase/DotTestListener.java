@@ -27,24 +27,25 @@ import org.testng.TestListenerAdapter;
 
 import static tigase.TestLogger.log;
 
-public class DotTestListener extends TestListenerAdapter {
+public class DotTestListener
+		extends TestListenerAdapter {
 
 	@Override
-	public void onStart( ITestContext testContext ) {
-		super.onStart( testContext );
+	public void onStart(ITestContext testContext) {
+		super.onStart(testContext);
 
-		log( "" );
-		log( "Running: " + testContext.getName() );
-		log( "------------------------------------" );
+		log("");
+		log("Running: " + testContext.getName());
+		log("------------------------------------");
 	}
 
 	@Override
-	public void onTestStart( ITestResult result ) {
-		super.onTestStart( result );
+	public void onTestStart(ITestResult result) {
+		super.onTestStart(result);
 
-		log( "" );
-		log( result.getTestName() + " / " + result.getTestClass() );
-		log( "------------------------------------" );
+		log("");
+		log(result.getTestName() + " / " + result.getTestClass());
+		log("------------------------------------");
 
 	}
 

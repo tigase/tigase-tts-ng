@@ -42,19 +42,19 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 /**
- * TestPubSub and TestRestApiUsingXML execute simialar tests however in extended form.
- * I think we can drop this test.
- *
+ * TestPubSub and TestRestApiUsingXML execute simialar tests however in extended form. I think we can drop this test.
+ * <p>
  * Created by andrzej on 27.03.2016.
  */
 @Deprecated
-public class TestPubSubOld extends AbstractTest {
+public class TestPubSubOld
+		extends AbstractTest {
 
-	private Map<String,Jaxmpp> jaxmpps = new HashMap<>();
-	private JID pubsubJid;
+	private Map<String, NodeInfo> createdNodes = new HashMap<>();
+	private Map<String, Jaxmpp> jaxmpps = new HashMap<>();
 	private Mutex mutex = new Mutex();
-	private Map<String,NodeInfo> createdNodes = new HashMap<>();
-	private Map<String,NodeInfo> parentNodes = new HashMap<>();
+	private Map<String, NodeInfo> parentNodes = new HashMap<>();
+	private JID pubsubJid;
 
 	@Test
 	public void test_nodeCreationModificationAndRemoval() throws Exception {
@@ -63,7 +63,7 @@ public class TestPubSubOld extends AbstractTest {
 			initConnections();
 			ensureNodeItemExists(null, null, null, false);
 			for (String hostname : getInstanceHostnames()) {
-				NodeInfo ni  = new NodeInfo();
+				NodeInfo ni = new NodeInfo();
 				createNode(jaxmpps.get(hostname), ni.getNode(), ni.getName(), false);
 				createdNodes.put(hostname, ni);
 				// on old version we need to wait
@@ -72,7 +72,7 @@ public class TestPubSubOld extends AbstractTest {
 				ensureNodeItemExists(ni.getNode(), ni.getName(), null, true);
 			}
 			for (String hostname : getInstanceHostnames()) {
-				NodeInfo ni  = new NodeInfo();
+				NodeInfo ni = new NodeInfo();
 				createNode(jaxmpps.get(hostname), ni.getNode(), ni.getName(), true);
 				parentNodes.put(hostname, ni);
 				// on old version we need to wait
@@ -111,40 +111,40 @@ public class TestPubSubOld extends AbstractTest {
 		}
 	}
 
-	private void createNode(Jaxmpp jaxmpp, String nodeName, String name, boolean collection) throws JaxmppException, InterruptedException {
+	private void createNode(Jaxmpp jaxmpp, String nodeName, String name, boolean collection)
+			throws JaxmppException, InterruptedException {
 		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
 		nodeCfg.addTextSingleField("pubsub#title", name);
 		if (collection) {
 			nodeCfg.addTextSingleField("pubsub#node_type", "collection");
 		}
-		jaxmpp.getModule(PubSubModule.class).createNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+		jaxmpp.getModule(PubSubModule.class)
+				.createNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+						mutex.notify("created:node:" + nodeName + ":" + name);
+					}
 
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
 
-			@Override
-			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("created:node:" + nodeName + ":" + name);
-			}
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
 
-			}
-		});
+					}
+				});
 		mutex.waitFor(10 * 1000, "created:node:" + nodeName + ":" + name);
 
-		assertTrue("Creation of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("created:node:" + nodeName + ":" + name));
+		assertTrue(
+				"Creation of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
+						" failed", mutex.isItemNotified("created:node:" + nodeName + ":" + name));
 	}
 
 	private void deleteNode(Jaxmpp jaxmpp, String nodeName, String name) throws JaxmppException, InterruptedException {
 		jaxmpp.getModule(PubSubModule.class).deleteNode(pubsubJid.getBareJid(), nodeName, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-
-			}
-
 			@Override
 			public void onSuccess(Stanza stanza) throws JaxmppException {
 				mutex.notify("deleted:node:" + nodeName + ":" + name);
@@ -154,65 +154,85 @@ public class TestPubSubOld extends AbstractTest {
 			public void onTimeout() throws JaxmppException {
 
 			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+
+			}
 		});
 		mutex.waitFor(10 * 1000, "deleted:node:" + nodeName + ":" + name);
-		assertTrue("Removal of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("deleted:node:" + nodeName + ":" + name));
+		assertTrue("Removal of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
+						   " failed", mutex.isItemNotified("deleted:node:" + nodeName + ":" + name));
 	}
 
-	private void configureNode(Jaxmpp jaxmpp, String nodeName, String parentNode) throws JaxmppException, InterruptedException {
+	private void configureNode(Jaxmpp jaxmpp, String nodeName, String parentNode)
+			throws JaxmppException, InterruptedException {
 		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
 		nodeCfg.addTextSingleField("pubsub#collection", parentNode);
-		jaxmpp.getModule(PubSubModule.class).configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+		jaxmpp.getModule(PubSubModule.class)
+				.configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+						mutex.notify("configured:node:" + nodeName + ":" + parentNode);
+					}
 
-			}
+					@Override
+					public void onTimeout() throws JaxmppException {
 
-			@Override
-			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("configured:node:" + nodeName + ":" + parentNode);
-			}
+					}
 
-			@Override
-			public void onTimeout() throws JaxmppException {
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
 
-			}
-		});
+					}
+				});
 		mutex.waitFor(10 * 1000, "configured:node:" + nodeName + ":" + parentNode);
-		assertTrue("Configuration of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
+		assertTrue("Configuration of node " + nodeName + " on " +
+						   jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed",
+				   mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
 	}
-	private void ensureNodeItemExists(String nodeName, String name, String parentNode, boolean exists) throws JaxmppException, InterruptedException {
+
+	private void ensureNodeItemExists(String nodeName, String name, String parentNode, boolean exists)
+			throws JaxmppException, InterruptedException {
 		String id = UUID.randomUUID().toString();
 		List<String> awaitFor = new ArrayList<>();
 		for (String hostname : this.getInstanceHostnames()) {
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
-			jaxmpp.getModule(DiscoveryModule.class).getItems(pubsubJid, parentNode, new DiscoveryModule.DiscoItemsAsyncCallback() {
-				@Override
-				public void onInfoReceived(String node, ArrayList<DiscoveryModule.Item> items) throws XMLException {
-					items.forEach((it) -> {
-						mutex.notify("received:node:" + id + ":" + hostname + ":" + it.getNode() + ":" + it.getName());
+			jaxmpp.getModule(DiscoveryModule.class)
+					.getItems(pubsubJid, parentNode, new DiscoveryModule.DiscoItemsAsyncCallback() {
+						@Override
+						public void onInfoReceived(String node, ArrayList<DiscoveryModule.Item> items)
+								throws XMLException {
+							items.forEach((it) -> {
+								mutex.notify("received:node:" + id + ":" + hostname + ":" + it.getNode() + ":" +
+													 it.getName());
+							});
+							mutex.notify("received:nodes:" + id + ":" + hostname);
+						}
+
+						@Override
+						public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+								throws JaxmppException {
+							assertTrue(false);
+						}
+
+						@Override
+						public void onTimeout() throws JaxmppException {
+							assertTrue(false);
+						}
 					});
-					mutex.notify("received:nodes:" + id + ":" + hostname);
-				}
-
-				@Override
-				public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
-					assertTrue(false);
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					assertTrue(false);
-				}
-			});
 			awaitFor.add("received:nodes:" + id + ":" + hostname);
 		}
 		mutex.waitFor(10 * 1000, awaitFor.toArray(new String[awaitFor.size()]));
 		if (nodeName != null) {
 			for (String hostname : getInstanceHostnames()) {
-				boolean val = mutex.isItemNotified("received:node:" + id + ":" + hostname + ":" + nodeName + ":" + name);
+				boolean val = mutex.isItemNotified(
+						"received:node:" + id + ":" + hostname + ":" + nodeName + ":" + name);
 
-				assertEquals((exists ? "Not found" : "Found") + " node " + nodeName + " on cluster node " + hostname, exists, val);
+				assertEquals((exists ? "Not found" : "Found") + " node " + nodeName + " on cluster node " + hostname,
+							 exists, val);
 			}
 		}
 	}
@@ -230,12 +250,14 @@ public class TestPubSubOld extends AbstractTest {
 	private void closeConnections() throws JaxmppException {
 		for (String hostname : this.getInstanceHostnames()) {
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
-			if (jaxmpp != null && jaxmpp.isConnected())
+			if (jaxmpp != null && jaxmpp.isConnected()) {
 				jaxmpp.disconnect(true);
+			}
 		}
 	}
 
 	private class NodeInfo {
+
 		private String id = UUID.randomUUID().toString();
 
 		public String getName() {

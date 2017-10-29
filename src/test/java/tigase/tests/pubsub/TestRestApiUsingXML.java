@@ -42,20 +42,27 @@ import java.util.stream.Collectors;
 import static org.testng.AssertJUnit.*;
 
 /**
- * Test is responsible for testing PubSub component node creation
- * manipulation and removal including publication and retraction
- * of PubSub node items using PubSub protocol and AdHoc commands.
- *
- * This test is executed on one or many cluster nodes and during
- * execution checks propagation of changes between cluster nodes.
- *
+ * Test is responsible for testing PubSub component node creation manipulation and removal including publication and
+ * retraction of PubSub node items using PubSub protocol and AdHoc commands.
+ * <p>
+ * This test is executed on one or many cluster nodes and during execution checks propagation of changes between cluster
+ * nodes.
+ * <p>
  * Created by andrzej on 10.07.2016.
  */
 public class TestRestApiUsingXML
 		extends TestRestApiAbstract {
 
+	protected static void assertCDataEquals(String expected, Element result, String[] path) throws XMLException {
+		assertNotNull(result);
+		Element node = result.findChild(path);
+		assertNotNull(node);
+		assertEquals(expected, node.getValue());
+	}
+
 	// HTTP API based implementation
-	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection) throws Exception {
+	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection)
+			throws Exception {
 		Element command = ElementFactory.create("data");
 
 		command.addChild(ElementFactory.create("node", nodeName, null));
@@ -70,7 +77,7 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "create-node", command);
 		assertNotNull(result);
 
-		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+		assertCDataEquals("Operation successful", result, new String[]{"result", "Note", "value"});
 	}
 
 	public void deleteNode(String hostname, String nodeName) throws Exception {
@@ -81,7 +88,7 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "delete-node", command);
 		assertNotNull(result);
 
-		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+		assertCDataEquals("Operation successful", result, new String[]{"result", "Note", "value"});
 	}
 
 	public void subscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
@@ -96,7 +103,7 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "subscribe-node", command);
 		assertNotNull(result);
 
-		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+		assertCDataEquals("Operation successful", result, new String[]{"result", "Note", "value"});
 	}
 
 	public void unsubscribeNode(String hostname, BareJID jid, String nodeName) throws Exception {
@@ -111,10 +118,11 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "unsubscribe-node", command);
 		assertNotNull(result);
 
-		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+		assertCDataEquals("Operation successful", result, new String[]{"result", "Note", "value"});
 	}
 
-	public void publishItemToNode(String hostname, BareJID owner, String nodeName, String itemId, Element payload) throws Exception {
+	public void publishItemToNode(String hostname, BareJID owner, String nodeName, String itemId, Element payload)
+			throws Exception {
 		Element command = ElementFactory.create("data");
 
 		command.addChild(ElementFactory.create("node", nodeName, null));
@@ -126,28 +134,7 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "publish-item", command);
 		assertNotNull(result);
 
-		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
-	}
-
-	@Override
-	protected void retrieveItemFromNode(String hostname, String nodeName, String itemId, ResultCallback<Element> callback)
-			throws Exception {
-		Element command = ElementFactory.create("data");
-
-		command.addChild(ElementFactory.create("node", nodeName, null));
-		command.addChild(ElementFactory.create("item-id", itemId, null));
-
-		Element result = executeHttpApiRequest(hostname, "retrieve-item", command);
-		assertCDataEquals(nodeName, result, new String[] { "result", "node", "value" });
-		assertCDataEquals(itemId, result, new String[] { "result", "item-id", "value" });
-
-		Element pubsubItem = result.findChild(new String[] { "result", "item", "value", "item" });
-		assertNotNull(pubsubItem);
-
-		Element payload = pubsubItem.getFirstChild();
-		assertNotNull(payload);
-
-		callback.finished(payload);
+		assertCDataEquals("Operation successful", result, new String[]{"result", "Note", "value"});
 	}
 
 	public void retractItemFromNode(String hostname, String nodeName, String itemId) throws Exception {
@@ -159,12 +146,63 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "delete-item", command);
 		assertNotNull(result);
 
-		assertCDataEquals("Operation successful", result, new String[] { "result", "Note", "value" });
+		assertCDataEquals("Operation successful", result, new String[]{"result", "Note", "value"});
+	}
+
+	/** This is not available in HTTP API - we are doing this using PubSub protocol */
+	public void configureNode(String hostname, String nodeName, String parentNode)
+			throws JaxmppException, InterruptedException {
+		Jaxmpp jaxmpp = jaxmpps.get(hostname);
+		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
+		nodeCfg.addTextSingleField("pubsub#collection", parentNode);
+		jaxmpp.getModule(PubSubModule.class)
+				.configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+						mutex.notify("configured:node:" + nodeName + ":" + parentNode);
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+
+					}
+
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+
+					}
+				});
+		mutex.waitFor(10 * 1000, "configured:node:" + nodeName + ":" + parentNode);
+		assertTrue("Configuration of node " + nodeName + " on " +
+						   jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed",
+				   mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
 	}
 
 	@Override
-	protected void retrieveUserSubscriptions(String hostname, BareJID user, String nodePattern, ResultCallback<List<String>> callback)
-			throws Exception {
+	protected void retrieveItemFromNode(String hostname, String nodeName, String itemId,
+										ResultCallback<Element> callback) throws Exception {
+		Element command = ElementFactory.create("data");
+
+		command.addChild(ElementFactory.create("node", nodeName, null));
+		command.addChild(ElementFactory.create("item-id", itemId, null));
+
+		Element result = executeHttpApiRequest(hostname, "retrieve-item", command);
+		assertCDataEquals(nodeName, result, new String[]{"result", "node", "value"});
+		assertCDataEquals(itemId, result, new String[]{"result", "item-id", "value"});
+
+		Element pubsubItem = result.findChild(new String[]{"result", "item", "value", "item"});
+		assertNotNull(pubsubItem);
+
+		Element payload = pubsubItem.getFirstChild();
+		assertNotNull(payload);
+
+		callback.finished(payload);
+	}
+
+	@Override
+	protected void retrieveUserSubscriptions(String hostname, BareJID user, String nodePattern,
+											 ResultCallback<List<String>> callback) throws Exception {
 		Element command = ElementFactory.create("data");
 		command.addChild(ElementFactory.create("jid", user.toString(), null));
 		if (nodePattern != null) {
@@ -174,38 +212,13 @@ public class TestRestApiUsingXML
 		Element result = executeHttpApiRequest(hostname, "retrieve-user-subscriptions", command);
 		assertNotNull(result);
 
-		callback.finished(result.getFirstChild("nodes").getChildren().stream().map( valueEl -> {
+		callback.finished(result.getFirstChild("nodes").getChildren().stream().map(valueEl -> {
 			try {
 				return XMLUtils.unescape(valueEl.getValue());
 			} catch (XMLException ex) {
 				return null;
 			}
 		}).collect(Collectors.toList()));
-	}
-
-	/** This is not available in HTTP API - we are doing this using PubSub protocol */
-	public void configureNode(String hostname, String nodeName, String parentNode) throws JaxmppException, InterruptedException {
-		Jaxmpp jaxmpp = jaxmpps.get(hostname);
-		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
-		nodeCfg.addTextSingleField("pubsub#collection", parentNode);
-		jaxmpp.getModule(PubSubModule.class).configureNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition, PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-
-			}
-
-			@Override
-			public void onSuccess(Stanza stanza) throws JaxmppException {
-				mutex.notify("configured:node:" + nodeName + ":" + parentNode);
-			}
-
-			@Override
-			public void onTimeout() throws JaxmppException {
-
-			}
-		});
-		mutex.waitFor(10 * 1000, "configured:node:" + nodeName + ":" + parentNode);
-		assertTrue("Configuration of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed", mutex.isItemNotified("configured:node:" + nodeName + ":" + parentNode));
 	}
 
 	protected Element executeHttpApiRequest(String hostname, String action, Element command)
@@ -216,13 +229,6 @@ public class TestRestApiUsingXML
 		assertEquals("result", response.getName());
 
 		return response;
-	}
-
-	protected static void assertCDataEquals(String expected, Element result, String[] path) throws XMLException {
-		assertNotNull(result);
-		Element node = result.findChild(path);
-		assertNotNull(node);
-		assertEquals(expected, node.getValue());
 	}
 
 }

@@ -53,25 +53,11 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class PubSubManager {
 
-	private final AbstractTest test;
-
 	private final ConcurrentHashMap<Object, Set<PubSubNode>> nodes = new ConcurrentHashMap<>();
+	private final AbstractTest test;
 
 	public PubSubManager(AbstractTest test) {
 		this.test = test;
-	}
-
-	private Object getScopeKey() {
-		Object key;
-		key = test.CURRENT_METHOD.get();
-		if (key == null) {
-			key = test.CURRENT_CLASS.get();
-			if (key == null) {
-				key = test.CURRENT_SUITE.get();
-			}
-		}
-
-		return key;
 	}
 
 	public PubSubNodeBuilder createNode(String node) {
@@ -83,16 +69,10 @@ public class PubSubManager {
 		deleteNode(node, jaxmpp);
 		jaxmpp.disconnect(true);
 	}
-	
+
 	public void deleteNode(PubSubNode node, Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		Mutex mutex = new Mutex();
 		jaxmpp.getModule(PubSubModule.class).deleteNode(node.getPubsubJid(), node.getName(), new PubSubAsyncCallback() {
-			@Override
-			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
-								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-
-			}
-
 			@Override
 			public void onSuccess(Stanza stanza) throws JaxmppException {
 				mutex.notify("deleted:node:" + node.getName());
@@ -102,10 +82,17 @@ public class PubSubManager {
 			public void onTimeout() throws JaxmppException {
 
 			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+
+			}
 		});
 		mutex.waitFor(10 * 1000, "deleted:node:" + node.getName());
-		assertTrue("Removal of node " + node.getName() + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
-						   " failed", mutex.isItemNotified("deleted:node:" + node.getName()));
+		assertTrue("Removal of node " + node.getName() + " on " +
+						   jaxmpp.getSessionObject().getProperty("socket#ServerHost") + " failed",
+				   mutex.isItemNotified("deleted:node:" + node.getName()));
 
 		remove(node);
 	}
@@ -115,6 +102,39 @@ public class PubSubManager {
 		deleteNode(node, jaxmpp);
 	}
 
+	public void add(PubSubNode node) {
+		Object key = getScopeKey();
+		add(node, key);
+	}
+
+	public void add(PubSubNode node, Object scopeKey) {
+		if (nodes.computeIfAbsent(scopeKey, (k) -> new CopyOnWriteArraySet<>()).add(node)) {
+			System.out.println("created pubsub node = " + node);
+		}
+	}
+
+	public void remove(PubSubNode node) {
+		Object key = getScopeKey();
+		remove(node, key);
+	}
+
+	public void remove(PubSubNode node, Object key) {
+		if (nodes.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).remove(node)) {
+			System.out.println("deleted pubsub node = " + node);
+		}
+	}
+
+	public void scopeFinished() {
+		Object key = getScopeKey();
+		nodes.getOrDefault(key, new HashSet<>()).forEach(node -> {
+			try {
+				deleteNode(node);
+			} catch (JaxmppException | InterruptedException e) {
+				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove node " + node, e);
+			}
+		});
+	}
+
 	protected PubSubNode createNode(PubSubNodeBuilder builder, JabberDataElement nodeCfg)
 			throws JaxmppException, InterruptedException {
 		BareJID pubsubJid = builder.getPubSubJid();
@@ -122,7 +142,8 @@ public class PubSubManager {
 		final Mutex mutex = new Mutex();
 
 		if (builder.getIfNotExists() || builder.getReplaceIfExists()) {
-			builder.getJaxmpp().getModule(DiscoveryModule.class)
+			builder.getJaxmpp()
+					.getModule(DiscoveryModule.class)
 					.getItems(JID.jidInstance(pubsubJid), new DiscoveryModule.DiscoItemsAsyncCallback() {
 						@Override
 						public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items)
@@ -150,92 +171,77 @@ public class PubSubManager {
 				return null;
 			}
 			if (builder.getReplaceIfExists()) {
-				builder.getJaxmpp().getModule(PubSubModule.class).deleteNode(pubsubJid, nodeName, new PubSubAsyncCallback() {
-					@Override
-					protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
-										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-						mutex.notify(nodeName + ":node_removed:error");
-						mutex.notify(nodeName + ":node_removed");
-					}
+				builder.getJaxmpp()
+						.getModule(PubSubModule.class)
+						.deleteNode(pubsubJid, nodeName, new PubSubAsyncCallback() {
+							@Override
+							public void onSuccess(Stanza responseStanza) throws JaxmppException {
+								mutex.notify(nodeName + ":node_removed:success");
+								mutex.notify(nodeName + ":node_removed");
+							}
 
-					@Override
-					public void onSuccess(Stanza responseStanza) throws JaxmppException {
-						mutex.notify(nodeName + ":node_removed:success");
-						mutex.notify(nodeName + ":node_removed");
-					}
+							@Override
+							public void onTimeout() throws JaxmppException {
+								mutex.notify(nodeName + ":node_removed:timeout");
+								mutex.notify(nodeName + ":node_removed");
+							}
 
-					@Override
-					public void onTimeout() throws JaxmppException {
-						mutex.notify(nodeName + ":node_removed:timeout");
-						mutex.notify(nodeName + ":node_removed");
-					}
-				});
+							@Override
+							protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+												  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+								mutex.notify(nodeName + ":node_removed:error");
+								mutex.notify(nodeName + ":node_removed");
+							}
+						});
 				mutex.waitFor(30 * 1000, nodeName + ":node_removed");
 				Assert.assertTrue(mutex.isItemNotified(nodeName + ":node_removed:success"));
 			}
 		}
 
-		builder.getJaxmpp().getModule(PubSubModule.class)
+		builder.getJaxmpp()
+				.getModule(PubSubModule.class)
 				.createNode(pubsubJid, nodeName, nodeCfg, new PubSubAsyncCallback() {
 					@Override
-					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
-										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-						if (errorCondition == XMPPException.ErrorCondition.conflict && (builder.getIfNotExists() || builder.getReplaceIfExists())) {
-							mutex.notify(nodeName + ":create_node:success");
-						}
-						mutex.notify( nodeName + ":create_node" );
-					}
-
-					@Override
 					public void onSuccess(Stanza stanza) throws JaxmppException {
-						mutex.notify( nodeName + ":create_node:success" );
-						mutex.notify( nodeName + ":create_node" );
+						mutex.notify(nodeName + ":create_node:success");
+						mutex.notify(nodeName + ":create_node");
 					}
 
 					@Override
 					public void onTimeout() throws JaxmppException {
-						mutex.notify( nodeName + ":create_node" );
+						mutex.notify(nodeName + ":create_node");
+					}
+
+					@Override
+					protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						if (errorCondition == XMPPException.ErrorCondition.conflict &&
+								(builder.getIfNotExists() || builder.getReplaceIfExists())) {
+							mutex.notify(nodeName + ":create_node:success");
+						}
+						mutex.notify(nodeName + ":create_node");
 					}
 				});
-		mutex.waitFor( 30 * 1000, nodeName + ":create_node" );
-		Assert.assertTrue(mutex.isItemNotified(nodeName + ":create_node:success" ), "PubSub node " + nodeName + " not created" );
+		mutex.waitFor(30 * 1000, nodeName + ":create_node");
+		Assert.assertTrue(mutex.isItemNotified(nodeName + ":create_node:success"),
+						  "PubSub node " + nodeName + " not created");
 
 		PubSubNode node = new PubSubNode(this, pubsubJid, nodeName);
 		add(node);
 		return node;
 	}
 
-	public void add(PubSubNode node) {
-		Object key = getScopeKey();
-		add(node, key);
-	}
-
-	public void add(PubSubNode node, Object scopeKey) {
-		if (nodes.computeIfAbsent(scopeKey, (k)-> new CopyOnWriteArraySet<>()).add(node)) {
-			System.out.println("created pubsub node = " + node);
-		}
-	}
-
-	public void remove(PubSubNode node) {
-		Object key = getScopeKey();
-		remove(node, key);
-	}
-
-	public void remove(PubSubNode node, Object key) {
-		if (nodes.computeIfAbsent(key, (k)-> new CopyOnWriteArraySet<>()).remove(node)) {
-			System.out.println("deleted pubsub node = " + node);
-		}
-	}
-
-	public void scopeFinished() {
-		Object key = getScopeKey();
-		nodes.getOrDefault(key, new HashSet<>()).forEach(node -> {
-			try {
-				deleteNode(node);
-			} catch (JaxmppException | InterruptedException e) {
-				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove node " + node, e);
+	private Object getScopeKey() {
+		Object key;
+		key = test.CURRENT_METHOD.get();
+		if (key == null) {
+			key = test.CURRENT_CLASS.get();
+			if (key == null) {
+				key = test.CURRENT_SUITE.get();
 			}
-		});
+		}
+
+		return key;
 	}
 
 }

@@ -31,13 +31,17 @@ import java.util.Objects;
  */
 public class PubSubNode {
 
+	public enum Type {
+		leaf,
+		collection
+	}
 	private final PubSubManager manager;
-	private final BareJID pubsubJid;
 	private final String name;
+	private final BareJID pubsubJid;
 
 	public PubSubNode(PubSubManager manager, BareJID pubsubJid, String name) {
 		this.manager = manager;
-		this.pubsubJid  = pubsubJid;
+		this.pubsubJid = pubsubJid;
 		this.name = name;
 	}
 
@@ -70,11 +74,6 @@ public class PubSubNode {
 	@Override
 	public String toString() {
 		return "PubSubNode[jid=" + pubsubJid + ",node=" + name + "]";
-	}
-
-	public enum Type {
-		leaf,
-		collection
 	}
 
 }

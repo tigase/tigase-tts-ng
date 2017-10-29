@@ -35,10 +35,11 @@ import static org.testng.Assert.assertTrue;
 /**
  * Created by andrzej on 17.09.2016.
  */
-public class TestReconnections extends AbstractJaxmppTest {
+public class TestReconnections
+		extends AbstractJaxmppTest {
 
-	private Account user;
 	private Jaxmpp jaxmpp;
+	private Account user;
 
 	@BeforeMethod
 	public void prepareAccountAndJaxmpp() throws JaxmppException, InterruptedException {

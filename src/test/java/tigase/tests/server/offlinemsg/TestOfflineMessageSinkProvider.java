@@ -45,7 +45,8 @@ import tigase.tests.utils.PubSubNode;
 import java.util.Arrays;
 import java.util.Date;
 
-public class TestOfflineMessageSinkProvider extends AbstractTest {
+public class TestOfflineMessageSinkProvider
+		extends AbstractTest {
 
 	private PubSubNode testNode;
 	private Account userA;
@@ -60,7 +61,7 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 		preparePubSubNode(adminJaxmpp);
 	}
 
-	@Test(groups = { "Offline Message" }, description = "Offline Message Sink Provider")
+	@Test(groups = {"Offline Message"}, description = "Offline Message Sink Provider")
 	public void testOfflineMessageSinkProvider() throws Exception {
 		final Mutex mutex = new Mutex();
 
@@ -69,8 +70,9 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 		pubSub.addNotificationReceivedHandler(new NotificationReceivedHandler() {
 
 			@Override
-			public void onNotificationReceived(SessionObject sessionObject, Message message, JID pubSubJID, String nodeName,
-					String itemId, Element payload, Date delayTime, String itemType) {
+			public void onNotificationReceived(SessionObject sessionObject, Message message, JID pubSubJID,
+											   String nodeName, String itemId, Element payload, Date delayTime,
+											   String itemType) {
 				try {
 					Message msg = (Message) Message.create(payload);
 					mutex.notify("received:" + msg.getBody());
@@ -97,7 +99,11 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 	}
 
 	private void preparePubSubNode(Jaxmpp ownerJaxmpp) throws JaxmppException, InterruptedException {
-		testNode = pubSubManager.createNode("test").setNodeType(PubSubNode.Type.leaf).setJaxmpp(ownerJaxmpp).setReplaceIfExists(true).build();
+		testNode = pubSubManager.createNode("test")
+				.setNodeType(PubSubNode.Type.leaf)
+				.setJaxmpp(ownerJaxmpp)
+				.setReplaceIfExists(true)
+				.build();
 
 		PubSubModule pubSub = ownerJaxmpp.getModule(PubSubModule.class);
 		String[] hostnames = getInstanceHostnames();
@@ -106,30 +112,33 @@ public class TestOfflineMessageSinkProvider extends AbstractTest {
 			Arrays.stream(hostnames).forEach(hostname -> {
 				try {
 					pubSub.setAffiliation(testNode.getPubsubJid(), testNode.getName(),
-										  JID.jidInstance("sess-man", hostname), Affiliation.publisher, new PubSubAsyncCallback() {
-								@Override
-								protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
-													  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-									mutex.notify(hostname  + ":affiliation:error");
-									mutex.notify(hostname  + ":affiliation");
-								}
+										  JID.jidInstance("sess-man", hostname), Affiliation.publisher,
+										  new PubSubAsyncCallback() {
+											  @Override
+											  public void onSuccess(Stanza responseStanza) throws JaxmppException {
+												  mutex.notify(hostname + ":affiliation:success");
+												  mutex.notify(hostname + ":affiliation");
+											  }
 
-								@Override
-								public void onSuccess(Stanza responseStanza) throws JaxmppException {
-									mutex.notify(hostname  + ":affiliation:success");
-									mutex.notify(hostname  + ":affiliation");
-								}
+											  @Override
+											  public void onTimeout() throws JaxmppException {
+												  mutex.notify(hostname + ":affiliation:timeout");
+												  mutex.notify(hostname + ":affiliation");
+											  }
 
-								@Override
-								public void onTimeout() throws JaxmppException {
-									mutex.notify(hostname  + ":affiliation:timeout");
-									mutex.notify(hostname  + ":affiliation");
-								}
-							});
+											  @Override
+											  protected void onEror(IQ response,
+																	XMPPException.ErrorCondition errorCondition,
+																	PubSubErrorCondition pubSubErrorCondition)
+													  throws JaxmppException {
+												  mutex.notify(hostname + ":affiliation:error");
+												  mutex.notify(hostname + ":affiliation");
+											  }
+										  });
 
 					mutex.waitFor(30 * 1000, hostname + ":affiliation");
 					Assert.assertTrue(mutex.isItemNotified(hostname + ":affiliation:success"));
-				} catch (JaxmppException|InterruptedException ex) {
+				} catch (JaxmppException | InterruptedException ex) {
 					ex.printStackTrace();
 				}
 			});

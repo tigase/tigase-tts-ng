@@ -25,28 +25,28 @@ import java.util.Date;
 
 public class TestLogger {
 
-	private static SimpleDateFormat dt = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
+	private static SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	public static void log(String s) {
-		log( s, true );
+		log(s, true);
 	}
 
 	public static void log(String s, Object[] params) {
-		log( s, true, params );
+		log(s, true, params);
 	}
 
 	public static void log(String s, boolean newline) {
 		log(s, newline, null);
 	}
+
 	public static void log(String s, boolean newline, Object[] params) {
-		String date = dt.format( new Date() ) + " | ";
+		String date = dt.format(new Date()) + " | ";
 		if (params != null) {
 			s = java.text.MessageFormat.format(s, params);
 		}
-		System.out.println( date + s );
-		Reporter.log( date + s + (newline ? "\n" : ""));
+		System.out.println(date + s);
+		Reporter.log(date + s + (newline ? "\n" : ""));
 //		Reporter.log( escapeHtml4( s ) );
 	}
-
 
 }

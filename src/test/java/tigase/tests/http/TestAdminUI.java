@@ -45,30 +45,29 @@ import java.util.UUID;
 import static org.testng.Assert.*;
 
 /**
- *
  * @author andrzej
  */
-public class TestAdminUI extends AbstractTest {
-	
-	private WebClient webClient;
+public class TestAdminUI
+		extends AbstractTest {
+
 	private DefaultCredentialsProvider credentialProvider;
+	private WebClient webClient;
 
 	@BeforeMethod
 	public void setUp() throws Exception {
 		credentialProvider = new DefaultCredentialsProvider();
-		credentialProvider.addCredentials(getAdminAccount().getJid().toString(),
-						getAdminAccount().getPassword());
+		credentialProvider.addCredentials(getAdminAccount().getJid().toString(), getAdminAccount().getPassword());
 		webClient = new WebClient();
 		webClient.setCredentialsProvider(credentialProvider);
 	}
 
 	@AfterMethod
-	public void cleanUp()  {
+	public void cleanUp() {
 		credentialProvider = null;
 		webClient = null;
 	}
-	
-	@Test(groups = { "HTTP - Admin" }, description = "Check authorization requirement")
+
+	@Test(groups = {"HTTP - Admin"}, description = "Check authorization requirement")
 	public void testAuthorization() throws IOException {
 		System.out.println("##### Check authorization requirement");
 		WebClient webClient = new WebClient();
@@ -79,24 +78,24 @@ public class TestAdminUI extends AbstractTest {
 			assertEquals(ex.getStatusCode(), 401);
 		}
 		webClient.setCredentialsProvider(credentialProvider);
-		Page p = webClient.getPage(getAdminUrl());		
+		Page p = webClient.getPage(getAdminUrl());
 		assertNotNull(p);
 	}
 
-	@Test(groups = { "HTTP - Admin" }, description = "Check 'Users' contains valid commands")
+	@Test(groups = {"HTTP - Admin"}, description = "Check 'Users' contains valid commands")
 	public void testCommandsAvailability() throws IOException {
 		System.out.println("##### Check 'Users' contains valid commands");
-		HtmlPage p = webClient.getPage(getAdminUrl());		
+		HtmlPage p = webClient.getPage(getAdminUrl());
 		HtmlAnchor userGroupLink = p.getAnchorByText("Users");
 		p = userGroupLink.click();
 		HtmlAnchor getUserInfoLink = p.getAnchorByText("Get User Info");
 		HtmlAnchor addUserLink = p.getAnchorByText("Add user");
-		HtmlAnchor changeUserPasswordLink = p.getAnchorByText("Change user password");	
+		HtmlAnchor changeUserPasswordLink = p.getAnchorByText("Change user password");
 		HtmlAnchor deleteUserLink = p.getAnchorByText("Delete user");
 		HtmlAnchor modifyUserLink = p.getAnchorByText("Modify user");
 	}
-	
-	@Test(groups = { "HTTP - Admin" }, description = "Check adding user")
+
+	@Test(groups = {"HTTP - Admin"}, description = "Check adding user")
 	public void testAddUser() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
 		System.out.println("##### Check adding user");
 		HtmlPage p = webClient.getPage(getAdminUrl());
@@ -109,23 +108,26 @@ public class TestAdminUI extends AbstractTest {
 		HtmlInput password1 = form.getInputByName("password");
 		HtmlInput password2 = form.getInputByName("password-verify");
 		HtmlInput email = form.getInputByName("email");
-		
+
 		BareJID jid = randomUserJid();
 		accountJid.setValueAttribute(jid.toString());
 		password1.setValueAttribute(jid.getLocalpart());
 		password2.setValueAttribute(jid.getLocalpart());
 		email.setValueAttribute("email+" + jid.toString());
 		HtmlSubmitInput button = form.getInputByName("submit");
-		
+
 		p = button.click();
 		form = p.getForms().get(0);
 		form.getInputByValue("Operation successful");
 
-		Account user1 = createAccount().setUsername(jid.getLocalpart()).setDomain(jid.getDomain()).setRegister(false).build();
+		Account user1 = createAccount().setUsername(jid.getLocalpart())
+				.setDomain(jid.getDomain())
+				.setRegister(false)
+				.build();
 		accountManager.add(user1);
-	}	
-	
-	@Test(groups = { "HTTP - Admin" }, description = "Check delete user")
+	}
+
+	@Test(groups = {"HTTP - Admin"}, description = "Check delete user")
 	public void testDeleteUser() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
 		System.out.println("##### Check delete user");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
@@ -135,21 +137,21 @@ public class TestAdminUI extends AbstractTest {
 		p = userGroupLink.click();
 		HtmlAnchor delUserLink = p.getAnchorByText("Delete user");
 		p = delUserLink.click();
-		
+
 		HtmlForm form = p.getForms().get(0);
 		HtmlTextArea accountJids = form.getTextAreaByName("accountjids");
 		accountJids.setText(user1.getJid().toString());
-		
+
 		HtmlSubmitInput button = form.getInputByName("submit");
-		
+
 		p = button.click();
 		form = p.getForms().get(0);
 		HtmlTextArea notes = form.getTextAreaByName("Notes");
 		assertTrue(notes.getText().contains("Operation successful for user " + user1.getJid().toString()));
 		accountManager.remove(user1);
-	}	
-	
-	@Test(groups = { "HTTP - Admin" }, description = "Check modify user")
+	}
+
+	@Test(groups = {"HTTP - Admin"}, description = "Check modify user")
 	public void testModifyUser() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
 		System.out.println("##### Check modify user");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
@@ -162,42 +164,42 @@ public class TestAdminUI extends AbstractTest {
 		p = userGroupLink.click();
 		HtmlAnchor modUserLink = p.getAnchorByText("Modify user");
 		p = modUserLink.click();
-		
+
 		HtmlForm form = p.getForms().get(0);
 		HtmlTextInput accountJid = form.getInputByName("accountjid");
 		accountJid.setValueAttribute(user1.getJid().toString());
-		
+
 		HtmlSubmitInput button = form.getInputByName("submit");
 		p = button.click();
-		
+
 		form = p.getForms().get(0);
-		
+
 		HtmlTextInput email = form.getInputByName("email");
 		email.setValueAttribute(user1.getJid().toString());
-		HtmlCheckBoxInput enabled = form.getInputByName("Account enabled");	
+		HtmlCheckBoxInput enabled = form.getInputByName("Account enabled");
 		enabled.setChecked(false);
-		
-		button = form.getInputByName("submit");	
+
+		button = form.getInputByName("submit");
 		p = button.click();
-		
+
 		form = p.getForms().get(0);
 		form.getInputByValue("Operation successful");
-				
+
 		p = webClient.getPage(getAdminUrl());
 		userGroupLink = p.getAnchorByText("Users");
 		p = userGroupLink.click();
 		modUserLink = p.getAnchorByText("Modify user");
 		p = modUserLink.click();
-		
+
 		form = p.getForms().get(0);
 		accountJid = form.getInputByName("accountjid");
 		accountJid.setValueAttribute(user1.getJid().toString());
-		
+
 		button = form.getInputByName("submit");
 		p = button.click();
-		
+
 		form = p.getForms().get(0);
-		
+
 		email = form.getInputByName("email");
 		assertEquals(email.getValueAttribute(), user1.getJid().toString());
 		enabled = form.getInputByName("Account enabled");
@@ -206,27 +208,28 @@ public class TestAdminUI extends AbstractTest {
 
 		assertFalse(userJaxmpp1.isConnected());
 		try {
-			userJaxmpp1.getEventBus().addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class,
-												 (sessionObject, error) -> {
-													 synchronized (userJaxmpp1) {
-														 userJaxmpp1.notify();
-													 }
-													 userJaxmpp1.disconnect(true);
-												 });
+			userJaxmpp1.getEventBus()
+					.addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, (sessionObject, error) -> {
+						synchronized (userJaxmpp1) {
+							userJaxmpp1.notify();
+						}
+						userJaxmpp1.disconnect(true);
+					});
 			userJaxmpp1.login(true);
 		} catch (Exception ex) {
 		}
-		assertFalse(userJaxmpp1.isConnected());				
-		
-		button = form.getInputByName("submit");		
+		assertFalse(userJaxmpp1.isConnected());
+
+		button = form.getInputByName("submit");
 		p = button.click();
-		
+
 		form = p.getForms().get(0);
 		form.getInputByValue("Operation successful");
-	}	
-	
-	@Test(groups = { "HTTP - Admin" }, description = "Check get user info - user online")
-	public void testGetUserInfoUserOnline() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
+	}
+
+	@Test(groups = {"HTTP - Admin"}, description = "Check get user info - user online")
+	public void testGetUserInfoUserOnline()
+			throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
 		System.out.println("##### Check get user info - online");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
 		accountManager.remove(user1);
@@ -237,14 +240,14 @@ public class TestAdminUI extends AbstractTest {
 		p = userGroupLink.click();
 		HtmlAnchor getUserLink = p.getAnchorByText("Get User Info");
 		p = getUserLink.click();
-		
+
 		HtmlForm form = p.getForms().get(0);
 		HtmlTextInput accountJid = form.getInputByName("accountjid");
 		accountJid.setValueAttribute(user1.getJid().toString());
 
 		HtmlSubmitInput button = form.getInputByName("submit");
 		p = button.click();
-		
+
 		form = p.getForms().get(0);
 		assertEquals(form.getInputByName("JID").getValueAttribute(), "JID: " + user1.getJid().toString());
 		assertEquals(form.getInputByName("Status").getValueAttribute(), "Status: online");
@@ -254,15 +257,18 @@ public class TestAdminUI extends AbstractTest {
 		DomNodeList<HtmlElement> tbody = tables.get(0).getElementsByTagName("tbody");
 		DomNodeList<HtmlElement> trs = tbody.get(0).getElementsByTagName("tr");
 		Iterator<DomElement> tds = trs.get(0).getChildElements().iterator();
-		assertEquals(tds.next().asText(), ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource());
-		
+		assertEquals(tds.next().asText(),
+					 ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource());
+
 		trs = tbody.get(0).getElementsByTagName("tr");
 		tds = trs.get(0).getChildElements().iterator();
-		assertEquals(tds.next().asText(), ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource());
-	}	
-	
-	@Test(groups = { "HTTP - Admin" }, description = "Check get user info - user offline")
-	public void testGetUserInfoUserOffline() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
+		assertEquals(tds.next().asText(),
+					 ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource());
+	}
+
+	@Test(groups = {"HTTP - Admin"}, description = "Check get user info - user offline")
+	public void testGetUserInfoUserOffline()
+			throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
 		System.out.println("##### Check get user info - offline");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
 		Jaxmpp userJaxmpp1 = user1.createJaxmpp().setConnected(true).build();
@@ -274,22 +280,22 @@ public class TestAdminUI extends AbstractTest {
 		JID to = JID.jidInstance(user1.getJid());
 		userJaxmpp2.getModule(MessageModule.class).sendMessage(to, null, "Test message 1");
 		userJaxmpp2.getModule(MessageModule.class).sendMessage(to, null, "Test message 2");
-		
+
 		Thread.sleep(2000);
-		
+
 		HtmlPage p = webClient.getPage(getAdminUrl());
 		HtmlAnchor userGroupLink = p.getAnchorByText("Users");
 		p = userGroupLink.click();
 		HtmlAnchor getUserLink = p.getAnchorByText("Get User Info");
 		p = getUserLink.click();
-		
+
 		HtmlForm form = p.getForms().get(0);
 		HtmlTextInput accountJid = form.getInputByName("accountjid");
 		accountJid.setValueAttribute(user1.getJid().toString());
-		
+
 		HtmlSubmitInput button = form.getInputByName("submit");
 		p = button.click();
-		
+
 		form = p.getForms().get(0);
 		assertEquals(form.getInputByName("JID").getValueAttribute(), "JID: " + user1.getJid().toString());
 		assertEquals(form.getInputByName("Status").getValueAttribute(), "Status: offline");
@@ -305,16 +311,16 @@ public class TestAdminUI extends AbstractTest {
 			}
 		}
 	}
-	
+
 	private BareJID randomUserJid() throws TigaseStringprepException {
 		return BareJID.bareJIDInstance(getUserPrefix() + UUID.randomUUID().toString(), getDomain());
 	}
-	
+
 	private String getUserPrefix() {
 		return "http-admin_";
 	}
-	
-	private String getAdminUrl() { 
+
+	private String getAdminUrl() {
 		return "http://" + getDomain(0) + ":" + getHttpPort() + "/admin/";
 	}
 }

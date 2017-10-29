@@ -46,24 +46,14 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Created by andrzej on 13.07.2016.
  */
-public abstract class TestPubSubAbstract extends AbstractTest {
+public abstract class TestPubSubAbstract
+		extends AbstractTest {
 
-	protected Map<String,Jaxmpp> jaxmpps = new HashMap<>();
-	protected JID pubsubJid;
+	protected Map<String, NodeInfo> createdNodes = new HashMap<>();
+	protected Map<String, Jaxmpp> jaxmpps = new HashMap<>();
 	protected Mutex mutex = new Mutex();
-	protected Map<String,NodeInfo> createdNodes = new HashMap<>();
-	protected Map<String,NodeInfo> parentNodes = new HashMap<>();
-
-	protected abstract void createNode(String hostname, BareJID owner, String node, String name, boolean collection) throws Exception;
-	protected abstract void configureNode(String hostname, String node, String parentNode) throws Exception;
-	protected abstract void subscribeNode(String hostname, BareJID subscriber, String node) throws Exception;
-	protected abstract void unsubscribeNode(String hostname, BareJID subscriber, String node) throws Exception;
-	protected abstract void deleteNode(String hostname, String node) throws Exception;
-
-	protected abstract void publishItemToNode(String hostname, BareJID publisher, String node, String itemId, Element payload) throws Exception;
-	protected abstract void retrieveItemFromNode(String hostname, String node, String itemId, ResultCallback<Element> callback) throws Exception;
-	protected abstract void retractItemFromNode(String hostname, String node, String itemId) throws Exception;
-	protected abstract void retrieveUserSubscriptions(String hostname, BareJID userJid, String nodePattern, ResultCallback<List<String>> callback) throws Exception;
+	protected Map<String, NodeInfo> parentNodes = new HashMap<>();
+	protected JID pubsubJid;
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -71,11 +61,11 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		initConnections();
 		ensureNodeItemExists(null, null, null, false);
 	}
-	
+
 	@Test
 	public void createNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
-			NodeInfo ni  = new NodeInfo();
+			NodeInfo ni = new NodeInfo();
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
 			createNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), ni.getNode(), ni.getName(), false);
 			pubSubManager.add(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), ni.getName()), this.getClass());
@@ -87,10 +77,10 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "createNodes" })
+	@Test(dependsOnMethods = {"createNodes"})
 	public void createSubnodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
-			NodeInfo ni  = new NodeInfo();
+			NodeInfo ni = new NodeInfo();
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
 			createNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), ni.getNode(), ni.getName(), true);
 			pubSubManager.add(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), ni.getName()), getClass());
@@ -102,7 +92,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "createSubnodes" })
+	@Test(dependsOnMethods = {"createSubnodes"})
 	public void configureNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
@@ -114,7 +104,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "configureNodes" })
+	@Test(dependsOnMethods = {"configureNodes"})
 	public void subscribeNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			for (NodeInfo ni : createdNodes.values()) {
@@ -125,7 +115,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "retractItemsFromNodes" })
+	@Test(dependsOnMethods = {"retractItemsFromNodes"})
 	public void unsubscribeNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			for (NodeInfo ni : createdNodes.values()) {
@@ -136,7 +126,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "unsubscribeNodes" })
+	@Test(dependsOnMethods = {"unsubscribeNodes"})
 	public void deleteSubnodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
@@ -151,7 +141,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "deleteSubnodes" })
+	@Test(dependsOnMethods = {"deleteSubnodes"})
 	public void deleteNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = parentNodes.get(hostname);
@@ -165,7 +155,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "subscribeNodes" })
+	@Test(dependsOnMethods = {"subscribeNodes"})
 	public void publishItemsToNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
@@ -173,35 +163,44 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			String itemId = ni.getItemId();
 			Element payload = ElementFactory.create("test", itemId, null);
 			ni.setItemPayload(payload);
-			String[] waitFor = jaxmpps.values().stream().map(jaxmpp1 -> "published:item:notified" + itemId + ":" + jaxmpp1.getSessionObject().getUserBareJid()).toArray(i -> new String[i]);
+			String[] waitFor = jaxmpps.values()
+					.stream()
+					.map(jaxmpp1 -> "published:item:notified" + itemId + ":" +
+							jaxmpp1.getSessionObject().getUserBareJid())
+					.toArray(i -> new String[i]);
 			PubSubModule.NotificationReceivedHandler handler = new PubSubModule.NotificationReceivedHandler() {
 				@Override
-				public void onNotificationReceived(SessionObject sessionObject, Message message, JID jid, String node, String itemId, Element element, Date date, String s2) {
+				public void onNotificationReceived(SessionObject sessionObject, Message message, JID jid, String node,
+												   String itemId, Element element, Date date, String s2) {
 					mutex.notify("published:item:notified" + itemId + ":" + sessionObject.getUserBareJid());
 				}
 			};
-			jaxmpps.values().forEach( jaxmpp1 -> jaxmpp1.getEventBus().addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class, handler));
+			jaxmpps.values()
+					.forEach(jaxmpp1 -> jaxmpp1.getEventBus()
+							.addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class,
+										handler));
 
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
-			publishItemToNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), ni.getNode(), ni.getItemId(), payload);
+			publishItemToNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), ni.getNode(), ni.getItemId(),
+							  payload);
 
 			mutex.waitFor(10 * 1000, waitFor);
 			for (String waitedFor : waitFor) {
 				assertTrue(mutex.isItemNotified(waitedFor));
 			}
-			jaxmpps.values().forEach(jaxmpp1 -> jaxmpp1.getEventBus().remove(handler) );
+			jaxmpps.values().forEach(jaxmpp1 -> jaxmpp1.getEventBus().remove(handler));
 		}
 	}
 
-
-	@Test(dependsOnMethods = { "publishItemsToNodes" })
+	@Test(dependsOnMethods = {"publishItemsToNodes"})
 	public void retrieveItemsFromNodes() throws Exception {
 		createdNodes.values().forEach((NodeInfo ni) -> {
 			for (String hostname : getInstanceHostnames()) {
 				try {
 					String waitFor = "retrieved:item:" + ni.getItemId() + ":payload-matches:true:" + hostname;
 					retrieveItemFromNode(hostname, ni.getNode(), ni.getItemId(), (Element payload) -> {
-						mutex.notify("retrieved:item:" + ni.getItemId() + ":payload-matches:" + ni.getItemPayload().equals(payload) + ":" + hostname);
+						mutex.notify("retrieved:item:" + ni.getItemId() + ":payload-matches:" +
+											 ni.getItemPayload().equals(payload) + ":" + hostname);
 					});
 
 					mutex.waitFor(10 * 1000, waitFor);
@@ -213,25 +212,36 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		});
 	}
 
-	@Test(dependsOnMethods = { "retrieveItemsFromNodes" })
+	@Test(dependsOnMethods = {"retrieveItemsFromNodes"})
 	public void retractItemsFromNodes() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
 
-			String itemId =  ni.getItemId();
-			String[] waitFor = jaxmpps.values().stream().map(jaxmpp1 -> "retracted:item:notified" + itemId + ":" + jaxmpp1.getSessionObject().getUserBareJid()).toArray(i -> new String[i]);
+			String itemId = ni.getItemId();
+			String[] waitFor = jaxmpps.values()
+					.stream()
+					.map(jaxmpp1 -> "retracted:item:notified" + itemId + ":" +
+							jaxmpp1.getSessionObject().getUserBareJid())
+					.toArray(i -> new String[i]);
 			PubSubModule.NotificationReceivedHandler handler = new PubSubModule.NotificationReceivedHandler() {
 				@Override
-				public void onNotificationReceived(SessionObject sessionObject, Message message, JID jid, String node, String itemId, Element element, Date date, String s2) {
+				public void onNotificationReceived(SessionObject sessionObject, Message message, JID jid, String node,
+												   String itemId, Element element, Date date, String s2) {
 					try {
-						String id = message.getFirstChild("event").getFirstChild("items").getFirstChild("retract").getAttribute("id");
+						String id = message.getFirstChild("event")
+								.getFirstChild("items")
+								.getFirstChild("retract")
+								.getAttribute("id");
 						mutex.notify("retracted:item:notified" + id + ":" + sessionObject.getUserBareJid());
 					} catch (Exception ex) {
 						assertTrue(false);
 					}
 				}
 			};
-			jaxmpps.values().forEach( jaxmpp1 -> jaxmpp1.getEventBus().addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class, handler));
+			jaxmpps.values()
+					.forEach(jaxmpp1 -> jaxmpp1.getEventBus()
+							.addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class,
+										handler));
 
 			retractItemFromNode(hostname, ni.getNode(), ni.getItemId());
 
@@ -239,11 +249,11 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			for (String waitedFor : waitFor) {
 				assertTrue(mutex.isItemNotified(waitedFor));
 			}
-			jaxmpps.values().forEach(jaxmpp1 -> jaxmpp1.getEventBus().remove(handler) );
+			jaxmpps.values().forEach(jaxmpp1 -> jaxmpp1.getEventBus().remove(handler));
 		}
 	}
 
-	@Test(dependsOnMethods = { "publishItemsToNodes" })
+	@Test(dependsOnMethods = {"publishItemsToNodes"})
 	public void retrieveUserSubscriptions() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
@@ -254,7 +264,7 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "publishItemsToNodes" })
+	@Test(dependsOnMethods = {"publishItemsToNodes"})
 	public void retrieveUserSubscriptionsWithRegex() throws Exception {
 		for (String hostname : getInstanceHostnames()) {
 			NodeInfo ni = createdNodes.get(hostname);
@@ -265,42 +275,70 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		}
 	}
 
-	private void ensureNodeItemExists(String nodeName, String name, String parentNode, boolean exists) throws JaxmppException, InterruptedException {
+	protected abstract void createNode(String hostname, BareJID owner, String node, String name, boolean collection)
+			throws Exception;
+
+	protected abstract void configureNode(String hostname, String node, String parentNode) throws Exception;
+
+	protected abstract void subscribeNode(String hostname, BareJID subscriber, String node) throws Exception;
+
+	protected abstract void unsubscribeNode(String hostname, BareJID subscriber, String node) throws Exception;
+
+	protected abstract void deleteNode(String hostname, String node) throws Exception;
+
+	protected abstract void publishItemToNode(String hostname, BareJID publisher, String node, String itemId,
+											  Element payload) throws Exception;
+
+	protected abstract void retrieveItemFromNode(String hostname, String node, String itemId,
+												 ResultCallback<Element> callback) throws Exception;
+
+	protected abstract void retractItemFromNode(String hostname, String node, String itemId) throws Exception;
+
+	protected abstract void retrieveUserSubscriptions(String hostname, BareJID userJid, String nodePattern,
+													  ResultCallback<List<String>> callback) throws Exception;
+
+	private void ensureNodeItemExists(String nodeName, String name, String parentNode, boolean exists)
+			throws JaxmppException, InterruptedException {
 		String id = UUID.randomUUID().toString();
 		List<String> awaitFor = new ArrayList<>();
 		for (String hostname : this.getInstanceHostnames()) {
 			Jaxmpp jaxmpp = jaxmpps.get(hostname);
-			jaxmpp.getModule(DiscoveryModule.class).getItems(pubsubJid, parentNode, new DiscoveryModule.DiscoItemsAsyncCallback() {
-				@Override
-				public void onInfoReceived(String node, ArrayList<DiscoveryModule.Item> items) throws XMLException {
-					items.forEach((it) -> {
-						mutex.notify("received:node:" + id + ":" + hostname + ":" + it.getNode() + ":" + it.getName());
+			jaxmpp.getModule(DiscoveryModule.class)
+					.getItems(pubsubJid, parentNode, new DiscoveryModule.DiscoItemsAsyncCallback() {
+						@Override
+						public void onInfoReceived(String node, ArrayList<DiscoveryModule.Item> items)
+								throws XMLException {
+							items.forEach((it) -> {
+								mutex.notify("received:node:" + id + ":" + hostname + ":" + it.getNode() + ":" +
+													 it.getName());
+							});
+							mutex.notify("received:nodes:" + id + ":" + hostname);
+						}
+
+						@Override
+						public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+								throws JaxmppException {
+							assertTrue(false);
+						}
+
+						@Override
+						public void onTimeout() throws JaxmppException {
+							assertTrue(false);
+						}
 					});
-					mutex.notify("received:nodes:" + id + ":" + hostname);
-				}
-
-				@Override
-				public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
-					assertTrue(false);
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					assertTrue(false);
-				}
-			});
 			awaitFor.add("received:nodes:" + id + ":" + hostname);
 		}
 		mutex.waitFor(10 * 1000, awaitFor.toArray(new String[awaitFor.size()]));
 		if (nodeName != null) {
 			for (String hostname : getInstanceHostnames()) {
-				boolean val = mutex.isItemNotified("received:node:" + id + ":" + hostname + ":" + nodeName + ":" + name);
+				boolean val = mutex.isItemNotified(
+						"received:node:" + id + ":" + hostname + ":" + nodeName + ":" + name);
 
-				assertEquals((exists ? "Not found" : "Found") + " node " + nodeName + " on cluster node " + hostname, exists, val);
+				assertEquals((exists ? "Not found" : "Found") + " node " + nodeName + " on cluster node " + hostname,
+							 exists, val);
 			}
 		}
 	}
-
 
 	private void initConnections() throws JaxmppException {
 		for (String hostname : this.getInstanceHostnames()) {
@@ -311,8 +349,15 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			jaxmpps.put(hostname, jaxmpp);
 		}
 	}
-	
+
+	public interface ResultCallback<T> {
+
+		void finished(T result);
+
+	}
+
 	private class NodeInfo {
+
 		private String id = UUID.randomUUID().toString();
 		private String itemId = UUID.randomUUID().toString();
 		private Element payload = null;
@@ -325,7 +370,9 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 			return "node-" + id;
 		}
 
-		public String getItemId() { return "item-" + itemId; }
+		public String getItemId() {
+			return "item-" + itemId;
+		}
 
 		public Element getItemPayload() {
 			return payload;
@@ -334,11 +381,5 @@ public abstract class TestPubSubAbstract extends AbstractTest {
 		protected void setItemPayload(Element payload) {
 			this.payload = payload;
 		}
-	}
-
-	public interface ResultCallback<T> {
-
-		void finished(T result);
-
 	}
 }
