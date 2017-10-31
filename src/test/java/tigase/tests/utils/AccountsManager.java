@@ -39,6 +39,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.UnifiedRegistrationForm;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -247,6 +248,7 @@ public class AccountsManager {
 			jaxmpp1.getModulesManager().register(new RosterModule());
 			jaxmpp1.getModulesManager().register(new MessageArchivingModule());
 			jaxmpp1.getModulesManager().register(new PubSubModule());
+			jaxmpp1.getModulesManager().register(new VCardModule());
 
 			tigase.jaxmpp.j2se.Presence.initialize(jaxmpp1);
 

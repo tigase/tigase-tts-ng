@@ -496,6 +496,11 @@
         </dependency>
         <dependency>
             <groupId>tigase</groupId>
+            <artifactId>jaxmpp-vcard</artifactId>
+            <version>${jaxmppVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>tigase</groupId>
             <artifactId>tigase-utils</artifactId>
             <version>3.4.4-SNAPSHOT</version>
         </dependency>
