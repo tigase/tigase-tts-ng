@@ -121,9 +121,10 @@ function tig_stop_server() {
 function sleep_fun() {
 	[[ -z ${1} ]] && local _sleep_timeout="1" || local _sleep_timeout=${1}
 
-    for i in $(seq -w -s' ' ${_sleep_timeout} -1 0); do
-        echo -ne "Sleeping: ${i}\r"
-        sleep 1
+    while [ ${_sleep_timeout} -gt 0 ] ; do
+        echo -ne "Sleeping: ${_sleep_timeout}\r"
+        sleep 5
+        _sleep_timeout=$((_sleep_timeout-5))
     done
     echo
 }
@@ -209,19 +210,31 @@ function run_test() {
 		tig_start_server ${_server_dir} "${CONFIG_BASE_DIR}/etc/tigase.conf"
 
         _PID=$(cat ${_server_dir}/logs/tigase.pid)
-        sleep_fun $(((${server_timeout} * 2)))
+        sleep_fun $(((${server_timeout} / 2)))
 
-        if ! ps -p"${_PID}" -o "pid=" >/dev/null 2>&1; then
-            echo "Process is NOT running... output of ${_server_dir}/logs/tigase-console.log";
+        counter=$(((${server_timeout} * 15)))
+        while [ $counter -gt 0 ] ; do
+            if ! ps -p"${_PID}" -o "pid=" >/dev/null 2>&1; then
+                echo "Process is NOT running... output of ${_server_dir}/logs/tigase-console.log";
 
-            cat ${_server_dir}/logs/tigase-console.log
+                cat ${_server_dir}/logs/tigase-console.log
 
-            tig_stop_server ${_server_dir} "etc/tigase.conf"
+                tig_stop_server ${_server_dir} "etc/tigase.conf"
 
-            copy_results ${_server_dir} ${_output_dir} "true"
+                copy_results ${_server_dir} ${_output_dir} "true"
 
-            return
-        fi
+                return
+            fi
+
+            if ! nc -z ${_server_ip} 5222 ; then
+                echo -ne "waiting for server: ${counter}\r"
+                sleep $(((${server_timeout} / 10)))
+                counter=$((counter-5))
+            else
+                break;
+            fi
+        done
+
 	else
 		echo "Skipped Tigase server starting."
 	fi
