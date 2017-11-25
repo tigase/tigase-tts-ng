@@ -8,6 +8,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractJaxmppTest;
 import tigase.tests.utils.Account;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 
 public class TestNonSaslAuthentication
@@ -34,6 +35,25 @@ public class TestNonSaslAuthentication
 		jaxmpp.login(true);
 
 		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testAuthFailure() throws JaxmppException {
+		jaxmpp = user.createJaxmpp().setConfigurator(jaxmpp -> {
+			SaslModule saslModule = jaxmpp.getModule(SaslModule.class);
+			if (saslModule != null) {
+				jaxmpp.getModulesManager().unregister(saslModule);
+			}
+			return jaxmpp;
+		}).build();
+
+		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
+		try {
+			jaxmpp.login(true);
+		} catch (JaxmppException ex) {
+		}
+
+		assertFalse(jaxmpp.isConnected());
 	}
 
 }
