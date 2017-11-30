@@ -28,6 +28,7 @@ import tigase.jaxmpp.core.client.connector.ConnectorWrapper;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
@@ -185,6 +186,9 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 
 	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayReconnectionAndPresence,
 											   StanzaType messageType) throws Exception {
+
+		long estimatedMessageDeliveryTime = estimateMessageDeliveryTime();
+
 		final Mutex mutex = new Mutex();
 
 		log("\n\n\n===== simulation of connection failure \n");
@@ -220,7 +224,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 		sendMessage(user1Jaxmpp, destination, messageType, body);
 
 		//Thread.sleep(delay + 65000);
-		Thread.sleep(1000);
+		Thread.sleep((estimatedMessageDeliveryTime * 2) + 1000);
 
 		user2Jaxmpp.getEventBus()
 				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
@@ -254,6 +258,9 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 
 	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayPresence,
 											   StanzaType messageType, long delayBinding) throws Exception {
+
+		long estimatedMessageDeliveryTime = estimateMessageDeliveryTime();
+
 		final Mutex mutex = new Mutex();
 
 		log("\n\n\n===== simulation of connection failure \n");
@@ -285,7 +292,8 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 
 		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");
-		Thread.sleep(1000);
+
+		Thread.sleep((estimatedMessageDeliveryTime * 2) + 1000);
 
 		user2Jaxmpp.getEventBus()
 				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
@@ -345,8 +353,29 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 		log("\n\n\n===== broadcasting presence \n");
 		user2Jaxmpp.getModule(PresenceModule.class).setPresence(Presence.Show.online, null, 5);
 
-		mutex.waitFor(2 * 5000, "message:" + body);
+		mutex.waitFor(resume ? 2 * 5000 : 150 * 1000, "message:" + body);
 		assertTrue("Message was not delivered!", mutex.isItemNotified("message:" + body));
+	}
+
+	private long estimateMessageDeliveryTime() throws Exception {
+		final Mutex mutex = new Mutex();
+		MessageModule.MessageReceivedHandler handler = (SessionObject sessionObject, Chat chat, Message message) -> {
+			try {
+				mutex.notify("message:" + message.getBody());
+			} catch (JaxmppException ex) {}
+		};
+		user2Jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
+		String body = UUID.randomUUID().toString();
+
+		long start = System.currentTimeMillis();
+		sendMessage(user1Jaxmpp, ResourceBinderModule.getBindedJID(user2Jaxmpp.getSessionObject()), StanzaType.chat, body);
+		mutex.waitFor(10 * 1000, "message:" + body);
+
+		user2Jaxmpp.getEventBus().remove(handler);
+
+		long end = System.currentTimeMillis();
+		long result =  end - start;
+		return result;
 	}
 
 	private void sendMessage(Jaxmpp jaxmpp, JID destination, StanzaType type, String body) throws Exception {
