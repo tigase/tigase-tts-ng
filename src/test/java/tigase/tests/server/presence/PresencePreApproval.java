@@ -82,6 +82,7 @@ public class PresencePreApproval
 		if (user1Jaxmpp.isConnected() && user2Jaxmpp.isConnected()) {
 			user1Jaxmpp.getModule(PresenceModule.class).subscribed(user2JID);
 
+			long start = System.currentTimeMillis();
 			user1Jaxmpp.getEventBus()
 					.addHandler(RosterModule.ItemAddedHandler.ItemAddedEvent.class,
 								(sessionObject, item, modifiedGroups) -> {
@@ -98,6 +99,8 @@ public class PresencePreApproval
 			mutex.waitFor(3 * 1000, "added:" + user2JID.getBareJid());
 			Assert.assertTrue(mutex.isItemNotified(user2JID.getBareJid() + ":none:true"), "User added correctly!");
 
+			long delay = System.currentTimeMillis() - start;
+
 			user1Jaxmpp.getEventBus()
 					.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class,
 								(sessionObject, stanza, jid) -> {
@@ -109,7 +112,7 @@ public class PresencePreApproval
 
 			Assert.assertFalse(mutex.isItemNotified(user1JID + ":subscribe:" + user2JID), ">subscribe< not filtered!");
 
-			Thread.sleep(1000);
+			Thread.sleep((delay * 2) + 1000);
 
 			Assert.assertTrue(user1Jaxmpp.getModulesManager()
 									  .getModule(RosterModule.class)

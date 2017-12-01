@@ -25,7 +25,9 @@ import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.ConnectorWrapper;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
@@ -86,6 +88,9 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS
 	}
 
 	public void testMessageDeliveryReliability(boolean fullJid) throws Exception {
+
+		long estimatedMessageDeliveryTime = estimateMessageDeliveryTime();
+
 		final Mutex mutex = new Mutex();
 
 		log("\n\n\n===== simulation of connection failure \n");
@@ -110,7 +115,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS
 		sendMessage(user1Jaxmpp, destination, StanzaType.chat, body);
 
 		//Thread.sleep(delay + 65000);
-		Thread.sleep(1000);
+		Thread.sleep((estimatedMessageDeliveryTime * 2) + 1000);
 
 		user2Jaxmpp.getEventBus()
 				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
@@ -170,6 +175,28 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS
 		}
 		return jaxmpp;
 	}
+
+	private long estimateMessageDeliveryTime() throws Exception {
+		final Mutex mutex = new Mutex();
+		MessageModule.MessageReceivedHandler handler = (SessionObject sessionObject, Chat chat, Message message) -> {
+			try {
+				mutex.notify("message:" + message.getBody());
+			} catch (JaxmppException ex) {}
+		};
+		user2Jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
+		String body = UUID.randomUUID().toString();
+
+		long start = System.currentTimeMillis();
+		sendMessage(user1Jaxmpp, ResourceBinderModule.getBindedJID(user2Jaxmpp.getSessionObject()), StanzaType.chat, body);
+		mutex.waitFor(10 * 1000, "message:" + body);
+
+		user2Jaxmpp.getEventBus().remove(handler);
+
+		long end = System.currentTimeMillis();
+		long result =  end - start;
+		return result;
+	}
+	
 
 	private void sendMessage(Jaxmpp jaxmpp, JID destination, StanzaType type, String body) throws Exception {
 		Message m = Message.create();

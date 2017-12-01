@@ -102,7 +102,8 @@ public class TestMessageArchivingTagsAndContains
 			forbiddenMessages.add(msg);
 			sendAndWait(userJaxmpp, userJaxmpp, msg);
 		}
-
+		Thread.sleep(2000);
+		
 		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp.getSessionObject().getUserBareJid()))
 				.setStart(testStartDate)
 				.addTags(tagName);
@@ -146,6 +147,7 @@ public class TestMessageArchivingTagsAndContains
 			forbiddenMessages.add(msg);
 			sendAndWait(userJaxmpp, userJaxmpp, msg);
 		}
+		Thread.sleep(2000);
 
 		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp.getSessionObject().getUserBareJid()))
 				.setStart(testStartDate)
@@ -176,6 +178,7 @@ public class TestMessageArchivingTagsAndContains
 			goodTags.add(tag);
 			sendAndWait(userJaxmpp, userJaxmpp, msg);
 		}
+		Thread.sleep(2000);
 
 		List<String> badTags = new ArrayList<String>();
 		for (int i = 0; i < 10; i++) {

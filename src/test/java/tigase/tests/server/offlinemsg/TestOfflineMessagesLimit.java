@@ -187,7 +187,11 @@ public class TestOfflineMessagesLimit
 								}
 							});
 
-		Thread.sleep(2000);
+		if (limit == -1 || 10 <= limit) {
+			Thread.sleep(2000);
+		} else {
+			mutex.waitFor(10 * 1000, "offline:message:error:" + sent.get(sent.size()-1));
+		}
 
 		receiver.login(true);
 
