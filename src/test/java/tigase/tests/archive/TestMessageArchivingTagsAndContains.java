@@ -104,7 +104,7 @@ public class TestMessageArchivingTagsAndContains
 			sendAndWait(userJaxmpp, userJaxmpp, msg);
 		}
 		Thread.sleep(2000);
-		
+
 		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp.getSessionObject().getUserBareJid()))
 				.setStart(testStartDate)
 				.addTags(tagName);

@@ -41,7 +41,8 @@ import tigase.tests.utils.Account;
 
 import static org.testng.AssertJUnit.assertTrue;
 
-public class TestVcardTemp extends AbstractTest {
+public class TestVcardTemp
+		extends AbstractTest {
 
 	private Jaxmpp jaxmpp1;
 
@@ -89,7 +90,7 @@ public class TestVcardTemp extends AbstractTest {
 		iq.setType(StanzaType.set);
 		iq.addChild(vCard.makeElement());
 
-		sendAndWait(jaxmpp1,iq, new AsyncCallback() {
+		sendAndWait(jaxmpp1, iq, new AsyncCallback() {
 			@Override
 			public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
 				Assert.fail("Cannot set vcard-temp");
@@ -106,7 +107,6 @@ public class TestVcardTemp extends AbstractTest {
 
 			}
 		});
-
 
 	}
 

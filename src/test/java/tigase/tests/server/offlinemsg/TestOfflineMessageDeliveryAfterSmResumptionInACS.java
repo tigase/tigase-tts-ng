@@ -182,22 +182,23 @@ public class TestOfflineMessageDeliveryAfterSmResumptionInACS
 		MessageModule.MessageReceivedHandler handler = (SessionObject sessionObject, Chat chat, Message message) -> {
 			try {
 				mutex.notify("message:" + message.getBody());
-			} catch (JaxmppException ex) {}
+			} catch (JaxmppException ex) {
+			}
 		};
 		user2Jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 		String body = UUID.randomUUID().toString();
 
 		long start = System.currentTimeMillis();
-		sendMessage(user1Jaxmpp, ResourceBinderModule.getBindedJID(user2Jaxmpp.getSessionObject()), StanzaType.chat, body);
+		sendMessage(user1Jaxmpp, ResourceBinderModule.getBindedJID(user2Jaxmpp.getSessionObject()), StanzaType.chat,
+					body);
 		mutex.waitFor(10 * 1000, "message:" + body);
 
 		user2Jaxmpp.getEventBus().remove(handler);
 
 		long end = System.currentTimeMillis();
-		long result =  end - start;
+		long result = end - start;
 		return result;
 	}
-	
 
 	private void sendMessage(Jaxmpp jaxmpp, JID destination, StanzaType type, String body) throws Exception {
 		Message m = Message.create();

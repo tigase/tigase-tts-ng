@@ -71,6 +71,7 @@ public class TestModificationOfPrivacyRulesUsingREST
 		CUSTOM,
 		BLOCK;
 	}
+
 	final Mutex mutex = new Mutex();
 	BareJID userRegular1JID_whitelist;
 	Jaxmpp userRegular1Jaxmpp_whitelist;

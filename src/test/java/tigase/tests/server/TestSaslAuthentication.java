@@ -80,7 +80,8 @@ public class TestSaslAuthentication
 		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
 		try {
 			jaxmpp.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 
 		assertFalse(jaxmpp.isConnected());
 	}
@@ -92,7 +93,8 @@ public class TestSaslAuthentication
 		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, "some-user");
 		try {
 			jaxmpp.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 
 		assertFalse(jaxmpp.isConnected());
 	}
@@ -120,7 +122,8 @@ public class TestSaslAuthentication
 		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
 		try {
 			jaxmpp.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 
 		assertFalse(jaxmpp.isConnected());
 	}
@@ -132,7 +135,8 @@ public class TestSaslAuthentication
 		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, "some-user");
 		try {
 			jaxmpp.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 
 		assertFalse(jaxmpp.isConnected());
 	}
@@ -160,7 +164,8 @@ public class TestSaslAuthentication
 		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
 		try {
 			jaxmpp.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 
 		assertFalse(jaxmpp.isConnected());
 	}
@@ -172,7 +177,8 @@ public class TestSaslAuthentication
 		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, "some-user");
 		try {
 			jaxmpp.login(true);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 
 		assertFalse(jaxmpp.isConnected());
 	}

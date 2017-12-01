@@ -34,6 +34,7 @@ public class PubSubNode {
 		leaf,
 		collection
 	}
+
 	private final PubSubManager manager;
 	private final String name;
 	private final BareJID pubsubJid;
