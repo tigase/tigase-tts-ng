@@ -60,7 +60,7 @@ import tigase.tests.Mutex;
 import tigase.tests.http.TestSendingXmppStanzaUsingREST;
 import tigase.tests.utils.Account;
 import tigase.tests.utils.PubSubNode;
-import tigase.util.DateTimeFormatter;
+import tigase.util.datetime.DateTimeFormatter;
 
 import java.io.IOException;
 import java.io.InputStream;
