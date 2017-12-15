@@ -38,15 +38,23 @@ import tigase.tests.Mutex;
 import tigase.tests.server.offlinemsg.TestOfflineMessagesLimit;
 import tigase.tests.utils.Account;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -54,6 +62,10 @@ import static org.testng.Assert.assertTrue;
  */
 public class TestWebSocketConnectivity
 		extends AbstractTest {
+
+	private final static Charset UTF_CHARSET = Charset.forName("UTF-8");
+	private static final String EOL = "\r\n";
+	private static final byte[] HTTP_RESPONSE_101 = "HTTP/1.1 101 ".getBytes(UTF_CHARSET);
 
 	private static final String USER_PREFIX = "ws_";
 
@@ -219,6 +231,51 @@ public class TestWebSocketConnectivity
 		mutex.waitFor(20 * 1000, "websocket:message:to:" + body);
 		Thread.sleep(1000);
 		assertTrue(mutex.isItemNotified("websocket:message:to:" + body));
+	}
+
+	@Test
+	public void testWebSocket_ConnectionHeaderCaseSensitivity() throws IOException, InterruptedException {
+		assertEquals(testConnectionHeaderCaseSensitivity("Upgrade"), HTTP_RESPONSE_101, "Unexpected response!");
+		assertEquals(testConnectionHeaderCaseSensitivity("Upgrade".toLowerCase()), HTTP_RESPONSE_101, "Unexpected response!");
+		assertEquals(testConnectionHeaderCaseSensitivity("Upgrade".toUpperCase()), HTTP_RESPONSE_101, "Unexpected response!");
+		assertNotEquals(testConnectionHeaderCaseSensitivity("ERROR"), HTTP_RESPONSE_101, "Unexpected response!");
+	}
+
+	public byte[] testConnectionHeaderCaseSensitivity(String header) throws IOException, InterruptedException {
+		URI uri = URI.create(getWebSocketURI());
+		String wskey = UUID.randomUUID().toString();
+		StringBuilder sb = new StringBuilder();
+		sb.append("GET ").append(uri.getPath() != null ? uri.getPath() : "/").append(" HTTP/1.1").append(EOL);
+		sb.append("Host: ").append(uri.getHost());
+		if (uri.getPort() != -1) {
+			sb.append(":").append(uri.getPort());
+		}
+		sb.append(EOL);
+		sb.append("Connection: ").append(header).append(EOL);
+		sb.append("Upgrade: websocket").append(EOL);
+		sb.append("Sec-WebSocket-Key: ").append(wskey).append(EOL);
+		sb.append("Sec-WebSocket-Protocol: ").append("xmpp").append(",").append("xmpp-framing").append(EOL);
+		sb.append("Sec-WebSocket-Version: 13").append(EOL);
+		sb.append(EOL);
+		byte[] buffer = sb.toString().getBytes(UTF_CHARSET);
+
+		Socket socket = new Socket();
+		socket.setKeepAlive(false);
+		socket.setTcpNoDelay(true);
+
+		socket.connect(new InetSocketAddress(uri.getHost(), uri.getPort()));
+
+		socket.getOutputStream().write(buffer);
+
+		buffer = new byte[4096];
+		while (socket.getInputStream().available() < HTTP_RESPONSE_101.length) {
+			Thread.sleep(100);
+		}
+		socket.getInputStream().read(buffer);
+
+		socket.close();
+		
+		return Arrays.copyOf(buffer, HTTP_RESPONSE_101.length);
 	}
 
 	private ByteBuffer generateTextFrame(String input) {
