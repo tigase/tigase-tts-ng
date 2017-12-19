@@ -32,6 +32,7 @@ import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.RetrieveItemsAsyncCallback;
@@ -255,5 +256,35 @@ public class TestRemovalOfPepNodeOnUserRemoval
 		mutex.waitFor(10 * 1000, "discovered:2:items:0");
 		assertTrue(mutex.isItemNotified("discovered:2:items:0"));
 		assertFalse(mutex.isItemNotified("discovered:2:item:http://jabber.org/protocol/geoloc"));
+
+		// testing node creation after recreation of an account to make sure that nodes were properly removed
+		user1 = createAccount().setUsername(user1.getJid().getLocalpart())
+				.setDomain(user1.getJid().getDomain())
+				.build();
+		jaxmpp1 = user1.createJaxmpp().setConnected(true).build();
+		jaxmpp1.getModulesManager().getModule(PubSubModule.class).createNode(user1.getJid(),
+																			 "http://jabber.org/protocol/geoloc", new PubSubAsyncCallback() {
+					@Override
+					protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+										  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+						mutex.notify("recreate-node:1:failure:" + errorCondition);
+						mutex.notify("recreate-node:1");
+					}
+
+					@Override
+					public void onSuccess(Stanza responseStanza) throws JaxmppException {
+						mutex.notify("recreate-node:1:success");
+						mutex.notify("recreate-node:1");
+
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("recreate-node:1:failure:timeout");
+						mutex.notify("recreate-node:1");
+					}
+				});
+		mutex.waitFor(10 * 1000, "recreate-node:1");
+		assertTrue(mutex.isItemNotified("recreate-node:1:success"));
 	}
 }
