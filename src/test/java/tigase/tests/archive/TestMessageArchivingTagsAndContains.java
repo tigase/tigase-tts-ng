@@ -23,7 +23,6 @@ package tigase.tests.archive;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -43,9 +42,9 @@ import tigase.tests.utils.Account;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 /**
  * Created by andrzej on 25.07.2016.
@@ -57,22 +56,27 @@ public class TestMessageArchivingTagsAndContains
 	String expect;
 	String id;
 	Date testStartDate;
-	Account user;
-	Jaxmpp userJaxmpp;
+	Account user1;
+	Account user2;
+	Jaxmpp userJaxmpp1;
+	Jaxmpp userJaxmpp2;
 
 	@BeforeMethod
 	public void setUpTest() throws JaxmppException, InterruptedException {
 		testStartDate = new Date();
 
-		user = createAccount().setLogPrefix("user1").build();
-		userJaxmpp = user.createJaxmpp().setConfigurator(jaxmpp -> {
+		user1 = createAccount().setLogPrefix("user1").build();
+		userJaxmpp1 = user1.createJaxmpp().setConfigurator(jaxmpp -> {
 			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
 			return jaxmpp;
 		}).setConnected(true).build();
 
+		user2 = createAccount().setLogPrefix("user2").build();
+		userJaxmpp2 = user2.createJaxmpp().setConnected(true).build();
+
 		// enable message archiving to be sure it works
 		id = nextRnd().toLowerCase();
-		setArchiveSettings(userJaxmpp, id, true);
+		setArchiveSettings(userJaxmpp1, id, true);
 		expect = "setArchiveSettings:" + id + ":success";
 		mutex.waitFor(20 * 1000, expect);
 		assertTrue(mutex.isItemNotified(expect), "Set archive for user error.");
@@ -86,7 +90,7 @@ public class TestMessageArchivingTagsAndContains
 		for (int i = 0; i < 10; i++) {
 			String msg = nextRnd();
 			forbiddenMessages.add(msg);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 		String tagName = "#Test123";
@@ -95,24 +99,24 @@ public class TestMessageArchivingTagsAndContains
 		for (int i = 0; i < 10; i++) {
 			String msg = nextRnd() + " " + tagName;
 			expectedMessages.add(msg);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 		for (int i = 0; i < 10; i++) {
 			String msg = nextRnd();
 			forbiddenMessages.add(msg);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 
-		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp.getSessionObject().getUserBareJid()))
+		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp2.getSessionObject().getUserBareJid()))
 				.setStart(testStartDate)
 				.addTags(tagName);
 
-		retrieveArchivedCollections(userJaxmpp, id, crit);
-		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + user.getJid().toString()),
+		retrieveArchivedCollections(userJaxmpp1, id, crit);
+		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + user2.getJid().toString()),
 				   "Retrieval of list of collections failed");
-		retrieveArchivedMessages(userJaxmpp, id, crit);
+		retrieveArchivedMessages(userJaxmpp1, id, crit, expectedMessages.size());
 		for (String msg : expectedMessages) {
 			assertTrue(mutex.isItemNotified("2:" + id + ":retriveCollection:success:" + msg),
 					   "Not retrieved message which was marked by hashtag " + tagName);
@@ -131,7 +135,7 @@ public class TestMessageArchivingTagsAndContains
 		for (int i = 0; i < 10; i++) {
 			String msg = nextRnd();
 			forbiddenMessages.add(msg);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 		String tagName = "Test 123";
@@ -140,24 +144,24 @@ public class TestMessageArchivingTagsAndContains
 		for (int i = 0; i < 10; i++) {
 			String msg = nextRnd() + " " + tagName;
 			expectedMessages.add(msg);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 		for (int i = 0; i < 10; i++) {
 			String msg = nextRnd();
 			forbiddenMessages.add(msg);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 
-		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp.getSessionObject().getUserBareJid()))
+		Criteria crit = new Criteria().setWith(JID.jidInstance(userJaxmpp2.getSessionObject().getUserBareJid()))
 				.setStart(testStartDate)
 				.addContains(tagName);
 
-		retrieveArchivedCollections(userJaxmpp, id, crit);
-		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + user.getJid().toString()),
+		retrieveArchivedCollections(userJaxmpp1, id, crit);
+		assertTrue(mutex.isItemNotified("1:" + id + ":retriveCollection:received:" + user2.getJid().toString()),
 				   "Retrieval of list of collections failed");
-		retrieveArchivedMessages(userJaxmpp, id, crit);
+		retrieveArchivedMessages(userJaxmpp1, id, crit, expectedMessages.size());
 		for (String msg : expectedMessages) {
 			assertTrue(mutex.isItemNotified("2:" + id + ":retriveCollection:success:" + msg),
 					   "Not retrieved message which was marked by hashtag " + tagName);
@@ -177,7 +181,7 @@ public class TestMessageArchivingTagsAndContains
 			String tag = "#Good" + nextRnd();
 			String msg = nextRnd() + " " + tag;
 			goodTags.add(tag);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 		Thread.sleep(2000);
 
@@ -186,18 +190,42 @@ public class TestMessageArchivingTagsAndContains
 			String tag = "#Bad" + nextRnd();
 			String msg = nextRnd() + " " + tag;
 			badTags.add(tag);
-			sendAndWait(userJaxmpp, userJaxmpp, msg);
+			sendAndWait(userJaxmpp1, userJaxmpp2, msg);
 		}
 
-		Thread.sleep(1000);
+		queryTags(userJaxmpp1, id, goodTags.size());
 
+		for (String tag : goodTags) {
+			assertTrue(mutex.isItemNotified("3:" + id + ":queryTags:success:" + tag),
+					   "Not returned tag '" + tag + "' which should be suggested");
+		}
+		for (String tag : badTags) {
+			assertFalse(mutex.isItemNotified("3:" + id + ":queryTags:success:" + tag),
+						"Returned tag '" + tag + "' which should not be suggested");
+		}
+	}
+
+	private void queryTags(Jaxmpp userJaxmpp, String id, int expected) throws InterruptedException, JaxmppException {
+		int retry = 0;
+		int count = 0;
+		while ((count = queryTagsInternal(userJaxmpp, id, count)) < expected) {
+			System.out.println("got " + count + " while expected " + expected);
+			if (retry >= 5) {
+				assertEquals(expected, count, "retry " + retry + " still failing...");
+				return;
+			}
+			retry++;
+			Thread.sleep(2000);
+		}
+	}
+
+	private int queryTagsInternal(Jaxmpp userJaxmpp, String id, int retry) throws InterruptedException, JaxmppException {
+		AtomicInteger count = new AtomicInteger(0);
 		IQ iq = IQ.createIQ();
 		iq.setType(StanzaType.set);
 		Element tagsEl = ElementFactory.create("tags", null, "http://tigase.org/protocol/archive#query");
 		iq.addChild(tagsEl);
 		tagsEl.setAttribute("like", "#Good");
-
-		Thread.sleep(1000);
 
 		userJaxmpp.send(iq, new AsyncCallback() {
 
@@ -212,23 +240,17 @@ public class TestMessageArchivingTagsAndContains
 					for (Element tagEl : tagElems) {
 						mutex.notify("3:" + id + ":queryTags:success:" + tagEl.getValue());
 					}
+					count.set(tagElems.size());
 				}
-				mutex.notify("3:" + id + ":queryTags:success");
+				mutex.notify("3:" + retry + ":" + id + ":queryTags:success");
 			}
 
 			public void onTimeout() throws JaxmppException {
 				mutex.notify("3:" + id + ":queryTags:timeout");
 			}
 		});
-		mutex.waitFor(20 * 1000, "3:" + id + ":queryTags:success");
-		for (String tag : goodTags) {
-			assertTrue(mutex.isItemNotified("3:" + id + ":queryTags:success:" + tag),
-					   "Not returned tag '" + tag + "' which should be suggested");
-		}
-		for (String tag : badTags) {
-			assertFalse(mutex.isItemNotified("3:" + id + ":queryTags:success:" + tag),
-						"Returned tag '" + tag + "' which should not be suggested");
-		}
+		mutex.waitFor(20 * 1000, "3:" + retry + ":" + id + ":queryTags:success");
+		return count.get();
 	}
 
 	private void setArchiveSettings(Jaxmpp user, final String id, boolean enable)
@@ -255,7 +277,6 @@ public class TestMessageArchivingTagsAndContains
 	private void retrieveArchivedCollections(final Jaxmpp jaxmppUser1, final String id, final Criteria crit)
 			throws JaxmppException, InterruptedException {
 
-		BareJID userBareJid = (jaxmppUser1.getSessionObject()).getUserBareJid();
 		jaxmppUser1.getModule(MessageArchivingModule.class)
 				.listCollections(crit, new MessageArchivingModule.CollectionAsyncCallback() {
 
@@ -285,8 +306,23 @@ public class TestMessageArchivingTagsAndContains
 		mutex.waitFor(20 * 1000, "1:" + id + ":retriveCollection:received");
 	}
 
-	private void retrieveArchivedMessages(final Jaxmpp jaxmppUser1, final String id, final Criteria crit)
+	private void retrieveArchivedMessages(final Jaxmpp jaxmppUser1, final String id, final Criteria crit, final int expected)
 			throws JaxmppException, InterruptedException {
+		int retry = 0;
+		int count = 0;
+	    while ((count = retrieveArchivedMessagesInternal(jaxmppUser1, id, crit, count)) < expected) {
+	    	System.out.println("got " + count + " while expected " + expected);
+	    	if (retry >= 5) {
+	    		assertEquals(expected, count, "retry " + retry + " still failing...");
+			}
+			retry++;
+	    	Thread.sleep(2000);
+		}
+	}
+
+	private int retrieveArchivedMessagesInternal(final Jaxmpp jaxmppUser1, final String id, final Criteria crit, int retry)
+			throws JaxmppException, InterruptedException {
+		AtomicInteger count = new AtomicInteger(0);
 		jaxmppUser1.getModule(MessageArchivingModule.class)
 				.retrieveCollection(crit, new MessageArchivingModule.ItemsAsyncCallback() {
 
@@ -301,14 +337,16 @@ public class TestMessageArchivingTagsAndContains
 
 					@Override
 					protected void onItemsReceived(ChatResultSet chat) throws XMLException {
+						count.set(chat.getCount());
 						for (ChatItem item : chat.getItems()) {
 							mutex.notify("2:" + id + ":retriveCollection:success:" + item.getBody());
 						}
-						mutex.notify("2:" + id + ":retriveCollection:received");
+						mutex.notify("2:" + retry + ":" + id + ":retriveCollection:received");
 					}
 
 				});
-		mutex.waitFor(20 * 1000, "2:" + id + ":retriveCollection:received");
+		mutex.waitFor(20 * 1000, "2:" + retry + ":" + id + ":retriveCollection:received");
+		return count.get();
 	}
 
 }
