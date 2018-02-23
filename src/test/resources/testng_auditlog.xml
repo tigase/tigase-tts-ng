@@ -1,0 +1,19 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Tigase Auditlog Component" verbose="1">
+    <test name="Get list of connected users">
+        <classes>
+            <class name="tigase.tests.auditlog.TestGetConnectedUsers"/>
+        </classes>
+    </test>
+    <test name="Get list of disconnected users">
+        <classes>
+            <class name="tigase.tests.auditlog.TestGetDisconnectedUsers"/>
+        </classes>
+    </test>
+    <test name="Get list of history entries for connections">
+        <classes>
+            <class name="tigase.tests.auditlog.TestGetConnectionsHistory"/>
+        </classes>
+    </test>
+</suite>
