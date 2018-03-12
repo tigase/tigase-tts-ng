@@ -77,14 +77,14 @@ function db_reload_sql() {
 	fi
 
 
-    ./scripts/tigase.sh destroy-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass}
+    ./scripts/tigase.sh destroy-schema ${_config_file} -T ${_db_type} -D ${_db_name} -H ${_database_host} -U ${_db_user} -P ${_db_pass} -R ${_db_root_user} -A ${_db_root_pass} -L ALL
 
     if [[ ! $? -eq 0 ]] ; then
         cd ${tts_dir}
         return 1
     fi
 
-    ./scripts/tigase.sh upgrade-schema ${_config_file} -R ${_db_root_user} -A ${_db_root_pass}
+    ./scripts/tigase.sh upgrade-schema ${_config_file} -R ${_db_root_user} -A ${_db_root_pass} -L ALL
 
     if [[ ! $? -eq 0 ]] ; then
         cd ${tts_dir}

@@ -144,6 +144,25 @@ while [ "${found}" == "1" ] ; do
 	esac
 done
 
+case "${1}" in
+	--help|-h)
+		usage
+		;;
+    --all-tests)
+        echo "${2}"
+		[[ -z ${2} ]] || DATABASES=( "${@:2}" )
+		;;
+	--custom)
+		[[ -z ${2} ]] || tests=${2}
+		[[ -z ${3} ]] || DATABASES=( "${@:3}" )
+		;;
+	*)
+		[[ -z "${1}" ]] || echo "Invalid command '$1'"
+		usage
+		exit 1
+		;;
+esac
+
 if [ ! -z "${SERVER_DOWNLOAD}" ] ; then
     echo "Downloading latest version of Tigase server."
 
@@ -171,24 +190,6 @@ echo "Output dir: ${output_dir}"
 
 [ ! -e ${server_dir} ] && echo "Tigase home directory (${server_dir}) doesn't exist, aborting!" && exit 1
 
-case "${1}" in
-	--help|-h)
-		usage
-		;;
-    --all-tests)
-        echo "${2}"
-		[[ -z ${2} ]] || DATABASES=( "${@:2}" )
-		;;
-	--custom)
-		[[ -z ${2} ]] || tests=${2}
-		[[ -z ${3} ]] || DATABASES=( "${@:3}" )
-		;;
-	*)
-		[[ -z "${1}" ]] || echo "Invalid command '$1'"
-		usage
-		exit 1
-		;;
-esac
 
 echo "Databases: ${DATABASES[*]}"
 echo "Tests: ${tests}"
