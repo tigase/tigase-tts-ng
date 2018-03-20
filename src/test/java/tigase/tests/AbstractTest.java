@@ -553,7 +553,7 @@ public abstract class AbstractTest {
 		CURRENT_SUITE.set(context.getSuite());
 		System.out.println("setting up suite " + context.getSuite().getName());
 		loadProperties();
-		setLoggerLevel(Level.ALL, connectorLogsEnabled);
+		setLoggerLevel(Level.FINER, connectorLogsEnabled);
 		ensureAdminAccountExists();
 	}
 
