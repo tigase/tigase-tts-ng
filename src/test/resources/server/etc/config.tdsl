@@ -1,5 +1,13 @@
 'vhost-disable-dns-check' = true
-'virtual-hosts' = 'localhost,a.localhost:clientCertCA=' + env('CONFIG_BASE_DIR') + '/certs/root_ca.pem:clientCertRequired=true'
+'virtual-hosts' {
+    'a.localhost' {
+        clientCertCA = env('CONFIG_BASE_DIR') + '/certs/root_ca.pem'
+        clientCertRequired = true
+    }
+    localhost {
+    }
+}
+
 'config-type' = '--gen-config-def'
 trusted = [ 'admin@localhost', 'http@{clusterNode}' ]
 admins = [ 'admin@localhost' ]
@@ -46,7 +54,9 @@ httpServer {
 }
 
 http () {
-    'api-keys' = [ 'test-api-key' ]
+    'api-keys' {
+      'test-api-key' {}
+    }
     rest () {
         'password-reset-form' {
             captchaRequired = false
