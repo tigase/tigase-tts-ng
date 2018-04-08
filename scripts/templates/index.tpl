@@ -68,7 +68,7 @@ html {
                                                         a(href: versionDBs[dbs]?.getReportFile()) {
                                                             if (versionDBs[dbs]?.getMetricsAsString() ) {
                                                                 div(class: "tooltip2") {
-                                                                    span(class: "tooltiptext2", "Passed / Skipped / Failed | Total")
+                                                                    span(class: "tooltiptext2", "Passed / Failed | Total")
                                                                     yield versionDBs[dbs]?.getMetricsAsString()
                                                                 }
                                                             }
@@ -95,7 +95,6 @@ html {
                                         }
                                     }
                                 }
-
                             }
                         }
                     }
