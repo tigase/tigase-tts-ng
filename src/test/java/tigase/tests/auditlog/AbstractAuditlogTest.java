@@ -3,6 +3,7 @@ package tigase.tests.auditlog;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestResult;
+import org.testng.SkipException;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -22,6 +23,9 @@ public class AbstractAuditlogTest
 
 	@Override
 	public void run(IHookCallBack iHookCallBack, ITestResult iTestResult) {
+		if (!isAuditlogAvailable()) {
+			throw new SkipException("Skipping tests because AuditLog component is not available!");
+		}
 		if (isAuditlogAvailable()) {
 			iHookCallBack.runTestMethod(iTestResult);
 		} else {
