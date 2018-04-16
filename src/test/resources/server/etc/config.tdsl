@@ -64,7 +64,11 @@ http () {
     }
 }
 
-upload () {}
+upload () {
+    logic () {
+        'server-name' = 'localhost'
+    }
+}
 
 pubsub () {
     'persistent-pep' = true
