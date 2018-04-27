@@ -11,4 +11,9 @@
             <class name="tigase.tests.muc.TestLimitOfUsersPerRoom"/>
         </classes>
     </test>
+    <test name="Test handling of timestamps - #7443">
+        <classes>
+            <class name="tigase.tests.muc.TestMucHistoryTimestamps"/>
+        </classes>
+    </test>
 </suite>
