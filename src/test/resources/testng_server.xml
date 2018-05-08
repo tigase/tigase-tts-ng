@@ -47,6 +47,11 @@
             <class name="tigase.tests.server.TestWelcomeMessage"/>
         </classes>
     </test>
+    <test name="User credentials manipulation">
+        <classes>
+            <class name="tigase.tests.server.TestCredentialsManipulation"/>
+        </classes>
+    </test>
 
     <!-- Offline Messages -->
     <test name="Offline Messages: Setting offline messages limit to 3 - #2944">
