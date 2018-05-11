@@ -4,7 +4,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
 import org.testng.AssertJUnit;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -15,6 +15,7 @@ import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.Action;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractJaxmppTest;
@@ -31,6 +32,7 @@ public class TestCredentialsManipulation
 
 	private Jaxmpp jaxmpp;
 	private Account user;
+	private String randomUsername;
 
 	private void addUsername(String username) throws JaxmppException, InterruptedException {
 		JabberDataElement request = new JabberDataElement(XDataType.submit);
@@ -98,30 +100,45 @@ public class TestCredentialsManipulation
 		return names;
 	}
 
-	@BeforeMethod
+	@BeforeClass
 	public void prepareAccountAndJaXMPP() throws JaxmppException, InterruptedException {
 		this.user = createAccount().setLogPrefix("user1").build();
 		this.jaxmpp = user.createJaxmpp().setConnected(true).build();
 	}
 
 	@Test
-	public void testCredentialsManipulation() throws Exception {
-		assertTrue(jaxmpp.isConnected());
-
+	public void testRetrievingUsernames1() throws Exception {
 		Collection<String> names = getUsernames();
 		assertEquals(1, names.size());
 		assertTrue(names.contains("default"));
+	}
 
-		final String randomUsername = "bzz_" + nextRnd();
+	@Test(dependsOnMethods = {"testRetrievingUsernames1"})
+	public void testAddingCredentials() throws Exception {
+		this.randomUsername = "bzz_" + nextRnd();
 		addUsername(randomUsername);
 
-		names = getUsernames();
+		Collection<String> names = getUsernames();
 		assertEquals(2, names.size());
 		assertTrue(names.contains("default"));
 		assertTrue(names.contains(randomUsername));
+	}
 
+	@Test(dependsOnMethods = {"testAddingCredentials"})
+	public void testAuthenticationWithNewCredentials() throws JaxmppException {
+		Jaxmpp jaxmpp = user.createJaxmpp().setConfigurator(j -> {
+			j.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, randomUsername);
+			j.getConnectionConfiguration().setUserPassword("123");
+			return j;
+		}).setConnected(true).build();
+		assertTrue(jaxmpp.isConnected());
+		jaxmpp.disconnect(true);
+	}
+
+	@Test(dependsOnMethods = {"testAuthenticationWithNewCredentials"})
+	public void testDeletingCredentials() throws Exception {
 		deleteUsername(randomUsername);
-		names = getUsernames();
+		Collection<String> names = getUsernames();
 		assertEquals(1, names.size());
 		assertTrue(names.contains("default"));
 	}
