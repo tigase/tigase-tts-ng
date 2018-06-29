@@ -23,6 +23,7 @@ MAIL_IMAP_HOST="imap.tigase.org"
 MAIL_SENDER_ADDRESS="sender@localhost"
 MAIL_SENDER_PASS="bt555ml"
 MAIL_RECEIVER_ADDRESS="receiver@localhost"
+MAIL_RECEIVER_PASS="bt55ml"
 
 tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
 
