@@ -24,6 +24,10 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.tests.AbstractTest;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
 /**
  * Created by andrzej on 22.04.2017.
  */
@@ -36,6 +40,8 @@ public class AccountBuilder {
 	private String password;
 	private boolean register = true;
 	private String username;
+	private List<Consumer<Account>> registrationSuccessHandlers = new ArrayList<>();
+	private List<Consumer<Account>> unregistrationHandlers = new ArrayList<>();
 
 	public AccountBuilder(AbstractTest abstractTest) {
 		this.test = abstractTest;
@@ -91,6 +97,16 @@ public class AccountBuilder {
 		return this;
 	}
 
+	public AccountBuilder addRegistrationSuccessHandler(Consumer<Account> registrationSuccessHandler) {
+		this.registrationSuccessHandlers.add(registrationSuccessHandler);
+		return this;
+	}
+
+	public AccountBuilder addUnregistrationHandler(Consumer<Account> unregistrationHandler) {
+		this.unregistrationHandlers.add(unregistrationHandler);
+		return this;
+	}
+
 	public Account build() throws JaxmppException, InterruptedException {
 		if (domain == null) {
 			domain = test.getDomain(0);
@@ -108,9 +124,11 @@ public class AccountBuilder {
 			}
 		}
 
-		Account account = new Account(test, logPrefix, BareJID.bareJIDInstance(username, domain), password);
+		Account account = new Account(test, logPrefix, BareJID.bareJIDInstance(username, domain), password, this.unregistrationHandlers);
 		if (register) {
-			return test.accountManager.registerAccount(this, account);
+			Account acc = test.accountManager.registerAccount(this, account);
+			registrationSuccessHandlers.forEach(handler -> handler.accept(acc));
+			return acc;
 		}
 
 		return account;

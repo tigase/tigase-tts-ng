@@ -323,6 +323,7 @@ public class AccountsManager {
 				account.scopeFinished();
 				remove(account);
 
+				account.accountUnregistered();
 			} finally {
 				jaxmpp.getEventBus().remove(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
 			}

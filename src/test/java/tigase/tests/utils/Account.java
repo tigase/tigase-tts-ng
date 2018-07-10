@@ -25,10 +25,13 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Consumer;
 
 /**
  * Created by andrzej on 22.04.2017.
@@ -40,12 +43,18 @@ public class Account {
 	private final BareJID jid;
 	private final String logPrefix;
 	private final String password;
+	private final List<Consumer<Account>> unregistrationHandlers;
 
 	public Account(AbstractTest test, String logPrefix, BareJID jid, String password) {
+	    this(test, logPrefix, jid, password, Collections.emptyList());
+	}
+
+	public Account(AbstractTest test, String logPrefix, BareJID jid, String password, List<Consumer<Account>> unregistrationHandlers) {
 		this.test = test;
 		this.logPrefix = logPrefix;
 		this.jid = jid;
 		this.password = password;
+		this.unregistrationHandlers = unregistrationHandlers;
 	}
 
 	public BareJID getJid() {
@@ -85,21 +94,26 @@ public class Account {
 
 	protected void scopeFinished() {
 		Object key = getScopeKey();
-		jaxmpps.getOrDefault(key, new HashSet<>()).forEach(jaxmpp -> {
-			try {
-				if (jaxmpp.isConnected()) {
-					jaxmpp.disconnect(true);
+		if (key != null) {
+			jaxmpps.getOrDefault(key, new HashSet<>()).forEach(jaxmpp -> {
+				try {
+					if (jaxmpp.isConnected()) {
+						jaxmpp.disconnect(true);
+					}
+					unregisterJaxmpp(jaxmpp);
+				} catch (Throwable ex) {
+					ex.printStackTrace();
 				}
-				unregisterJaxmpp(jaxmpp);
-			} catch (Throwable ex) {
-				ex.printStackTrace();
-			}
-		});
+			});
+		}
+	}
+
+	protected void accountUnregistered() {
+		unregistrationHandlers.forEach(handler -> handler.accept(this));
 	}
 
 	private Object getScopeKey() {
-		Object key;
-		key = test.CURRENT_METHOD.get();
+		Object key = test.CURRENT_METHOD.get();
 		if (key == null) {
 			key = test.CURRENT_CLASS.get();
 			if (key == null) {
