@@ -37,6 +37,7 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.j2se.xml.J2seElement;
+import tigase.tests.utils.ApiKey;
 import tigase.xml.DomBuilderHandler;
 import tigase.xml.SingletonFactory;
 
@@ -57,6 +58,7 @@ public abstract class TestRestApiAbstract
 	protected BareJID adminBareJid;
 	protected CloseableHttpClient httpClient;
 	protected HttpClientContext localContext;
+	protected ApiKey apiKey;
 
 	protected static Element parseXML(String result) {
 		DomBuilderHandler handler = new DomBuilderHandler();
@@ -82,6 +84,8 @@ public abstract class TestRestApiAbstract
 												 .setConnectionRequestTimeout(timeout * SECOND)
 												 .build())
 				.build();
+
+		apiKey = createRestApiKey().build();
 	}
 
 	@AfterClass
@@ -98,7 +102,7 @@ public abstract class TestRestApiAbstract
 
 		HttpHost target = new HttpHost(hostname, Integer.parseInt(getHttpPort()), "http");
 		HttpPost postRequest = new HttpPost("/rest/pubsub/" + pubsubJid + "/" + action);
-		postRequest.addHeader("Api-Key", getApiKey());
+		postRequest.addHeader("Api-Key", apiKey.getKey());
 
 		StringEntity entity = new StringEntity(command);
 		entity.setContentType(contentType);

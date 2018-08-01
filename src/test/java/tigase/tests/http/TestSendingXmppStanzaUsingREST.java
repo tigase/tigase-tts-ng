@@ -51,6 +51,7 @@ import tigase.jaxmpp.j2se.xml.J2seElement;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
+import tigase.tests.utils.ApiKey;
 import tigase.xml.DomBuilderHandler;
 import tigase.xml.SimpleParser;
 
@@ -78,6 +79,7 @@ public class TestSendingXmppStanzaUsingREST
 	private CloseableHttpClient httpClient;
 	private Account user;
 	private Jaxmpp userJaxmpp;
+	private ApiKey apiKey;
 
 	@BeforeMethod
 	public void setUp() throws Exception {
@@ -92,6 +94,8 @@ public class TestSendingXmppStanzaUsingREST
 				.build();
 		user = createAccount().setLogPrefix(USER_PREFIX).build();
 		userJaxmpp = user.createJaxmpp().setConnected(true).build();
+
+		apiKey = createRestApiKey().build();
 	}
 
 	@AfterMethod
@@ -128,7 +132,7 @@ public class TestSendingXmppStanzaUsingREST
 
 		String server = getInstanceHostname();
 		HttpPost postRequest = new HttpPost("/rest/stream/");
-		postRequest.addHeader("Api-Key", getApiKey());
+		postRequest.addHeader("Api-Key", apiKey.getKey());
 
 		String body = "Test message " + UUID.randomUUID().toString();
 

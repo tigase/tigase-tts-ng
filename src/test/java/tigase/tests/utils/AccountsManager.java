@@ -65,7 +65,7 @@ import static tigase.tests.AbstractTest.LOG_PREFIX_KEY;
 /**
  * Created by andrzej on 22.04.2017.
  */
-public class AccountsManager {
+public class AccountsManager extends AbstractManager {
 
 	private final static TrustManager[] dummyTrustManagers = new X509TrustManager[]{new X509TrustManager() {
 
@@ -83,10 +83,9 @@ public class AccountsManager {
 		}
 	}};
 	private final ConcurrentHashMap<Object, Set<Account>> accounts = new ConcurrentHashMap<>();
-	private AbstractTest abstractTest;
 
 	public AccountsManager(AbstractTest abstractTest) {
-		this.abstractTest = abstractTest;
+		super(abstractTest);
 	}
 
 	public void add(Account account) {
@@ -107,8 +106,7 @@ public class AccountsManager {
 		}
 	}
 
-	public void scopeFinished() {
-		Object key = getScopeKey();
+	protected void scopeFinished(Object key) {
 		accounts.getOrDefault(key, new HashSet<>()).forEach(account -> {
 			try {
 				unregisterAccount(account);
@@ -120,7 +118,7 @@ public class AccountsManager {
 
 	public Account registerAccount(AccountBuilder builder, Account account)
 			throws JaxmppException, InterruptedException {
-		final String server = abstractTest.getInstanceHostname();
+		final String server = test.getInstanceHostname();
 		final Jaxmpp jaxmpp1 = createJaxmpp(builder.getLogPrefix());
 		jaxmpp1.getEventBus().addListener(new EventListener() {
 
@@ -206,7 +204,7 @@ public class AccountsManager {
 		final Jaxmpp jaxmpp = createJaxmpp(account.getLogPrefix());
 		jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
 
-		final String server = abstractTest.getInstanceHostname();
+		final String server = test.getInstanceHostname();
 		if (server != null) {
 			jaxmpp.getConnectionConfiguration().setServer(server);
 		}
@@ -237,7 +235,7 @@ public class AccountsManager {
 				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
 			}
 			jaxmpp1.getSessionObject().setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
-			jaxmpp1.getEventBus().addListener(abstractTest.connectorListener);
+			jaxmpp1.getEventBus().addListener(test.connectorListener);
 
 			jaxmpp1.getModulesManager().register(new InBandRegistrationModule());
 			jaxmpp1.getModulesManager().register(new MessageModule());
@@ -253,24 +251,11 @@ public class AccountsManager {
 
 			return jaxmpp1;
 		} catch (JaxmppException e) {
-			abstractTest.fail(e);
+			test.fail(e);
 			throw new RuntimeException(e);
 		}
 	}
-
-	private Object getScopeKey() {
-		Object key;
-		key = abstractTest.CURRENT_METHOD.get();
-		if (key == null) {
-			key = abstractTest.CURRENT_CLASS.get();
-			if (key == null) {
-				key = abstractTest.CURRENT_SUITE.get();
-			}
-		}
-
-		return key;
-	}
-
+	
 	private void unregisterAccount(Jaxmpp jaxmpp, Account account) throws JaxmppException, InterruptedException {
 		try {
 			BareJID userJid = account.getJid();
@@ -328,8 +313,8 @@ public class AccountsManager {
 				jaxmpp.getEventBus().remove(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
 			}
 		} catch (JaxmppException ex) {
-			if (abstractTest.getAdminAccount() != account) {
-				Jaxmpp adminJaxmpp = abstractTest.getJaxmppAdmin();
+			if (test.getAdminAccount() != account) {
+				Jaxmpp adminJaxmpp = test.getJaxmppAdmin();
 				if (!adminJaxmpp.isConnected()) {
 					adminJaxmpp.login(true);
 				}
@@ -340,7 +325,7 @@ public class AccountsManager {
 
 				final Mutex mutex = new Mutex();
 				jaxmpp.getModule(AdHocCommansModule.class)
-						.execute(JID.jidInstance("sess-man", abstractTest.getAdminAccount().getJid().getDomain()),
+						.execute(JID.jidInstance("sess-man", test.getAdminAccount().getJid().getDomain()),
 								 "http://jabber.org/protocol/admin#delete-user", Action.execute, data,
 								 new AsyncCallback() {
 									 @Override

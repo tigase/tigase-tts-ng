@@ -47,6 +47,7 @@ import java.lang.reflect.Method;
 import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.Random;
+import java.util.UUID;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -69,6 +70,7 @@ public abstract class AbstractTest {
 	public final ThreadLocal<Method> CURRENT_METHOD = new ThreadLocal<>();
 	public final ThreadLocal<ISuite> CURRENT_SUITE = new ThreadLocal<>();
 	public final AccountsManager accountManager = new AccountsManager(this);
+	public final ApiKeyManager apiKeyManager = new ApiKeyManager(this);
 	public final PubSubManager pubSubManager = new PubSubManager(this);
 	public final VHostManager vHostManager = new VHostManager(this);
 	protected boolean connectorLogsEnabled = true;
@@ -129,17 +131,21 @@ public abstract class AbstractTest {
 	public Jaxmpp getJaxmppAdmin() {
 		return jaxmppAdmin;
 	}
-
+	
 	public AccountBuilder createAccount() {
 		return new AccountBuilder(this);
 	}
 
-	public String getHttpPort() {
-		return props.getProperty("test.http.port");
+	public ApiKeyBuilder createRestApiKey() {
+		return new ApiKeyBuilder(apiKeyManager, UUID.randomUUID().toString());
 	}
 
-	public String getApiKey() {
-		return props.getProperty("test.http.api-key");
+	public VHostBuilder createVHost(String domain) {
+		return new VHostBuilder(vHostManager, domain);
+	}
+
+	public String getHttpPort() {
+		return props.getProperty("test.http.port");
 	}
 
 	/**
@@ -561,6 +567,7 @@ public abstract class AbstractTest {
 	protected void tearDownSuite(ITestContext context) {
 		pubSubManager.scopeFinished();
 		vHostManager.scopeFinished();
+		apiKeyManager.scopeFinished();
 		accountManager.scopeFinished();
 		CURRENT_SUITE.remove();
 	}
@@ -578,6 +585,7 @@ public abstract class AbstractTest {
 	protected void tearDownClass(ITestContext context) {
 		System.out.println("tearing down class " + this.getClass().getCanonicalName() + " = " + this.toString());
 		pubSubManager.scopeFinished();
+		apiKeyManager.scopeFinished();
 		accountManager.scopeFinished();
 		vHostManager.scopeFinished();
 		CURRENT_CLASS.remove();
@@ -599,6 +607,7 @@ public abstract class AbstractTest {
 		System.out.println(
 				"tearing down method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
 		pubSubManager.scopeFinished();
+		apiKeyManager.scopeFinished();
 		accountManager.scopeFinished();
 		vHostManager.scopeFinished();
 		CURRENT_METHOD.remove();

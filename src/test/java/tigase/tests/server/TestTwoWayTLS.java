@@ -21,6 +21,7 @@
 package tigase.tests.server;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.cert.CertificateEntry;
@@ -63,6 +64,13 @@ public class TestTwoWayTLS
 
 			return os.toByteArray();
 		}
+	}
+
+	@BeforeClass
+	public void createRequiredVHost() throws JaxmppException, InterruptedException {
+		String vhost = props.getProperty("server.client_auth.domain");
+		String caCertPath = props.getProperty("server.client_auth.ca_cert");
+		createVHost(vhost).setClientCertCA(caCertPath).setClientCertRequired(true).updateIfExists(true).build();
 	}
 
 	@BeforeMethod

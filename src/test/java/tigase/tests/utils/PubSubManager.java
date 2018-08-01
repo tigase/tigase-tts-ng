@@ -50,13 +50,12 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Created by andrzej on 22.04.2017.
  */
-public class PubSubManager {
+public class PubSubManager extends AbstractManager {
 
 	private final ConcurrentHashMap<Object, Set<PubSubNode>> nodes = new ConcurrentHashMap<>();
-	private final AbstractTest test;
 
 	public PubSubManager(AbstractTest test) {
-		this.test = test;
+		super(test);
 	}
 
 	public PubSubNodeBuilder createNode(String node) {
@@ -123,8 +122,7 @@ public class PubSubManager {
 		}
 	}
 
-	public void scopeFinished() {
-		Object key = getScopeKey();
+	protected void scopeFinished(Object key) {
 		nodes.getOrDefault(key, new HashSet<>()).forEach(node -> {
 			try {
 				deleteNode(node);
@@ -229,18 +227,5 @@ public class PubSubManager {
 		add(node);
 		return node;
 	}
-
-	private Object getScopeKey() {
-		Object key;
-		key = test.CURRENT_METHOD.get();
-		if (key == null) {
-			key = test.CURRENT_CLASS.get();
-			if (key == null) {
-				key = test.CURRENT_SUITE.get();
-			}
-		}
-
-		return key;
-	}
-
+	
 }

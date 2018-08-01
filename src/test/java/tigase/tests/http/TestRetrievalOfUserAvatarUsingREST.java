@@ -21,6 +21,7 @@
 package tigase.tests.http;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
@@ -42,6 +43,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
+import tigase.tests.utils.ApiKey;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,6 +76,7 @@ public class TestRetrievalOfUserAvatarUsingREST
 	private Jaxmpp jaxmpp2;
 	private Account user1;
 	private Account user2;
+	private ApiKey apiKey;
 
 	public static String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
@@ -83,6 +86,11 @@ public class TestRetrievalOfUserAvatarUsingREST
 			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 		}
 		return new String(hexChars);
+	}
+
+	@BeforeClass
+	public void prepare() throws JaxmppException, InterruptedException {
+		apiKey = createRestApiKey().build();
 	}
 
 	@BeforeMethod
@@ -133,7 +141,7 @@ public class TestRetrievalOfUserAvatarUsingREST
 		}
 
 		URL url = new URL("http://" + domain + ":" + getHttpPort() + "/rest/avatar/" + user1.getJid().toString() +
-								  "/avatar?api-key=" + getApiKey());
+								  "/avatar?api-key=" + apiKey.getKey());
 		URLConnection con = url.openConnection();
 		con.setDoInput(true);
 		InputStream is = con.getInputStream();

@@ -59,6 +59,7 @@ import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.http.TestSendingXmppStanzaUsingREST;
 import tigase.tests.utils.Account;
+import tigase.tests.utils.ApiKey;
 import tigase.tests.utils.PubSubNode;
 import tigase.util.datetime.DateTimeFormatter;
 
@@ -88,6 +89,7 @@ public class TestRestApiWithMessageExpiration
 	private CloseableHttpClient httpClient;
 	private HttpClientContext localContext;
 	private HttpHost target;
+	private ApiKey apiKey;
 
 	@BeforeMethod
 	public void prepareTest() throws JaxmppException, InterruptedException {
@@ -183,7 +185,7 @@ public class TestRestApiWithMessageExpiration
 	}
 
 	@BeforeClass
-	private void prepareAdmin() throws JaxmppException {
+	private void prepareAdmin() throws JaxmppException, InterruptedException {
 
 		setLoggerLevel(Level.INFO, true);
 
@@ -220,6 +222,7 @@ public class TestRestApiWithMessageExpiration
 		authCache.put(target, basicAuth);
 		localContext.setAuthCache(authCache);
 
+		apiKey = createRestApiKey().build();
 	}
 
 	private void addMessageListener(Jaxmpp cnt) {
@@ -286,7 +289,7 @@ public class TestRestApiWithMessageExpiration
 	private void publishToPubsub(String nodeid, String itemId, Date timestamp, String content) throws Exception {
 
 		HttpPost postRequest = new HttpPost("/rest/pubsub/pubsub." + getDomain(0) + "/publish-item");
-		postRequest.addHeader("Api-Key", getApiKey());
+		postRequest.addHeader("Api-Key", apiKey.getKey());
 
 		Element command = createPublishCommand(nodeid, itemId, timestamp, content);
 

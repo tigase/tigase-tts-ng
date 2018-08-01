@@ -1,81 +1,40 @@
-'vhost-disable-dns-check' = true
-'virtual-hosts' {
-    'a.localhost' {
-        clientCertCA = env('CONFIG_BASE_DIR') + '/certs/root_ca.pem'
-        clientCertRequired = true
-    }
-    localhost {
-    }
-}
-
-'config-type' = '--gen-config-def'
-trusted = [ 'admin@localhost', 'http@{clusterNode}' ]
 admins = [ 'admin@localhost' ]
-
+'config-type' = '--gen-config-def'
+'default-virtual-host' = 'localhost'
 'priority-queue-implementation' = 'tigase.util.workqueue.PriorityQueueStrict'
 'sm-threads-pool' = 'custom:200'
-
-
+trusted = [ 'admin@localhost', 'http@{clusterNode}' ]
+'vhost-disable-dns-check' = true
 dataSource {
     default () {
         uri = env('JDBC_URI', 'jdbc://server/database')
     }
 }
-
-msgRepository {
-    'user-store-limit-enable' = true
-}
-
+'account-email-password-resetter' () {}
 c2s {
-    'urn:xmpp:sm:3' () {}
     seeOtherHost {}
+    'urn:xmpp:sm:3' () {}
 }
-
-'sess-man' {
-    'msg-offline-pubsub-publisher-notifier' () {
-        'msg-pubsub-jid' = 'pubsub.localhost'
-        'msg-pubsub-node' = 'test'
-        'msg-pubsub-publisher' = 'sess-man@localhost'
-    }
-    pep () {}
-    'jabber:iq:register' () {}
-    'message-archive' () {
-        'msg-archive-paths' = [ '-/message/result[urn:xmpp:mam:1]', '/message/body', '/message/subject' ]
-    }
-    'message-archive-xep-0136' () {}
-    'urn:xmpp:mam:1' () {}
-}
-
-httpServer {
-    connections {
-        8080 (active: false) {}
-        8088 () {}
-    }
-}
-
 http () {
-    'api-keys' {
-      'test-api-key' {}
-    }
     rest () {
         'password-reset-form' {
             captchaRequired = false
         }
     }
 }
-
-upload () {
-    logic () {
-        'server-name' = 'localhost'
+httpServer {
+    connections {
+        8080 (active: false) {}
+        8088 () {}
     }
 }
-
-pubsub () {
-    'persistent-pep' = true
+mailer (class: tigase.extras.mailer.Mailer) {
+    'mailer-from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+    'mailer-smtp-host' = env('MAIL_SMTP_HOST', 'localhost')
+    'mailer-smtp-password' = env('MAIL_SENDER_PASS', 'password')
+    'mailer-smtp-port' = '587'
+    'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
 }
-muc () {
-}
-
 'message-archive' () {
     'tags-support' = true
 }
@@ -84,19 +43,30 @@ monitor () {
         'from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
         'to-addresses' = env('MAIL_RECEIVER_ADDRESS', 'receiver@localhost')
     }
-#    mailer (class: tigase.extras.mailer.Mailer) {
-#        'mailer-from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
-#        'mailer-smtp-host' = env('MAIL_SMTP_HOST', 'localhost')
-#        'mailer-smtp-password' = env('MAIL_SENDER_PASS', 'password')
-#        'mailer-smtp-port' = '587'
-#        'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
-#    }
 }
-'account-email-password-resetter' () {}
-mailer (class: tigase.extras.mailer.Mailer) {
-    'mailer-from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
-    'mailer-smtp-host' = env('MAIL_SMTP_HOST', 'localhost')
-    'mailer-smtp-password' = env('MAIL_SENDER_PASS', 'password')
-    'mailer-smtp-port' = '587'
-    'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+msgRepository {
+    'user-store-limit-enable' = true
+}
+muc () {}
+pubsub () {
+    'persistent-pep' = true
+}
+'sess-man' {
+    'jabber:iq:register' () {}
+    'message-archive' () {
+        'msg-archive-paths' = [ '-/message/result[urn:xmpp:mam:1]', '/message/body', '/message/subject' ]
+    }
+    'message-archive-xep-0136' () {}
+    'msg-offline-pubsub-publisher-notifier' () {
+        'msg-pubsub-jid' = 'pubsub.localhost'
+        'msg-pubsub-node' = 'test'
+        'msg-pubsub-publisher' = 'sess-man@localhost'
+    }
+    pep () {}
+    'urn:xmpp:mam:1' () {}
+}
+upload () {
+    logic () {
+        'server-name' = 'localhost'
+    }
 }

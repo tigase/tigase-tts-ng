@@ -48,6 +48,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
+import tigase.tests.utils.ApiKey;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,8 +84,10 @@ public class TestModificationOfPrivacyRulesUsingREST
 	private HttpClientContext localContext;
 	private HttpHost target;
 
+	private ApiKey apiKey;
+
 	@BeforeClass
-	public void prepareAdmin() throws JaxmppException {
+	public void prepareAdmin() throws JaxmppException, InterruptedException {
 		target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		final Object adminBareJid = getAdminAccount().getJid();
@@ -107,6 +110,7 @@ public class TestModificationOfPrivacyRulesUsingREST
 		authCache.put(target, basicAuth);
 		localContext.setAuthCache(authCache);
 
+		apiKey = createRestApiKey().build();
 	}
 
 	@BeforeMethod
@@ -180,7 +184,7 @@ public class TestModificationOfPrivacyRulesUsingREST
 	public void updateContactFiltering(BareJID user, DomainFilterPolicy policy, String rule) throws Exception {
 
 		HttpPost postRequest = new HttpPost("/rest/adhoc/sess-man@" + getDomain(0));
-		postRequest.addHeader("Api-Key", getApiKey());
+		postRequest.addHeader("Api-Key", apiKey.getKey());
 
 		Element command = createCommand(user, policy, rule);
 
