@@ -61,7 +61,7 @@ import tigase.tests.http.TestSendingXmppStanzaUsingREST;
 import tigase.tests.utils.Account;
 import tigase.tests.utils.ApiKey;
 import tigase.tests.utils.PubSubNode;
-import tigase.util.datetime.DateTimeFormatter;
+import tigase.util.datetime.TimestampHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,7 +82,7 @@ public class TestRestApiWithMessageExpiration
 	final Mutex mutex = new Mutex();
 	BareJID adminJID;
 	Jaxmpp adminJaxmpp;
-	DateTimeFormatter dtf = new DateTimeFormatter();
+	TimestampHelper dtf = new TimestampHelper();
 	Account userRegular;
 	BareJID userRegularJID;
 	Jaxmpp userRegularJaxmpp;
@@ -339,7 +339,7 @@ public class TestRestApiWithMessageExpiration
 		}
 		if (timestamp != null) {
 			Element expireat = ElementFactory.create("expire-at",
-													 (timestamp != null ? dtf.formatDateTime(timestamp) : null), null);
+													 (timestamp != null ? dtf.format(timestamp) : null), null);
 			data.addChild(expireat);
 		}
 		Element entry = ElementFactory.create("entry");
