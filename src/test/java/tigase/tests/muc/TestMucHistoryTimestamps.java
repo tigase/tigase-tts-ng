@@ -449,6 +449,11 @@ public class TestMucHistoryTimestamps extends AbstractTest {
 			}
 			return false;
 		}
+
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "[nickname=" + nickname + ",ts=" + ts.getTime() + ",body=" + body + ",msgId=" + msgId + "]";
+		}
 	}
 
 	private class Item1 extends Item {
