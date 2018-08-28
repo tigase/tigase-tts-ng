@@ -88,7 +88,8 @@ public class TestMessageArchiveManagement
 	public void test_MAM_retrieveBetween() throws Exception {
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
 		query.setStart(sentMessages.get(2).ts);
-		query.setEnd(sentMessages.get(sentMessages.size() - 3).ts);
+		Date end = sentMessages.get(sentMessages.size() - 3).ts;
+		query.setEnd(new Date(((long)(end.getTime()/1000)) * 1000));
 
 		RSM rsm = null;
 		List<Item> expMessages = sentMessages.subList(2, (sentMessages.size() - 3));
