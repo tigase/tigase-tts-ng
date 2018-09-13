@@ -17,6 +17,11 @@
             <class name="tigase.tests.server.TestSaslAuthentication"/>
         </classes>
     </test>
+    <test name="Brute Force Prevention">
+        <classes>
+            <class name="tigase.tests.server.TestBruteforcePrevention"/>
+        </classes>
+    </test>
     <test name="Password change">
         <classes>
             <class name="tigase.tests.server.TestPasswordChange"/>
