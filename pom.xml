@@ -381,6 +381,7 @@
                         <suiteXmlFile>src/test/resources/testng_pubsub.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_http_api.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_archive.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_external.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_custom.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_auditlog.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_jaxmpp.xml</suiteXmlFile>
