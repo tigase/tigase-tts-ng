@@ -213,7 +213,7 @@ public class AccountsManager
 	protected void scopeFinished(Object key) {
 		accounts.getOrDefault(key, new HashSet<>()).forEach(account -> {
 			try {
-				unregisterAccount(account);
+				unregisterAccount(test.getJaxmppAdmin(), account);
 			} catch (JaxmppException | InterruptedException e) {
 				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove account " + account, e);
 			}
@@ -242,6 +242,7 @@ public class AccountsManager
 		jaxmpp.getConnectionConfiguration().setUserPassword(account.getPassword());
 		jaxmpp.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
 
+		log("!!!!!!!!! "+account.getJid());
 		jaxmpp.login(true);
 		unregisterAccount(jaxmpp, account);
 	}
