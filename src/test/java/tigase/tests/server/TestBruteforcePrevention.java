@@ -3,6 +3,7 @@ package tigase.tests.server;
 import org.testng.Assert;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
@@ -75,6 +76,32 @@ public class TestBruteforcePrevention
 		mutex.waitFor(30_000, "user");
 		Assert.assertTrue(mutex.isItemNotified("user:ok:" + expectedEnabledStatus),
 						  "User enable status is different " + "than " + expectedEnabledStatus);
+	}
+
+	private void disconnect(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
+		final Mutex mutex = new Mutex();
+		final EventListener eventListener = new EventListener() {
+			@Override
+			public void onEvent(Event<? extends EventHandler> event) {
+				if (event instanceof Connector.DisconnectedHandler.DisconnectedEvent) {
+					mutex.notify("disconnected");
+				}
+			}
+		};
+
+		try {
+			jaxmpp.getEventBus().addListener(eventListener);
+			TestLogger.log("Disconnecting");
+			jaxmpp.disconnect();
+
+			if (!jaxmpp.isConnected()) {
+				mutex.notify("disconnected");
+			}
+
+			mutex.waitFor(10_000, "disconnected");
+		} finally {
+			jaxmpp.getEventBus().remove(eventListener);
+		}
 
 	}
 
@@ -112,7 +139,7 @@ public class TestBruteforcePrevention
 
 		Jaxmpp jaxmppOk = user.createJaxmpp().setConnected(true).build();
 		assertTrue(jaxmppOk.isConnected());
-		jaxmppOk.disconnect(true);
+		disconnect(jaxmppOk);
 
 		for (int i = 0; i < 21; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
@@ -134,7 +161,7 @@ public class TestBruteforcePrevention
 
 		Jaxmpp jaxmppOk = user.createJaxmpp().setConnected(true).build();
 		assertTrue(jaxmppOk.isConnected());
-		jaxmppOk.disconnect(true);
+		disconnect(jaxmppOk);
 
 		for (int i = 0; i < 4; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
@@ -159,7 +186,7 @@ public class TestBruteforcePrevention
 
 		Jaxmpp jaxmppOk = user.createJaxmpp().setConnected(true).build();
 		assertTrue(jaxmppOk.isConnected());
-		jaxmppOk.disconnect(true);
+		disconnect(jaxmppOk);
 
 		for (int i = 0; i < 4; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
@@ -184,7 +211,7 @@ public class TestBruteforcePrevention
 
 		Jaxmpp jaxmppOk = user.createJaxmpp().setConnected(true).build();
 		assertTrue(jaxmppOk.isConnected());
-		jaxmppOk.disconnect(true);
+		disconnect(jaxmppOk);
 
 		for (int i = 0; i < 3; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
@@ -193,7 +220,7 @@ public class TestBruteforcePrevention
 
 		jaxmppOk = user.createJaxmpp().setConnected(true).build();
 		assertTrue(jaxmppOk.isConnected());
-		jaxmppOk.disconnect(true);
+		disconnect(jaxmppOk);
 
 		checkUserStatus(user.getJid(), true);
 	}
