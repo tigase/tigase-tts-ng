@@ -4,8 +4,12 @@ import org.testng.Assert;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.eventbus.Event;
+import tigase.jaxmpp.core.client.eventbus.EventHandler;
+import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.forms.AbstractField;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
@@ -13,11 +17,13 @@ import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.saslmechanisms.PlainMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.scram.ScramMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.scram.ScramSHA256Mechanism;
+import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractJaxmppTest;
@@ -72,9 +78,34 @@ public class TestBruteforcePrevention
 
 	}
 
-	@Test
+	private void makeInvalidLogin(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
+		final Mutex mutex = new Mutex();
+		final EventListener eventListener = new EventListener() {
+			@Override
+			public void onEvent(Event<? extends EventHandler> event) {
+				if (event instanceof AuthModule.AuthFailedHandler.AuthFailedEvent) {
+					mutex.notify("event", "authFailed");
+				} else if (event instanceof ResourceBinderModule.ResourceBindSuccessHandler.ResourceBindSuccessEvent ||
+						event instanceof StreamManagementModule.StreamResumedHandler.StreamResumedEvent) {
+					mutex.notify("event", "loggedIn");
+				} else if (event instanceof Connector.DisconnectedHandler.DisconnectedEvent) {
+					mutex.notify("event", "disconnected");
+				}
+			}
+		};
+		jaxmpp.getConnectionConfiguration().setUserPassword(" - - - - -");
+		try {
+			jaxmpp.getEventBus().addListener(eventListener);
+			jaxmpp.login();
+			mutex.waitFor(30_000, "event");
+			assertTrue(mutex.isItemNotified("authFailed"));
+		} finally {
+			jaxmpp.getEventBus().remove(eventListener);
+		}
+	}
+
+	@Test(description = "Test disabling user (21 invalid login)")
 	public void testDisableUser() throws Exception {
-		final SaslMechanism[] mechanisms = {new PlainMechanism(), new ScramSHA256Mechanism(), new ScramMechanism()};
 		final Random random = SecureRandom.getInstanceStrong();
 
 		Account user = createAccount().setLogPrefix("user").build();
@@ -85,18 +116,7 @@ public class TestBruteforcePrevention
 
 		for (int i = 0; i < 21; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
-
-			SaslModule module = jaxmpp.getModule(SaslModule.class);
-
-			module.removeAllMechanisms();
-			module.addMechanism(mechanisms[random.nextInt(mechanisms.length)]);
-
-			jaxmpp.getConnectionConfiguration().setUserPassword(" - - - - -");
-			try {
-				jaxmpp.login(true);
-				AssertJUnit.fail("It should not happen!");
-			} catch (Exception ignored) {
-			}
+			makeInvalidLogin(jaxmpp);
 		}
 
 		try {
@@ -108,7 +128,7 @@ public class TestBruteforcePrevention
 		checkUserStatus(user.getJid(), false);
 	}
 
-	@Test
+	@Test(description = "Test softban (4 invalid login)")
 	public void testOneInvalidLoginTooMuchDefaultSasl() throws Exception {
 		Account user = createAccount().setLogPrefix("user").build();
 
@@ -118,13 +138,7 @@ public class TestBruteforcePrevention
 
 		for (int i = 0; i < 4; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
-
-			jaxmpp.getConnectionConfiguration().setUserPassword(" - - - - -");
-			try {
-				jaxmpp.login(true);
-				AssertJUnit.fail("It should not happen!");
-			} catch (Exception ignored) {
-			}
+			makeInvalidLogin(jaxmpp);
 		}
 
 		try {
@@ -136,7 +150,7 @@ public class TestBruteforcePrevention
 		checkUserStatus(user.getJid(), true);
 	}
 
-	@Test
+	@Test(description = "Test softban (4 invalid login) with random SASL mechanisms")
 	public void testOneInvalidLoginTooMuchRandomSasl() throws Exception {
 		final SaslMechanism[] mechanisms = {new PlainMechanism(), new ScramSHA256Mechanism(), new ScramMechanism()};
 		final Random random = SecureRandom.getInstanceStrong();
@@ -149,18 +163,10 @@ public class TestBruteforcePrevention
 
 		for (int i = 0; i < 4; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
-
 			SaslModule module = jaxmpp.getModule(SaslModule.class);
-
 			module.removeAllMechanisms();
 			module.addMechanism(mechanisms[random.nextInt(mechanisms.length)]);
-
-			jaxmpp.getConnectionConfiguration().setUserPassword(" - - - - -");
-			try {
-				jaxmpp.login(true);
-				AssertJUnit.fail("It should not happen!");
-			} catch (Exception ignored) {
-			}
+			makeInvalidLogin(jaxmpp);
 		}
 
 		try {
@@ -172,7 +178,7 @@ public class TestBruteforcePrevention
 		checkUserStatus(user.getJid(), true);
 	}
 
-	@Test
+	@Test(description = "Test correct login after 3 invalid attempts")
 	public void testThreeInvalidLogins() throws Exception {
 		Account user = createAccount().setLogPrefix("user").build();
 
@@ -182,12 +188,7 @@ public class TestBruteforcePrevention
 
 		for (int i = 0; i < 3; i++) {
 			Jaxmpp jaxmpp = user.createJaxmpp().setConnected(false).build();
-			jaxmpp.getConnectionConfiguration().setUserPassword(" - - - - -");
-			try {
-				jaxmpp.login(true);
-				AssertJUnit.fail("It should not happen!");
-			} catch (Exception ignored) {
-			}
+			makeInvalidLogin(jaxmpp);
 		}
 
 		jaxmppOk = user.createJaxmpp().setConnected(true).build();
