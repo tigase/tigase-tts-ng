@@ -65,7 +65,8 @@ import static tigase.tests.AbstractTest.LOG_PREFIX_KEY;
 /**
  * Created by andrzej on 22.04.2017.
  */
-public class AccountsManager extends AbstractManager {
+public class AccountsManager
+		extends AbstractManager {
 
 	private final static TrustManager[] dummyTrustManagers = new X509TrustManager[]{new X509TrustManager() {
 
@@ -99,21 +100,33 @@ public class AccountsManager extends AbstractManager {
 		}
 	}
 
-	public void remove(Account account) {
-		Object key = getScopeKey();
-		if (accounts.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).remove(account)) {
-			System.out.println("removed account = " + account);
-		}
-	}
-
-	protected void scopeFinished(Object key) {
-		accounts.getOrDefault(key, new HashSet<>()).forEach(account -> {
-			try {
-				unregisterAccount(account);
-			} catch (JaxmppException | InterruptedException e) {
-				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove account " + account, e);
+	public Jaxmpp createJaxmpp(String logPrefix) {
+		try {
+			Jaxmpp jaxmpp1 = new Jaxmpp();
+			jaxmpp1.getSessionObject().setProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
+			if (logPrefix != null) {
+				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
 			}
-		});
+			jaxmpp1.getSessionObject().setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
+			jaxmpp1.getEventBus().addListener(test.connectorListener);
+
+			jaxmpp1.getModulesManager().register(new InBandRegistrationModule());
+			jaxmpp1.getModulesManager().register(new MessageModule());
+			jaxmpp1.getModulesManager().register(new MessageCarbonsModule());
+			jaxmpp1.getModulesManager().register(new MucModule());
+			jaxmpp1.getModulesManager().register(new AdHocCommansModule());
+			jaxmpp1.getModulesManager().register(new RosterModule());
+			jaxmpp1.getModulesManager().register(new MessageArchivingModule());
+			jaxmpp1.getModulesManager().register(new PubSubModule());
+			jaxmpp1.getModulesManager().register(new VCardModule());
+
+			tigase.jaxmpp.j2se.Presence.initialize(jaxmpp1);
+
+			return jaxmpp1;
+		} catch (JaxmppException e) {
+			test.fail(e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	public Account registerAccount(AccountBuilder builder, Account account)
@@ -190,6 +203,23 @@ public class AccountsManager extends AbstractManager {
 		return account;
 	}
 
+	public void remove(Account account) {
+		Object key = getScopeKey();
+		if (accounts.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).remove(account)) {
+			System.out.println("removed account = " + account);
+		}
+	}
+
+	protected void scopeFinished(Object key) {
+		accounts.getOrDefault(key, new HashSet<>()).forEach(account -> {
+			try {
+				unregisterAccount(account);
+			} catch (JaxmppException | InterruptedException e) {
+				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove account " + account, e);
+			}
+		});
+	}
+
 	public void unregisterAccount(BareJID jid) throws JaxmppException, InterruptedException {
 		Object key = getScopeKey();
 		Account account = accounts.getOrDefault(key, new HashSet<>())
@@ -227,52 +257,63 @@ public class AccountsManager extends AbstractManager {
 		unregisterAccount(jaxmpp, account);
 	}
 
-	public Jaxmpp createJaxmpp(String logPrefix) {
-		try {
-			Jaxmpp jaxmpp1 = new Jaxmpp();
-			jaxmpp1.getSessionObject().setProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
-			if (logPrefix != null) {
-				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
-			}
-			jaxmpp1.getSessionObject().setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
-			jaxmpp1.getEventBus().addListener(test.connectorListener);
-
-			jaxmpp1.getModulesManager().register(new InBandRegistrationModule());
-			jaxmpp1.getModulesManager().register(new MessageModule());
-			jaxmpp1.getModulesManager().register(new MessageCarbonsModule());
-			jaxmpp1.getModulesManager().register(new MucModule());
-			jaxmpp1.getModulesManager().register(new AdHocCommansModule());
-			jaxmpp1.getModulesManager().register(new RosterModule());
-			jaxmpp1.getModulesManager().register(new MessageArchivingModule());
-			jaxmpp1.getModulesManager().register(new PubSubModule());
-			jaxmpp1.getModulesManager().register(new VCardModule());
-
-			tigase.jaxmpp.j2se.Presence.initialize(jaxmpp1);
-
-			return jaxmpp1;
-		} catch (JaxmppException e) {
-			test.fail(e);
-			throw new RuntimeException(e);
+	private void unregisterAccount(final Jaxmpp jaxmpp, final Account account)
+			throws JaxmppException, InterruptedException {
+		if (test.getAdminAccount() == account) {
+			// removing admin account skipped!
+			return;
 		}
-	}
-	
-	private void unregisterAccount(Jaxmpp jaxmpp, Account account) throws JaxmppException, InterruptedException {
-		try {
-			BareJID userJid = account.getJid();
-			final Mutex mutex = new Mutex();
 
-			final JID jid1 = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
-			if (jid1 == null && !jaxmpp.isConnected()) {
-				jaxmpp.login(true);
+		if (test.getAdminAccount() != null) {
+			log("Remove account as admin: " + account.getJid());
+			Jaxmpp adminJaxmpp = test.getJaxmppAdmin();
+			if (!adminJaxmpp.isConnected()) {
+				adminJaxmpp.login(true);
 			}
-			final JID jid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
 
+			JabberDataElement data = new JabberDataElement(XDataType.submit);
+			data.addHiddenField("FORM_TYPE", "http://jabber.org/protocol/admin");
+			data.addJidMultiField("accountjids", JID.jidInstance(account.getJid()));
+
+			final Mutex mutex = new Mutex();
+			jaxmpp.getModule(AdHocCommansModule.class)
+					.execute(JID.jidInstance("sess-man", test.getAdminAccount().getJid().getDomain()),
+							 "http://jabber.org/protocol/admin#delete-user", Action.execute, data, new AsyncCallback() {
+								@Override
+								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										throws JaxmppException {
+									mutex.notify("account:removed:error:" + error.getElementName());
+									mutex.notify("account:removed");
+								}
+
+								@Override
+								public void onSuccess(Stanza responseStanza) throws JaxmppException {
+									mutex.notify("account:removed");
+								}
+
+								@Override
+								public void onTimeout() throws JaxmppException {
+									mutex.notify("account:removed");
+								}
+							});
+
+			mutex.waitFor(30 * 1000, "account:removed");
+		} else {
+			log("Remove own account as user: " + account.getJid());
+			final Mutex mutex = new Mutex();
+			final BareJID userJid = account.getJid();
 			final JaxmppCore.LoggedOutHandler disconnectionHandler = sessionObject -> {
 				log("Disconnected! " + userJid);
 				mutex.notifyForce();
 			};
-
 			try {
+
+				final JID jid1 = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
+				if (jid1 == null && !jaxmpp.isConnected()) {
+					jaxmpp.login(true);
+				}
+				final JID jid = ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject());
+
 				jaxmpp.getEventBus().addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
 
 				jaxmpp.getModule(InBandRegistrationModule.class).removeAccount(new AsyncCallback() {
@@ -311,42 +352,6 @@ public class AccountsManager extends AbstractManager {
 				account.accountUnregistered();
 			} finally {
 				jaxmpp.getEventBus().remove(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, disconnectionHandler);
-			}
-		} catch (JaxmppException ex) {
-			if (test.getAdminAccount() != account) {
-				Jaxmpp adminJaxmpp = test.getJaxmppAdmin();
-				if (!adminJaxmpp.isConnected()) {
-					adminJaxmpp.login(true);
-				}
-
-				JabberDataElement data = new JabberDataElement(XDataType.submit);
-				data.addHiddenField("FORM_TYPE", "http://jabber.org/protocol/admin");
-				data.addJidMultiField("accountjids", JID.jidInstance(account.getJid()));
-
-				final Mutex mutex = new Mutex();
-				jaxmpp.getModule(AdHocCommansModule.class)
-						.execute(JID.jidInstance("sess-man", test.getAdminAccount().getJid().getDomain()),
-								 "http://jabber.org/protocol/admin#delete-user", Action.execute, data,
-								 new AsyncCallback() {
-									 @Override
-									 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-											 throws JaxmppException {
-										 mutex.notify("account:removed:error:" + error.getElementName());
-										 mutex.notify("account:removed");
-									 }
-
-									 @Override
-									 public void onSuccess(Stanza responseStanza) throws JaxmppException {
-										 mutex.notify("account:removed");
-									 }
-
-									 @Override
-									 public void onTimeout() throws JaxmppException {
-										 mutex.notify("account:removed");
-									 }
-								 });
-
-				mutex.waitFor(30 * 1000, "account:removed");
 			}
 		}
 	}
