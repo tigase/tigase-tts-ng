@@ -8,8 +8,6 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
-import tigase.jaxmpp.core.client.eventbus.Event;
-import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.forms.AbstractField;
@@ -31,7 +29,6 @@ import tigase.tests.AbstractJaxmppTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
-import java.security.SecureRandom;
 import java.util.Random;
 
 import static org.testng.AssertJUnit.assertTrue;
@@ -39,13 +36,14 @@ import static org.testng.AssertJUnit.assertTrue;
 public class TestBruteforcePrevention
 		extends AbstractJaxmppTest {
 
+	private final Random random = new Random();
+
 	private void checkUserStatus(final BareJID jid, final boolean expectedEnabledStatus) throws Exception {
 		final Mutex mutex = new Mutex();
 
 		assert getJaxmppAdmin().isConnected();
 		final AdHocCommansModule adHoc = getJaxmppAdmin().getModule(AdHocCommansModule.class);
 		final String domain = ResourceBinderModule.getBindedJID(getJaxmppAdmin().getSessionObject()).getDomain();
-
 		final JabberDataElement form = new JabberDataElement(XDataType.submit);
 		form.addJidSingleField("accountjid", JID.jidInstance(jid));
 
@@ -80,12 +78,9 @@ public class TestBruteforcePrevention
 
 	private void disconnect(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		final Mutex mutex = new Mutex();
-		final EventListener eventListener = new EventListener() {
-			@Override
-			public void onEvent(Event<? extends EventHandler> event) {
-				if (event instanceof Connector.DisconnectedHandler.DisconnectedEvent) {
-					mutex.notify("disconnected");
-				}
+		final EventListener eventListener = event -> {
+			if (event instanceof Connector.DisconnectedHandler.DisconnectedEvent) {
+				mutex.notify("disconnected");
 			}
 		};
 
@@ -107,17 +102,14 @@ public class TestBruteforcePrevention
 
 	private void makeInvalidLogin(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		final Mutex mutex = new Mutex();
-		final EventListener eventListener = new EventListener() {
-			@Override
-			public void onEvent(Event<? extends EventHandler> event) {
-				if (event instanceof AuthModule.AuthFailedHandler.AuthFailedEvent) {
-					mutex.notify("event", "authFailed");
-				} else if (event instanceof ResourceBinderModule.ResourceBindSuccessHandler.ResourceBindSuccessEvent ||
-						event instanceof StreamManagementModule.StreamResumedHandler.StreamResumedEvent) {
-					mutex.notify("event", "loggedIn");
-				} else if (event instanceof Connector.DisconnectedHandler.DisconnectedEvent) {
-					mutex.notify("event", "disconnected");
-				}
+		final EventListener eventListener = event -> {
+			if (event instanceof AuthModule.AuthFailedHandler.AuthFailedEvent) {
+				mutex.notify("event", "authFailed");
+			} else if (event instanceof ResourceBinderModule.ResourceBindSuccessHandler.ResourceBindSuccessEvent ||
+					event instanceof StreamManagementModule.StreamResumedHandler.StreamResumedEvent) {
+				mutex.notify("event", "loggedIn");
+			} else if (event instanceof Connector.DisconnectedHandler.DisconnectedEvent) {
+				mutex.notify("event", "disconnected");
 			}
 		};
 		jaxmpp.getConnectionConfiguration().setUserPassword(" - - - - -");
@@ -133,8 +125,6 @@ public class TestBruteforcePrevention
 
 	@Test(description = "Test disabling user (21 invalid login)")
 	public void testDisableUser() throws Exception {
-		final Random random = SecureRandom.getInstanceStrong();
-
 		Account user = createAccount().setLogPrefix("user").build();
 
 		Jaxmpp jaxmppOk = user.createJaxmpp().setConnected(true).build();
@@ -180,7 +170,6 @@ public class TestBruteforcePrevention
 	@Test(description = "Test softban (4 invalid login) with random SASL mechanisms")
 	public void testOneInvalidLoginTooMuchRandomSasl() throws Exception {
 		final SaslMechanism[] mechanisms = {new PlainMechanism(), new ScramSHA256Mechanism(), new ScramMechanism()};
-		final Random random = SecureRandom.getInstanceStrong();
 
 		Account user = createAccount().setLogPrefix("user").build();
 
