@@ -28,6 +28,7 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.forms.ListSingleField;
 import tigase.jaxmpp.core.client.xmpp.forms.TextSingleField;
@@ -78,7 +79,9 @@ public class ComponentProtocolTest
 						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
 							 @Override
 							 protected void onResponseReceived(String sessionid, String node, State status,
-															   JabberDataElement data) throws JaxmppException {
+															   JabberDataElement _data) throws JaxmppException {
+
+							 	 JabberDataElement data = new JabberDataElement(ElementFactory.create(_data));
 								 ((TextSingleField) data.getField("Domain name")).setFieldValue("muc-ext." + getDomain());
 								 ((TextSingleField) data.getField("Domain password")).setFieldValue("muc-pass");
 								 ((ListSingleField) data.getField("Connection type")).setFieldValue("accept");
@@ -134,7 +137,8 @@ public class ComponentProtocolTest
 						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
 							 @Override
 							 protected void onResponseReceived(String sessionid, String node, State status,
-															   JabberDataElement data) throws JaxmppException {
+															   JabberDataElement _data) throws JaxmppException {
+								 JabberDataElement data = new JabberDataElement(ElementFactory.create(_data));
 								 ((TextSingleField) data.getField("Port number")).setFieldValue("5271");
 
 								 getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(extJID, "comp-repo-item-update", Action.execute, data, new AdHocCommansModule.AdHocCommansAsyncCallback() {
@@ -210,13 +214,14 @@ public class ComponentProtocolTest
 						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
 							 @Override
 							 protected void onResponseReceived(String sessionid, String node, State status,
-															   JabberDataElement data) throws JaxmppException {
+															   JabberDataElement _data) throws JaxmppException {
+								 JabberDataElement data = new JabberDataElement(ElementFactory.create(_data));
 								 ((TextSingleField) data.getField("Domain name")).setFieldValue("muc-ext." + getDomain());
 								 ((TextSingleField) data.getField("Domain password")).setFieldValue("muc-pass");
 								 ((ListSingleField) data.getField("Connection type")).setFieldValue("connect");
 								 ((TextSingleField) data.getField("Port number")).setFieldValue("5270");
 								 ((TextSingleField) data.getField("Remote host")).setFieldValue(DNSResolverFactory.getInstance().getDefaultHost());
-								 ((TextSingleField) data.getField("Protocol")).setFieldValue("connect");
+								 ((ListSingleField) data.getField("Protocol")).setFieldValue("connect");
 
 								 getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(extJID, "comp-repo-item-add", Action.execute, data, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
@@ -294,7 +299,8 @@ public class ComponentProtocolTest
 																	 null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 					@Override
 					protected void onResponseReceived(String sessionid, String node, State status,
-													  JabberDataElement data) throws JaxmppException {
+													  JabberDataElement _data) throws JaxmppException {
+						JabberDataElement data = new JabberDataElement(ElementFactory.create(_data));
 						ListSingleField f = data.getField("item-list");
 						if (f != null) {
 							Queue<String> items = new ArrayDeque<>();
