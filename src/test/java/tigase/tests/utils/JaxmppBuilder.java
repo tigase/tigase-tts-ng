@@ -35,6 +35,7 @@ public class JaxmppBuilder {
 	private final Account account;
 	private Function<Jaxmpp, Jaxmpp> configurator;
 	private boolean connected = false;
+	private String resource;
 	private String host;
 	private String logPrefix;
 
@@ -61,6 +62,9 @@ public class JaxmppBuilder {
 		}
 		if (account.getPassword() != null) {
 			jaxmpp1.getConnectionConfiguration().setUserPassword(account.getPassword());
+		}
+		if (resource != null) {
+			jaxmpp1.getConnectionConfiguration().setResource(resource);
 		}
 //			if (domain != null)
 //				jaxmpp1.getConnectionConfiguration().setDomain(account.);
@@ -102,6 +106,11 @@ public class JaxmppBuilder {
 
 	public JaxmppBuilder setConfigurator(Function<Jaxmpp, Jaxmpp> configurator) {
 		this.configurator = configurator;
+		return this;
+	}
+
+	public JaxmppBuilder setResource(String resource) {
+		this.resource = resource;
 		return this;
 	}
 }

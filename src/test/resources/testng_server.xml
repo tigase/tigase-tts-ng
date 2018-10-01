@@ -116,5 +116,10 @@
         </packages>
     </test>
 
+    <test name="Privacy list">
+        <classes>
+            <class name="tigase.tests.server.TestPrivacyList"/>
+        </classes>
+    </test>
 
 </suite>
