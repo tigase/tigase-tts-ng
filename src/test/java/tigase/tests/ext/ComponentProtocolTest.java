@@ -221,7 +221,7 @@ public class ComponentProtocolTest
 								 ((ListSingleField) data.getField("Connection type")).setFieldValue("connect");
 								 ((TextSingleField) data.getField("Port number")).setFieldValue("5270");
 								 ((TextSingleField) data.getField("Remote host")).setFieldValue(DNSResolverFactory.getInstance().getDefaultHost());
-								 ((ListSingleField) data.getField("Protocol")).setFieldValue("connect");
+								 ((ListSingleField) data.getField("Protocol")).setFieldValue("accept");
 
 								 getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(extJID, "comp-repo-item-add", Action.execute, data, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
