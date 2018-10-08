@@ -39,7 +39,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
-import tigase.util.dns.DNSResolverFactory;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -220,7 +219,7 @@ public class ComponentProtocolTest
 								 ((TextSingleField) data.getField("Domain password")).setFieldValue("muc-pass");
 								 ((ListSingleField) data.getField("Connection type")).setFieldValue("connect");
 								 ((TextSingleField) data.getField("Port number")).setFieldValue("5270");
-								 ((TextSingleField) data.getField("Remote host")).setFieldValue(DNSResolverFactory.getInstance().getDefaultHost());
+								 ((TextSingleField) data.getField("Remote host")).setFieldValue(getInstanceHostname());
 								 ((ListSingleField) data.getField("Protocol")).setFieldValue("accept");
 
 								 getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(extJID, "comp-repo-item-add", Action.execute, data, new AdHocCommansModule.AdHocCommansAsyncCallback() {
