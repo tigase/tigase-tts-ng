@@ -277,7 +277,7 @@ public class AccountsManager
 			data.addJidMultiField("accountjids", JID.jidInstance(account.getJid()));
 
 			final Mutex mutex = new Mutex();
-			jaxmpp.getModule(AdHocCommansModule.class)
+			adminJaxmpp.getModule(AdHocCommansModule.class)
 					.execute(JID.jidInstance("sess-man", test.getAdminAccount().getJid().getDomain()),
 							 "http://jabber.org/protocol/admin#delete-user", Action.execute, data, new AsyncCallback() {
 								@Override

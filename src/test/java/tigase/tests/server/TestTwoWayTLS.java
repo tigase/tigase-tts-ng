@@ -35,10 +35,7 @@ import tigase.tests.AbstractTest;
 import tigase.tests.utils.Account;
 
 import javax.net.ssl.KeyManagerFactory;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
@@ -69,7 +66,7 @@ public class TestTwoWayTLS
 	@BeforeClass
 	public void createRequiredVHost() throws JaxmppException, InterruptedException {
 		String vhost = props.getProperty("server.client_auth.domain");
-		String caCertPath = props.getProperty("server.client_auth.ca_cert");
+		String caCertPath = new File(props.getProperty("server.client_auth.ca_cert")).getAbsolutePath();
 		createVHost(vhost).setClientCertCA(caCertPath).setClientCertRequired(true).updateIfExists(true).build();
 	}
 
