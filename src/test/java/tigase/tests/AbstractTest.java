@@ -41,6 +41,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.utils.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -259,6 +260,17 @@ public abstract class AbstractTest {
 
 	public void removeUserAccount(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		accountManager.unregisterAccount(jaxmpp);
+	}
+
+	public File getServerConfigBaseDir() {
+		String val = System.getProperty("CONFIG_BASE_DIR");
+		if (val == null) {
+			val = System.getenv("CONFIG_BASE_DIR");
+			if (val == null) {
+				val = new File("src/test/resources/server").getAbsolutePath();
+			}
+		}
+		return new File(val);
 	}
 
 	protected String addVhost(final Jaxmpp adminJaxmpp, final String prefix)
