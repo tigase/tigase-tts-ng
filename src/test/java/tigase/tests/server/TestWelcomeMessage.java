@@ -185,7 +185,7 @@ public class TestWelcomeMessage
 
 		userJaxmpp.login(true);
 
-		mutex.waitFor(20 * 1000, "welcome:message:" + counter.get() + ":" + body);
+		Thread.sleep(5000);
 		assertFalse(mutex.isItemNotified("welcome:message:" + counter.get() + ":" + body));
 	}
 

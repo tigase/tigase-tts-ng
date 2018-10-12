@@ -54,6 +54,7 @@ pubsub () {
     'persistent-pep' = true
 }
 'sess-man' {
+    'auth-timeout' = 20
     'jabber:iq:register' () {}
     'message-archive' () {
         'msg-archive-paths' = [ '-/message/result[urn:xmpp:mam:1]', '/message/body', '/message/subject' ]

@@ -46,162 +46,195 @@ public class RetrieveVersion
 		extends AbstractTest {
 
 	@Test(groups = {"utils"}, description = "Retrieve server version")
-	public void retrieveServerVersion() throws InterruptedException, JaxmppException, Exception {
+	public void retrieveServerVersion() {
 
 		setLoggerLevel(Level.OFF, false);
+		forEachClusterNode(this::retrieveVersion);
+	}
 
+	// Unavailable on 8.0.0 and above
+	@Test(groups = {"utils"}, description = "Retrieve server components", enabled = false)
+	public void retrieveComponents() {
+
+		setLoggerLevel(Level.OFF, false);
+		forEachClusterNode(this::retrieveComponents);
+	}
+
+	// Unavailable on 8.0.0 and above
+	@Test(groups = {"utils"}, description = "Retrieve server configuration", enabled = false)
+	public void retrieveServerConfiguration() {
+
+		setLoggerLevel(Level.OFF, false);
+		forEachClusterNode(this::retrieveConfiguration);
+	}
+
+
+	private void forEachClusterNode(Consumer<Jaxmpp> function) {
 		String[] instanceHostnames = getInstanceHostnames();
 		if (instanceHostnames != null & instanceHostnames.length > 0) {
 			for (String node : instanceHostnames) {
 				log(" == " + node + " ==", false);
-				retrieveVersion(node);
-
+				try {
+					Jaxmpp jaxmpp = getAdminJaxmppForClusterNode(node);
+					function.accept(jaxmpp);
+					jaxmpp.disconnect();
+				} catch (Exception ex) {
+					log(" == " + node + " == - failure = " + ex.getMessage());
+				}
 			}
 		}
 	}
 
-	private void retrieveVersion(String hostname) throws Exception, JaxmppException {
-		Jaxmpp adminJaxmpp = getAdminAccount().createJaxmpp().setHost(hostname).setConnected(true).build();
-		assertTrue(adminJaxmpp.isConnected(), "contact was not connected");
-		if (adminJaxmpp.isConnected()) {
+	private void retrieveVersion(Jaxmpp adminJaxmpp) throws Exception, JaxmppException {
+		// version
+		log(" == Retrieve version", false);
+		IQ iq = IQ.create();
+		iq.setType(StanzaType.set);
+		iq.setTo(JID.jidInstance(adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
+		iq.addChild(ElementFactory.create("query", null, "jabber:iq:version"));
 
-			// version
-			log(" == Retrieve version", false);
-			IQ iq = IQ.create();
-			iq.setType(StanzaType.set);
-			iq.setTo(JID.jidInstance(adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
-			iq.addChild(ElementFactory.create("query", null, "jabber:iq:version"));
+		sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
 
-			sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				log("error" + responseStanza.getAsString(), false);
+			}
 
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					log("error" + responseStanza.getAsString(), false);
-				}
-
-				@Override
-				public void onSuccess(Stanza responseStanza) throws JaxmppException {
-					final Element query = responseStanza.getChildrenNS("query", "jabber:iq:version");
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				final Element query = responseStanza.getChildrenNS("query", "jabber:iq:version");
 //					log( "onSuccess: " + responseStanza.getAsString() );
-					log("onSuccess", false);
-					log("", false);
-					if (query != null && query.getChildren() != null && !query.getChildren().isEmpty()) {
-						for (Element child : query.getChildren()) {
-							log(child.getName() + ": " + child.getValue(), false);
-						}
-					}
-					log("", false);
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					log("onTimeout");
-				}
-			});
-
-			// configuration
-			log(" == Retrieve configuration", false);
-			iq = IQ.create();
-			iq.setType(StanzaType.set);
-			iq.setTo(JID.jidInstance(adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
-
-			JabberDataElement jde = new JabberDataElement(XDataType.submit);
-			Element command = ElementFactory.create("command", null, "http://jabber.org/protocol/commands");
-			command.setAttribute("node", "config-list");
-			jde.addListSingleField("comp-name", "sess-man");
-			command.addChild(jde);
-			iq.addChild(command);
-
-			sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
-
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					log("error" + responseStanza.getAsString(), false);
-				}
-
-				@Override
-				public void onSuccess(Stanza responseStanza) throws JaxmppException {
-//					log( "onSuccess: " + responseStanza.getAsString() );
-					log("onSuccess", false);
-					Element command = responseStanza.getChildrenNS("command", "http://jabber.org/protocol/commands");
-					if (command != null) {
-						Element x = command.getChildrenNS("x", "jabber:x:data");
-
-//						log( "onSuccess, x: " + x );
-						if (x != null) {
-							JabberDataElement jde2 = new JabberDataElement(x);
-							log("", false);
-							if (jde2 != null && jde2.getFields() != null && !jde2.getFields().isEmpty()) {
-								for (AbstractField field : jde2.getFields()) {
-									log(field.getVar() + ": " + field.getFieldValue(), false);
-								}
-							}
-							log("", false);
-						}
+				log("onSuccess", false);
+				log("", false);
+				if (query != null && query.getChildren() != null && !query.getChildren().isEmpty()) {
+					for (Element child : query.getChildren()) {
+						log(child.getName() + ": " + child.getValue(), false);
 					}
 				}
+				log("", false);
+			}
 
-				@Override
-				public void onTimeout() throws JaxmppException {
-					log("onTimeout");
-				}
-			});
-
-			// components
-			log(" == Retrieve components", false);
-			iq = IQ.create();
-			iq.setType(StanzaType.set);
-			iq.setTo(JID.jidInstance(adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
-
-			jde = new JabberDataElement(XDataType.submit);
-			command = ElementFactory.create("command", null, "http://jabber.org/protocol/commands");
-			command.setAttribute("node", "comp-manager");
-			jde.addListSingleField("action", "List");
-			command.addChild(jde);
-			iq.addChild(command);
-
-			sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
-
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					log("error" + responseStanza.getAsString(), false);
-				}
-
-				@Override
-				public void onSuccess(Stanza responseStanza) throws JaxmppException {
-//					log( "onSuccess: " + responseStanza.getAsString() );
-					log("onSuccess", false);
-					Element command = responseStanza.getChildrenNS("command", "http://jabber.org/protocol/commands");
-					if (command != null) {
-						Element x = command.getChildrenNS("x", "jabber:x:data");
-
-//						log( "onSuccess, x: " + x );
-						if (x != null) {
-							JabberDataElement jde2 = new JabberDataElement(x);
-							log("", false);
-							if (jde2 != null && jde2.getFields() != null && !jde2.getFields().isEmpty()) {
-								for (AbstractField field : jde2.getFields()) {
-									if (field instanceof TextMultiField) {
-										log(field.getVar() + ": " + ((TextMultiField) field).getFieldValue()[0], false);
-									}
-								}
-							}
-							log("", false);
-						}
-					}
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					log("onTimeout", false);
-				}
-			});
-
-			adminJaxmpp.disconnect();
-
-			log("\n\n\n");
-
-		}
+			@Override
+			public void onTimeout() throws JaxmppException {
+				log("onTimeout");
+			}
+		});
 	}
 
+	private void retrieveConfiguration(Jaxmpp adminJaxmpp) throws Exception {
+		// configuration
+		log(" == Retrieve configuration", false);
+		IQ iq = IQ.create();
+		iq.setType(StanzaType.set);
+		iq.setTo(JID.jidInstance("message-router", adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
+
+		JabberDataElement jde = new JabberDataElement(XDataType.submit);
+		Element command = ElementFactory.create("command", null, "http://jabber.org/protocol/commands");
+		command.setAttribute("node", "config-list");
+		jde.addListSingleField("comp-name", "sess-man");
+		command.addChild(jde);
+		iq.addChild(command);
+
+		sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				log("error" + responseStanza.getAsString(), false);
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+//					log( "onSuccess: " + responseStanza.getAsString() );
+				log("onSuccess", false);
+				Element command = responseStanza.getChildrenNS("command", "http://jabber.org/protocol/commands");
+				if (command != null) {
+					Element x = command.getChildrenNS("x", "jabber:x:data");
+
+//						log( "onSuccess, x: " + x );
+					if (x != null) {
+						JabberDataElement jde2 = new JabberDataElement(x);
+						log("", false);
+						if (jde2 != null && jde2.getFields() != null && !jde2.getFields().isEmpty()) {
+							for (AbstractField field : jde2.getFields()) {
+								log(field.getVar() + ": " + field.getFieldValue(), false);
+							}
+						}
+						log("", false);
+					}
+				}
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				log("onTimeout");
+			}
+		});
+	}
+
+	private void retrieveComponents(Jaxmpp adminJaxmpp) throws Exception {
+		// components
+		log(" == Retrieve components", false);
+		IQ iq = IQ.create();
+		iq.setType(StanzaType.set);
+		iq.setTo(JID.jidInstance(adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
+
+		JabberDataElement jde = new JabberDataElement(XDataType.submit);
+		Element command = ElementFactory.create("command", null, "http://jabber.org/protocol/commands");
+		command.setAttribute("node", "comp-manager");
+		jde.addListSingleField("action", "List");
+		command.addChild(jde);
+		iq.addChild(command);
+
+		sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				log("error" + responseStanza.getAsString(), false);
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+//					log( "onSuccess: " + responseStanza.getAsString() );
+				log("onSuccess", false);
+				Element command = responseStanza.getChildrenNS("command", "http://jabber.org/protocol/commands");
+				if (command != null) {
+					Element x = command.getChildrenNS("x", "jabber:x:data");
+
+//						log( "onSuccess, x: " + x );
+					if (x != null) {
+						JabberDataElement jde2 = new JabberDataElement(x);
+						log("", false);
+						if (jde2 != null && jde2.getFields() != null && !jde2.getFields().isEmpty()) {
+							for (AbstractField field : jde2.getFields()) {
+								if (field instanceof TextMultiField) {
+									log(field.getVar() + ": " + ((TextMultiField) field).getFieldValue()[0], false);
+								}
+							}
+						}
+						log("", false);
+					}
+				}
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				log("onTimeout", false);
+			}
+		});
+
+		adminJaxmpp.disconnect();
+
+		log("\n\n\n");
+
+	}
+
+	interface Consumer<T> {
+		void accept(T t) throws Exception;
+	}
+
+	private Jaxmpp getAdminJaxmppForClusterNode(String hostname) throws JaxmppException {
+		Jaxmpp adminJaxmpp = getAdminAccount().createJaxmpp().setHost(hostname).setConnected(true).build();
+		assertTrue(adminJaxmpp.isConnected(), "contact was not connected");
+		return adminJaxmpp;
+	}
 }

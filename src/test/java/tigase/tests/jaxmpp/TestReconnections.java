@@ -96,10 +96,6 @@ public class TestReconnections
 		jaxmpp.login(true);
 
 		assertTrue(jaxmpp.isConnected());
-
-		Thread.sleep(2000);
-
-		assertTrue(jaxmpp.isConnected());
 	}
 
 }

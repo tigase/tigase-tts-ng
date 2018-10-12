@@ -77,7 +77,7 @@ public class TestMessageArchiveManagement
 	public void test_MAM_retrieveAll() throws Exception {
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
 		RSM rsm = null;
-		assertRetrievedMessages(mutex, roomJID, sentMessages, user1Jaxmpp, query, rsm, (complete, rsm1) -> {
+		assertRetrievedMessages(mutex, roomJID, sentMessages, sentMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
 			assertEquals(true, complete);
 			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
 			assertEquals(0, rsm1.getIndex().intValue());
@@ -93,7 +93,7 @@ public class TestMessageArchiveManagement
 
 		RSM rsm = null;
 		List<Item> expMessages = sentMessages.subList(2, (sentMessages.size() - 3));
-		assertRetrievedMessages(mutex, roomJID, expMessages, user1Jaxmpp, query, rsm, (complete, rsm1) -> {
+		assertRetrievedMessages(mutex, roomJID, expMessages, expMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
 			assertEquals(true, complete);
 			assertEquals(expMessages.size(), rsm1.getCount().intValue());
 			assertEquals(0, rsm1.getIndex().intValue());
@@ -107,7 +107,7 @@ public class TestMessageArchiveManagement
 		rsm.setMax(sentMessages.size() / 2);
 
 		List<Item> expMessages1 = sentMessages.subList(0, sentMessages.size() / 2);
-		List<Item> recvMessages1 = assertRetrievedMessages(mutex, roomJID, expMessages1, user1Jaxmpp, query, rsm,
+		List<Item> recvMessages1 = assertRetrievedMessages(mutex, roomJID, expMessages1, sentMessages.size(), user1Jaxmpp, query, rsm,
 														   (complete, rsm1) -> {
 															   assertEquals(false, complete);
 															   assertEquals(sentMessages.size(),
@@ -117,7 +117,7 @@ public class TestMessageArchiveManagement
 
 		rsm.setAfter(recvMessages1.get(expMessages1.size() - 1).msgId);
 		List<Item> expMessages2 = sentMessages.subList(sentMessages.size() / 2, ((int) (sentMessages.size() / 2)) * 2);
-		assertRetrievedMessages(mutex, roomJID, expMessages2, user1Jaxmpp, query, rsm, (complete, rsm1) -> {
+		assertRetrievedMessages(mutex, roomJID, expMessages2, sentMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
 			assertEquals(sentMessages.size() % 2 == 0, complete);
 			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
 			assertEquals(expMessages1.size(), rsm1.getIndex().intValue());
@@ -215,7 +215,6 @@ public class TestMessageArchiveManagement
 
 		final MutableObject<JabberDataElement> roomConfig = new MutableObject<JabberDataElement>();
 
-		Room join = muc1Module.join(roomJID.getLocalpart(), roomJID.getDomain(), "user1");
 		user1Jaxmpp.getEventBus()
 				.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
 					@Override
@@ -223,6 +222,7 @@ public class TestMessageArchiveManagement
 						mutex.notify("joinAs:user1");
 					}
 				});
+		Room join = muc1Module.join(roomJID.getLocalpart(), roomJID.getDomain(), "user1");
 
 		mutex.waitFor(1000 * 20, "joinAs:user1");
 
@@ -269,7 +269,7 @@ public class TestMessageArchiveManagement
 		joinAs(user3Jaxmpp, roomJID, "user3", "joinAs:user3");
 	}
 
-	private List<Item> assertRetrievedMessages(Mutex mutex, BareJID roomJID, List<Item> expMessages, Jaxmpp user1Jaxmpp,
+	private List<Item> assertRetrievedMessages(Mutex mutex, BareJID roomJID, List<Item> expMessages, Integer expMessagesCount, Jaxmpp user1Jaxmpp,
 											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier)
 			throws Exception {
 		List<Item> receivedMessages = new ArrayList<>();
@@ -289,21 +289,23 @@ public class TestMessageArchiveManagement
 								public void onSuccess(String queryid, boolean complete, RSM rsm)
 										throws JaxmppException {
 									verifier.check(complete, rsm);
-									mutex.notify("mam:success:" + queryid + ":count=" + rsm.getCount());
+									mutex.notify("mam:success:" + queryid + ":count=" + rsm.getCount(), "mam:success:" + queryid);
 								}
 
 								@Override
 								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
 										throws JaxmppException {
-
+									// error
+									mutex.notify("mam:success:" + queryId);
 								}
 
 								@Override
 								public void onTimeout() throws JaxmppException {
-
+									mutex.notify("mam:success:" + queryId);
 								}
 							});
-		mutex.waitFor(30 * 1000, "mam:success:" + queryId + ":count=" + expMessages.size());
+		mutex.waitFor(30 * 1000, "mam:success:" + queryId);
+		mutex.isItemNotified("mam:success:" + queryId + ":count=" + expMessagesCount);
 
 		Thread.sleep(500);
 

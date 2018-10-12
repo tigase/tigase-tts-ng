@@ -131,7 +131,7 @@ public class TestRestApiWithMessageExpiration
 		Date timestamp = new Date(new Date().getTime() - 5 * SECOND);
 		publishToPubsub(nodeName, null, timestamp, "content_" + message);
 
-		mutex.waitFor(15 * 1000, userRegularJID + ":message:received:content_" + message);
+		mutex.waitFor(5 * 1000, userRegularJID + ":message:received:content_" + message);
 		Assert.assertFalse(mutex.isItemNotified(userRegularJID + ":message:received:content_" + message),
 						   "User: " + userRegularJID + " should have NOT received message: " + message);
 
@@ -139,7 +139,6 @@ public class TestRestApiWithMessageExpiration
 		// publishing normal message (to offline)
 		log("\n\n\n===== publishing normal message (to offline) \n");
 		userRegularJaxmpp.disconnect();
-		Thread.sleep(5 * SECOND);
 
 		message = nextRnd().toLowerCase();
 		publishToPubsub(nodeName, null, null, "content_" + message);
@@ -147,7 +146,6 @@ public class TestRestApiWithMessageExpiration
 		Thread.sleep(5 * SECOND);
 
 		userRegularJaxmpp.login(true);
-		Thread.sleep(5 * SECOND);
 
 		mutex.waitFor(10 * SECOND, userRegularJID + ":message:received:content_" + message);
 		Assert.assertTrue(mutex.isItemNotified(userRegularJID + ":message:received:content_" + message),
@@ -159,7 +157,6 @@ public class TestRestApiWithMessageExpiration
 		subscribeUser(pubSubModule, pubsubJID, JID.jidInstance(adminJID), nodeName);
 
 		userRegularJaxmpp.disconnect(true);
-		Thread.sleep(5 * SECOND);
 
 		message = nextRnd().toLowerCase();
 
@@ -168,13 +165,13 @@ public class TestRestApiWithMessageExpiration
 		publishToPubsub(nodeName, null, timestamp, "content_" + message);
 
 		// let's wait for regular user untill message expire
-		Thread.sleep(20 * SECOND);
+		Thread.sleep(8 * SECOND);
 
 		userRegularJaxmpp.login(true);
 
 		// user back online, admin was online - user should not receive message and admin should
 		mutex.waitFor(5 * 1000, userRegularJID + ":message:received:content_" + message);
-		mutex.waitFor(20 * 1000, adminJID + ":message:received:content_" + message);
+		mutex.waitFor(5 * 1000, adminJID + ":message:received:content_" + message);
 		Assert.assertFalse(mutex.isItemNotified(userRegularJID + ":message:received:content_" + message),
 						   "User: " + userRegularJID + " should have NOT received message: " + message);
 		Assert.assertTrue(mutex.isItemNotified(adminJID + ":message:received:content_" + message),
