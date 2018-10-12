@@ -94,6 +94,8 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		user1jaxmpp1.disconnect(true);
 		user1jaxmpp1.login(true);
 
+		assertTrue(user1jaxmpp1.isConnected());
+
 		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
 		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
 

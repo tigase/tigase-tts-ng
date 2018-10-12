@@ -81,37 +81,32 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCard4 publication returned error = " + error);
+				mutex.notify("vcardSet:jaxmpp1:error:" + error, "vcardSet:jaxmpp1");
 			}
 
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
 				try {
 					if (responseStanza.getType() == StanzaType.result) {
-						mutex.notify("vcardSet:jaxmpp1");
+						mutex.notify("vcardSet:jaxmpp1:success", "vcardSet:jaxmpp1");
+					} else {
+						mutex.notify("vcardSet:jaxmpp1:failure", "vcardSet:jaxmpp1");
 					}
 				} catch (Exception e) {
 					fail(e);
+					mutex.notify("vcardSet:jaxmpp1:failure", "vcardSet:jaxmpp1");
 				}
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardSet:jaxmpp1:error:timeout", "vcardSet:jaxmpp1");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardSet:jaxmpp1");
 
-		assertTrue("VCard4 publication failed", mutex.isItemNotified("vcardSet:jaxmpp1"));
+		assertTrue("VCard4 publication failed", mutex.isItemNotified("vcardSet:jaxmpp1:success"));
 
 		Element iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
@@ -121,6 +116,7 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCard4 retrieval by owner returned error = " + error);
+				mutex.notify("vcardRetrieve:jaxmpp1:error:" + error, "vcardRetrieve:jaxmpp1");
 			}
 
 			@Override
@@ -131,32 +127,26 @@ public class TestVCard4AndTempIntrgration
 						Element fn = vcard.getChildren("fn").get(0);
 						Element fnText = fn.getChildren("text").get(0);
 						if (fnText.getValue().equals("Test Example 1" + helloWorld)) {
-							mutex.notify("vcardRetrieve:jaxmpp1");
+							mutex.notify("vcardRetrieve:jaxmpp1:success", "vcardRetrieve:jaxmpp1");
+						} else {
+							mutex.notify("vcardRetrieve:jaxmpp1:failure", "vcardRetrieve:jaxmpp1");
 						}
 					}
 				} catch (Exception e) {
 					fail(e);
+					mutex.notify("vcardRetrieve:jaxmpp1:failure", "vcardRetrieve:jaxmpp1");
 				}
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardRetrieve:jaxmpp1:error:timeout", "vcardRetrieve:jaxmpp1");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardRetrieve:jaxmpp1");
 
-		assertTrue("VCard4 retrieval by owner failed", mutex.isItemNotified("vcardRetrieve:jaxmpp1"));
+		assertTrue("VCard4 retrieval by owner failed", mutex.isItemNotified("vcardRetrieve:jaxmpp1:success"));
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
@@ -167,6 +157,7 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCard4 retrieval by buddy returned error = " + error);
+				mutex.notify("vcardRetrieve:jaxmpp2:error:" + error, "vcardRetrieve:jaxmpp2");
 			}
 
 			@Override
@@ -177,32 +168,24 @@ public class TestVCard4AndTempIntrgration
 						Element fn = vcard.getChildren("fn").get(0);
 						Element fnText = fn.getChildren("text").get(0);
 						if (fnText.getValue().equals("Test Example 1" + helloWorld)) {
-							mutex.notify("vcardRetrieve:jaxmpp2");
+							mutex.notify("vcardRetrieve:jaxmpp2:success");
 						}
 					}
 				} catch (Exception e) {
 					fail(e);
 				}
+				mutex.notify("vcardRetrieve:jaxmpp2");
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardRetrieve:jaxmpp2:error:timeout", "vcardRetrieve:jaxmpp2");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardRetrieve:jaxmpp2");
 
-		assertTrue("VCard4 retrieval by buddy failed", mutex.isItemNotified("vcardRetrieve:jaxmpp2"));
+		assertTrue("VCard4 retrieval by buddy failed", mutex.isItemNotified("vcardRetrieve:jaxmpp2:success"));
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
@@ -213,6 +196,7 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCard4 retrieval by buddy returned error = " + error);
+				mutex.notify("vcardTempRetrieve:jaxmpp2:error:" + error, "vcardTempRetrieve:jaxmpp2");
 			}
 
 			@Override
@@ -222,32 +206,24 @@ public class TestVCard4AndTempIntrgration
 						Element vcard = responseStanza.getChildrenNS("vCard", "vcard-temp");
 						Element fn = vcard.getChildren("FN").get(0);
 						if (fn.getValue().equals("Test Example 1" + helloWorld)) {
-							mutex.notify("vcardTempRetrieve:jaxmpp2");
+							mutex.notify("vcardTempRetrieve:jaxmpp2:success");
 						}
 					}
 				} catch (Exception e) {
 					fail(e);
 				}
+				mutex.notify("vcardTempRetrieve:jaxmpp2");
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardTempRetrieve:jaxmpp2:error:timeout", "vcardTempRetrieve:jaxmpp2");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardTempRetrieve:jaxmpp2");
 
-		assertTrue("VCardTemp retrieval by buddy failed", mutex.isItemNotified("vcardTempRetrieve:jaxmpp2"));
+		assertTrue("VCardTemp retrieval by buddy failed", mutex.isItemNotified("vcardTempRetrieve:jaxmpp2:success"));
 	}
 
 	@Test(groups = {"Phase 1"}, description = "Test VCardTemp - VCard4 conversion integration")
@@ -266,37 +242,30 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCardTemp publication returned error = " + error);
+				mutex.notify("vcardSet:jaxmpp1:error:" + error, "vcardSet:jaxmpp1");
 			}
 
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
 				try {
 					if (responseStanza.getType() == StanzaType.result) {
-						mutex.notify("vcardSet:jaxmpp1");
+						mutex.notify("vcardSet:jaxmpp1:success");
 					}
 				} catch (Exception e) {
 					fail(e);
 				}
+				mutex.notify("vcardSet:jaxmpp1");
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardSet:jaxmpp1:error:timeout", "vcardSet:jaxmpp1");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardSet:jaxmpp1");
 
-		assertTrue("VCardTemp publication failed", mutex.isItemNotified("vcardSet:jaxmpp1"));
+		assertTrue("VCardTemp publication failed", mutex.isItemNotified("vcardSet:jaxmpp1:success"));
 
 		Element iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
@@ -306,6 +275,7 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCard4 retrieval by owner returned error = " + error);
+				mutex.notify("vcardRetrieve:jaxmpp1:error:" + error, "vcardRetrieve:jaxmpp1");
 			}
 
 			@Override
@@ -315,32 +285,24 @@ public class TestVCard4AndTempIntrgration
 						Element vcard = responseStanza.getChildrenNS("vCard", "vcard-temp");
 						Element fn = vcard.getChildren("FN").get(0);
 						if (fn.getValue().equals("Test Example 1" + helloWorld)) {
-							mutex.notify("vcardRetrieve:jaxmpp1");
+							mutex.notify("vcardRetrieve:jaxmpp1:success");
 						}
 					}
 				} catch (Exception e) {
 					fail(e);
 				}
+				mutex.notify("vcardRetrieve:jaxmpp1");
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardRetrieve:jaxmpp1:error:timeout", "vcardRetrieve:jaxmpp1");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardRetrieve:jaxmpp1");
 
-		assertTrue("VCardTemp retrieval by owner failed", mutex.isItemNotified("vcardRetrieve:jaxmpp1"));
+		assertTrue("VCardTemp retrieval by owner failed", mutex.isItemNotified("vcardRetrieve:jaxmpp1:success"));
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
@@ -351,6 +313,7 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCardTemp retrieval by buddy returned error = " + error);
+				mutex.notify("vcardRetrieve:jaxmpp2:error:" + error, "vcardRetrieve:jaxmpp2");
 			}
 
 			@Override
@@ -360,32 +323,24 @@ public class TestVCard4AndTempIntrgration
 						Element vcard = responseStanza.getChildrenNS("vCard", "vcard-temp");
 						Element fn = vcard.getChildren("FN").get(0);
 						if (fn.getValue().equals("Test Example 1" + helloWorld)) {
-							mutex.notify("vcardRetrieve:jaxmpp2");
+							mutex.notify("vcardRetrieve:jaxmpp2:success");
 						}
 					}
 				} catch (Exception e) {
 					fail(e);
 				}
+				mutex.notify("vcardRetrieve:jaxmpp2");
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcardRetrieve:jaxmpp2:error:timeout", "vcardRetrieve:jaxmpp2");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcardRetrieve:jaxmpp2");
 
-		assertTrue("VCardTemp retrieval by buddy failed", mutex.isItemNotified("vcardRetrieve:jaxmpp2"));
+		assertTrue("VCardTemp retrieval by buddy failed", mutex.isItemNotified("vcardRetrieve:jaxmpp2:success"));
 
 		iqRetrieve = ElementFactory.create("iq");
 		iqRetrieve.setAttribute("type", "get");
@@ -396,6 +351,7 @@ public class TestVCard4AndTempIntrgration
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
 				fail("VCard4 retrieval by buddy returned error = " + error);
+				mutex.notify("vcard4Retrieve:jaxmpp2:error:" + error, "vcard4Retrieve:jaxmpp2");
 			}
 
 			@Override
@@ -406,32 +362,24 @@ public class TestVCard4AndTempIntrgration
 						Element fn = vcard.getChildren("fn").get(0);
 						Element fnText = fn.getChildren("text").get(0);
 						if (fnText.getValue().equals("Test Example 1" + helloWorld)) {
-							mutex.notify("vcard4Retrieve:jaxmpp2");
+							mutex.notify("vcard4Retrieve:jaxmpp2:success");
 						}
 					}
 				} catch (Exception e) {
 					fail(e);
 				}
+				mutex.notify("vcard4Retrieve:jaxmpp2");
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
-				throw new UnsupportedOperationException("Not supported yet."); // To
-				// change
-				// body
-				// of
-				// generated
-				// methods,
-				// choose
-				// Tools
-				// |
-				// Templates.
+				mutex.notify("vcard4Retrieve:jaxmpp2:error:timeout", "vcard4Retrieve:jaxmpp2");
 			}
 		});
 
 		mutex.waitFor(1000 * 20, "vcard4Retrieve:jaxmpp2");
 
-		assertTrue("VCard4 retrieval by buddy failed", mutex.isItemNotified("vcard4Retrieve:jaxmpp2"));
+		assertTrue("VCard4 retrieval by buddy failed", mutex.isItemNotified("vcard4Retrieve:jaxmpp2:success"));
 	}
 
 	protected void fail(String msg) {

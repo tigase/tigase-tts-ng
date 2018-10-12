@@ -33,7 +33,7 @@ function get_database_uri() {
 
     case ${_db_type} in
         mysql)
-            export JDBC_URI="jdbc:mysql://${_database_host}/${_db_name}?user=${_db_user}&password=${_db_pass}&useSSL=false&useUnicode=true"
+            export JDBC_URI="jdbc:mysql://${_database_host}/${_db_name}?user=${_db_user}&password=${_db_pass}&useSSL=false&useUnicode=true&characterEncoding=UTF-8"
             ;;
         postgresql)
             export JDBC_URI="jdbc:postgresql://${_database_host}/${_db_name}?user=${_db_user}&password=${_db_pass}"

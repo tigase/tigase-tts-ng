@@ -180,7 +180,7 @@ public class TestMessageArchiveManagement
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
 		query.setWith(JID.jidInstance(user2Jaxmpp.getSessionObject().getUserBareJid()));
 		query.setStart(expDates.get(2));
-		query.setEnd(expDates.get(18));
+		query.setEnd(new Date(expDates.get(18).getTime() - 100));
 
 		List<String> expTags = new ArrayList<>();
 		for (int i = 0; i < this.expTags.size(); i++) {
@@ -201,7 +201,7 @@ public class TestMessageArchiveManagement
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
 		query.setWith(JID.jidInstance(user2Jaxmpp.getSessionObject().getUserBareJid()));
 		query.setStart(expDates.get(2));
-		query.setEnd(expDates.get(18));
+		query.setEnd(new Date(expDates.get(18).getTime() - 100));
 
 		List<String> expTags = new ArrayList<>();
 		for (int i = 0; i < this.expTags.size(); i++) {
@@ -349,4 +349,6 @@ public class TestMessageArchiveManagement
 				.getEventBus()
 				.remove(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 	}
+
+
 }

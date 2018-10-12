@@ -83,7 +83,6 @@ public class TestLimitOfUsersPerRoom
 
 		final MutableObject<JabberDataElement> roomConfig = new MutableObject<JabberDataElement>();
 
-		Room join = muc1Module.join(roomJID.getLocalpart(), roomJID.getDomain(), "user1");
 		user1Jaxmpp.getEventBus()
 				.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
 					@Override
@@ -91,8 +90,10 @@ public class TestLimitOfUsersPerRoom
 						mutex.notify("joinAs:user1");
 					}
 				});
+		Room join = muc1Module.join(roomJID.getLocalpart(), roomJID.getDomain(), "user1");
 
 		mutex.waitFor(1000 * 20, "joinAs:user1");
+		Assert.assertTrue(mutex.isItemNotified("joinAs:user1"));
 
 		muc1Module.getRoomConfiguration(muc1Module.getRoom(roomJID), new MucModule.RoomConfgurationAsyncCallback() {
 			@Override
@@ -128,7 +129,6 @@ public class TestLimitOfUsersPerRoom
 		});
 
 		mutex.waitFor(1000 * 20, "getConfig");
-		Assert.assertTrue(mutex.isItemNotified("joinAs:user1"));
 		Assert.assertTrue(mutex.isItemNotified("getConfig:success"));
 
 		Thread.sleep(1000);
