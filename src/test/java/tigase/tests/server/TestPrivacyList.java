@@ -23,6 +23,7 @@ package tigase.tests.server;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -92,7 +93,15 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		setDefaultPrivacyList(user1jaxmpp1, mutex, "privacy-list:default:set:1", "blocked");
 
 		user1jaxmpp1.disconnect(true);
-		user1jaxmpp1.login(true);
+		TestLogger.log("disconnection of user1jaxmpp1 finished!", true);
+
+		user1jaxmpp1.getEventBus().addHandler(Connector.DisconnectedHandler.DisconnectedEvent.class, sessionObject -> {
+			TestLogger.log("received disconnected event for user1jaxmpp1", true);
+		});
+
+		user1jaxmpp1 = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setResource("conn-1").setConnected(true).build();
+
+//		user1jaxmpp1.login(true);
 
 		assertTrue(user1jaxmpp1.isConnected());
 
