@@ -445,7 +445,7 @@ public class TestMucHistoryTimestamps extends AbstractTest {
 			if (obj instanceof Item) {
 				Item o = (Item) obj;
 				return body.equals(o.body) && nickname.equals(o.nickname) &&
-						((ts.getTime() / 1000) == (o.ts.getTime() / 1000));
+						(Math.abs(ts.getTime() - o.ts.getTime()) / 1000) == 0;
 			}
 			return false;
 		}
