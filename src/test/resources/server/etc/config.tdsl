@@ -3,7 +3,7 @@ admins = [ 'admin@localhost' ]
 'default-virtual-host' = 'localhost'
 'priority-queue-implementation' = 'tigase.util.workqueue.PriorityQueueStrict'
 'sm-threads-pool' = 'custom:200'
-trusted = [ 'admin@localhost', 'http@{clusterNode}' ]
+trusted = [ 'admin@localhost', 'http@{clusterNode}', 'user-status-endpoint@http.{clusterNode}' ]
 'vhost-disable-dns-check' = true
 dataSource {
     default () {

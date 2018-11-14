@@ -21,6 +21,11 @@
             <class name="tigase.tests.http.TestRetrievalOfUserAvatarUsingREST"/>
         </classes>
     </test>
+    <test name="REST: Test user status change via REST API call - #8226">
+        <classes>
+            <class name="tigase.tests.http.TestRestUserStatus"/>
+        </classes>
+    </test>
     <test name="Password reset over email">
         <classes>
             <class name="tigase.tests.http.TestPasswordReset"/>
