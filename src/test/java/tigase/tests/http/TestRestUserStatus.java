@@ -100,8 +100,7 @@ public class TestRestUserStatus extends AbstractTest {
 				.setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(5000).build())
 				.build();
 
-		//apiKey = createRestApiKey().build();
-		apiKey = new ApiKey("api-key");
+		apiKey = createRestApiKey().build();
 
 		Thread.sleep(200);
 		user2Jaxmpp.disconnect(true);
