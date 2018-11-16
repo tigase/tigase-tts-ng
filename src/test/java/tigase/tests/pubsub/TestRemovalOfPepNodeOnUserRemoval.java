@@ -60,7 +60,7 @@ public class TestRemovalOfPepNodeOnUserRemoval
 
 	Jaxmpp jaxmpp1;
 	Jaxmpp jaxmpp2;
-	Account user1;
+	Account user1;                                                                                                                                                                  
 	Account user2;
 
 	@BeforeMethod

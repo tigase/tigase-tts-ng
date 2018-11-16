@@ -182,6 +182,8 @@ public class TestMucHistoryTimestamps extends AbstractTest {
 		Room room1 = muc1Module.getRoom(roomJID);
 		muc1Module.leave(room1);
 
+		Thread.sleep(1000);
+
 		String expectedEvent = "notJoinAs:" + room1.getNickname() + ":4";
 
 		final Mutex mutex = new Mutex();
@@ -223,7 +225,7 @@ public class TestMucHistoryTimestamps extends AbstractTest {
 			Element history = ElementFactory.create("history", null, null);
 			String since = dtf.format(room1.getLastMessageDate());
 			int idx = since.lastIndexOf(':');
-			since = since.substring(0, idx) + ".15Z";
+			since = since.substring(0, idx) + ".150Z";
 			history.setAttribute("since",  since);
 			x.addChild(history);
 

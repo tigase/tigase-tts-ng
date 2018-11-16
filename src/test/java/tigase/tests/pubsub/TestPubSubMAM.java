@@ -298,6 +298,8 @@ public class TestPubSubMAM
 
 	protected static class Item {
 
+		private static long ALLOWED_TIME_DRIFT = 5000;
+
 		private final String id;
 		private final String itemId;
 		private final Element payload;
@@ -328,13 +330,13 @@ public class TestPubSubMAM
 				Item i = (Item) obj;
 				if (itemId.equals(i.itemId) && payload.equals(i.payload)) {
 					if (publishedAt != null) {
-						double i11 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
-						double i12 = Math.ceil(((double) publishedAt.getTime()) / 10000) * 10000;
+						double i11 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000 - ALLOWED_TIME_DRIFT;
+						double i12 = Math.ceil(((double) publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
 						double i2 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
 						return i11 <= i2 && i2 <= i12;
 					} else if (i.publishedAt != null) {
-						double i11 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
-						double i12 = Math.ceil(((double) i.publishedAt.getTime()) / 10000) * 10000;
+						double i11 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000 - ALLOWED_TIME_DRIFT;
+						double i12 = Math.ceil(((double) i.publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
 						double i2 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
 						return i11 <= i2 && i2 <= i12;
 					} else {
