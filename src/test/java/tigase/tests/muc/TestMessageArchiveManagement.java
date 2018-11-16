@@ -81,7 +81,7 @@ public class TestMessageArchiveManagement
 			assertEquals(true, complete);
 			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
 			assertEquals(0, rsm1.getIndex().intValue());
-		});
+		}, true);
 	}
 
 	@Test(dependsOnMethods = {"test_MAM_retrieveAll"})
@@ -97,7 +97,7 @@ public class TestMessageArchiveManagement
 			assertEquals(true, complete);
 			assertEquals(expMessages.size(), rsm1.getCount().intValue());
 			assertEquals(0, rsm1.getIndex().intValue());
-		});
+		}, false);
 	}
 
 	@Test(dependsOnMethods = {"test_MAM_retrieveBetween"})
@@ -113,7 +113,7 @@ public class TestMessageArchiveManagement
 															   assertEquals(sentMessages.size(),
 																			rsm1.getCount().intValue());
 															   assertEquals(0, rsm1.getIndex().intValue());
-														   });
+														   }, false);
 
 		rsm.setAfter(recvMessages1.get(expMessages1.size() - 1).msgId);
 		List<Item> expMessages2 = sentMessages.subList(sentMessages.size() / 2, ((int) (sentMessages.size() / 2)) * 2);
@@ -121,7 +121,7 @@ public class TestMessageArchiveManagement
 			assertEquals(sentMessages.size() % 2 == 0, complete);
 			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
 			assertEquals(expMessages1.size(), rsm1.getIndex().intValue());
-		});
+		}, false);
 	}
 
 	@Test(dependsOnMethods = {"test_MAM_retrieveAllWithPagination"})
@@ -186,7 +186,7 @@ public class TestMessageArchiveManagement
 		List<Item> sentMessages = new ArrayList<Item>();
 		for (int i = 0; i < messages; i++) {
 			int j = Math.abs(random.nextInt()) % mucModules.size();
-			Item item = new Item("user" + (j + 1), new Date(), "Message " + UUID.randomUUID().toString());
+			Item item = new Item("user" + (j + 1), null, "Message " + UUID.randomUUID().toString());
 			mucModules.get(j).getRoom(roomJID).sendMessage(item.body);
 
 			sentMessages.add(item);
@@ -270,7 +270,7 @@ public class TestMessageArchiveManagement
 	}
 
 	private List<Item> assertRetrievedMessages(Mutex mutex, BareJID roomJID, List<Item> expMessages, Integer expMessagesCount, Jaxmpp user1Jaxmpp,
-											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier)
+											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier, boolean updateTimestamps)
 			throws Exception {
 		List<Item> receivedMessages = new ArrayList<>();
 		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) -> {
@@ -313,6 +313,9 @@ public class TestMessageArchiveManagement
 		expMessages.forEach(sent -> {
 			Optional<Item> recv = receivedMessages.stream().filter(sent::equals).findFirst();
 			assertTrue(recv.isPresent());
+			if (updateTimestamps) {
+				sent.updateTimestamp(recv.get().ts);
+			}
 		});
 
 		user1Jaxmpp.getEventBus()
@@ -377,7 +380,7 @@ public class TestMessageArchiveManagement
 		public final String body;
 		public final String msgId;
 		public final String nickname;
-		public final Date ts;
+		public Date ts;
 
 		private Item(String nickname, Date ts, String body) {
 			this(nickname, ts, body, null);
@@ -390,12 +393,16 @@ public class TestMessageArchiveManagement
 			this.msgId = msgId;
 		}
 
+		public void updateTimestamp(Date timestamp) {
+			this.ts = timestamp;
+		}
+
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof Item) {
 				Item o = (Item) obj;
 				return body.equals(o.body) && nickname.equals(o.nickname) &&
-						((ts.getTime() / 1000) == (o.ts.getTime() / 1000));
+						(ts == null || ((ts.getTime() / 1000) == (o.ts.getTime() / 1000)));
 			}
 			return false;
 		}

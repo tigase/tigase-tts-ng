@@ -170,7 +170,7 @@ public class TestMessageArchiveManagement
 	@Test(dependsOnMethods = {"testMessageArchival"})
 	public void testMessageRetrievalWithNonEmptyResults() throws Exception {
 		final Mutex mutex = new Mutex();
-		testMessageRerieval(mutex, user1Jaxmpp, expTags, true);
+		testMessageRerieval(mutex, user1Jaxmpp, null, null, expTags, true, true);
 	}
 
 	@Test(dependsOnMethods = {"testMessageArchival"})
@@ -215,7 +215,7 @@ public class TestMessageArchiveManagement
 		RSM rsm = new RSM();
 		rsm.setMax(5);
 
-		testMessageRerieval(mutex, user1Jaxmpp, query, rsm, expTags, false);
+		testMessageRerieval(mutex, user1Jaxmpp, query, rsm, expTags, false, false);
 	}
 
 	public void changeSettings(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.DefaultValue value)
@@ -252,20 +252,27 @@ public class TestMessageArchiveManagement
 
 	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.Query query,
 									List<String> expectedMessageTags, boolean complete) throws Exception {
-		testMessageRerieval(mutex, jaxmpp, query, null, expectedMessageTags, complete);
+		testMessageRerieval(mutex, jaxmpp, query, null, expectedMessageTags, complete, false);
 	}
 
 	public void testMessageRerieval(final Mutex mutex, Jaxmpp jaxmpp, MessageArchiveManagementModule.Query query,
-									RSM rsm, List<String> expectedMessageTags, boolean complete) throws Exception {
+									RSM rsm, List<String> expectedMessageTags, boolean complete, boolean updateExpDates) throws Exception {
 		String queryid = UUID.randomUUID().toString();
 
 		final AtomicInteger count = new AtomicInteger(0);
+
+		if (updateExpDates) {
+			expDates.clear();
+		}
 
 		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = new MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler() {
 			@Override
 			public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId,
 											  Date timestamp, Message message) throws JaxmppException {
 				mutex.notify("item:" + message.getFrom() + ":" + message.getTo() + ":" + message.getBody());
+				if (updateExpDates) {
+					expDates.add(timestamp);
+				}
 				count.incrementAndGet();
 			}
 		};
