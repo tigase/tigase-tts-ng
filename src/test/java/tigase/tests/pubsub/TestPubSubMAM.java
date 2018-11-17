@@ -64,6 +64,8 @@ public class TestPubSubMAM
 	protected JID pubsubJid;
 	protected Account user;
 
+	private long timeDrift = 0;
+
 	@BeforeClass
 	public void setUp() throws Exception {
 		user = createAccount().setLogPrefix("user1").build();
@@ -176,22 +178,22 @@ public class TestPubSubMAM
 		queryNode(node.getName(), query, rsm, Collections.emptyList(), true);
 
 		List<Item> expectedItems = publishedItems.stream().limit(10).collect(Collectors.toList());
-		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
+		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + timeDrift));
 		query.setEnd(new Date(
-				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + timeDrift));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(5).limit(10).collect(Collectors.toList());
-		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
+		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + timeDrift));
 		query.setEnd(new Date(
-				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + timeDrift));
 
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(10).limit(10).collect(Collectors.toList());
-		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000));
+		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + timeDrift));
 		query.setEnd(new Date(
-				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000));
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + timeDrift));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 	}
 
@@ -251,6 +253,13 @@ public class TestPubSubMAM
 		assertEquals(expectedItems.size(), results.size());
 		assertListEquals(expectedItems, results);
 
+		if (!expectedItems.isEmpty()) {
+			long drift = 0;
+			for (int i = 0; i < expectedItems.size(); i++) {
+				drift += results.get(i).timestamp.getTime() - expectedItems.get(i).timestamp.getTime();
+			}
+			this.timeDrift = drift / expectedItems.size();
+		}
 		return results;
 	}
 
