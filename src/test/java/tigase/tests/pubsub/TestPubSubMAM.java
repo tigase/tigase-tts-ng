@@ -177,23 +177,26 @@ public class TestPubSubMAM
 		query.setStart(new Date());
 		queryNode(node.getName(), query, rsm, Collections.emptyList(), true);
 
+		long startDrift = Math.min(timeDrift, 0);
+		long endDrift = Math.max(timeDrift, 0);
+
 		List<Item> expectedItems = publishedItems.stream().limit(10).collect(Collectors.toList());
-		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + timeDrift));
+		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + startDrift));
 		query.setEnd(new Date(
-				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + timeDrift));
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + endDrift));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(5).limit(10).collect(Collectors.toList());
-		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + timeDrift));
+		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + startDrift));
 		query.setEnd(new Date(
-				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + timeDrift));
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + endDrift));
 
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(10).limit(10).collect(Collectors.toList());
-		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + timeDrift));
+		query.setStart(new Date(((long) (expectedItems.get(0).timestamp.getTime() / 1000)) * 1000 + startDrift));
 		query.setEnd(new Date(
-				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + timeDrift));
+				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + endDrift));
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 	}
 
