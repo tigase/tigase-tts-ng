@@ -177,8 +177,12 @@ if [ ! -z "${SERVER_DOWNLOAD}" ] ; then
     tar -xf tmp/tigase-server.tar.gz -C ${server_dir} --strip-components=1
 fi
 
-unzip -o ${server_dir}/jars/tigase-server.jar -d ${server_dir}/jars/tigase-server >> unzip.log
-ver=`grep -m 1 "Tigase-Version:" ${server_dir}/jars/tigase-server/META-INF/MANIFEST.MF | sed -e "s/Tigase-Version: \(.*\)/\\1/" | sed 's/[[:space:]]//'`
+server_binary="${server_dir}/jars/tigase-server.jar"
+if [ -f "${server_dir}/jars/tigase-server-dist.jar" ] ; then
+    server_binary="${server_dir}/jars/tigase-server-dist.jar"
+fi
+
+ver=`unzip -qc ${server_binary} | grep "Tigase-Version" | sed -e "s/Tigase-Version: \(.*\)/\\1/" | sed 's/[[:space:]]//'`
 
 [[ -z "${ROOT_DIR}" ]] && ROOT_DIR="files/"
 
