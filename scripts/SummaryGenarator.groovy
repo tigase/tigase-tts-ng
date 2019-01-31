@@ -136,8 +136,7 @@ class SummaryGenarator {
 
 		println("fails total: " + failsTotal)
 
-		System.exit(!failsTotal || failsTotal > 0 ? 1 : 0)
-
+		System.exit(failsTotal > 0 ? 1 : 0)
 	}
 
 	static Map<String, Object> getTestsMetrics(path, version, test, db) {
