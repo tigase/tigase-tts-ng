@@ -22,6 +22,7 @@
 import groovy.text.Template
 import groovy.text.markup.MarkupTemplateEngine
 import groovy.text.markup.TemplateConfiguration
+import groovy.xml.XmlUtil
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -50,10 +51,12 @@ class SummaryGenarator {
 			System.exit(3)
 		}
 
+		def times = []
 		ArrayList<TestCase> testResults = new ArrayList<TestCase>()
 		getVersions(resultsDirectory).each { ver ->
 			getTestGroups(resultsDirectory, ver).each { test ->
 				getDatabases(resultsDirectory, ver, test).each { db ->
+					def startint = System.currentTimeMillis()
 					def metrics = getTestsMetrics(resultsDirectory, ver, test, db)
 					def logFile = getLogFile(resultsDirectory, ver, test, db)
 					def reportFile = getReportFile(resultsDirectory, ver, test, db)
@@ -62,14 +65,19 @@ class SummaryGenarator {
 						TestCase tc = new TestCase(test, ver, db, metrics, logFile, reportFile, date)
 						testResults.add(tc)
 					}
+					def stop = (System.currentTimeMillis() - startint) / 1000
+					times.add(stop);
 				}
 			}
 		}
-
+		
+		def average = times.sum() / times.size()
+		println sprintf("average time: %ss, total: ", average, times.size())
 		println sprintf("results parsing generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		Map<String, Map<String, Map<String, List<TestCase>>>> map
 		map = testResults.groupBy({ it.testType }, { it.version }, { it.dbType })
+		println sprintf("Group by time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		Map<String, Map<String, Map<String, TestCase>>> collectible
 		collectible = map.collectEntries { String testType, Map<String, Map<String, List<TestCase>>> versions ->
@@ -148,6 +156,10 @@ class SummaryGenarator {
 			if (parsed.suite[0]?.@"finished-at") {
 				result['finishedAt'] = parsed.suite[0].@"finished-at".toString()
 			}
+			parsed."reporter-output".replaceNode{}
+			parsed.suite.test*.replaceNode{}
+			parsed.suite.groups*.replaceNode{}
+			file.write(XmlUtil.serialize(parsed))
 		}
 
 		return result
@@ -184,7 +196,7 @@ class SummaryGenarator {
 	}
 
 	static String[] getVersions(String path) {
-		return getItems(path, "(\\d\\.){2}\\d(-SNAPSHOT)?-b\\d{4}")
+		return getItems(path, "(\\d\\.){2}\\d(-(SNAPSHOT|RC)\\d*)?-b\\d{4}")
 	}
 
 	static String[] getTestGroups(rootPath, ver) {
