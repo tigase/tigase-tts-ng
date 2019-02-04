@@ -23,6 +23,7 @@ import groovy.text.Template
 import groovy.text.markup.MarkupTemplateEngine
 import groovy.text.markup.TemplateConfiguration
 import groovy.xml.XmlUtil
+import groovy.cli.commons.CliBuilder
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -40,6 +41,16 @@ class SummaryGenarator {
 	static String rootDirectory
 
 	static void main(String[] args) {
+
+		def cli = new CliBuilder(usage: 'showdate.groovy -[chflms] [date] [prefix]')
+		cli.p(type: String, 'Path to results', required: true)
+		cli.v(type: String, 'Version', required: true)
+		cli.d(type: String, 'Database used', args: -2, valueSeparator: ' ', required: true)
+
+		def options = cli.parse(args)
+		if (!options) {
+			return
+		}
 
 		def start = System.currentTimeMillis()
 
@@ -131,7 +142,7 @@ class SummaryGenarator {
 		println sprintf("total generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		def failsTotal = testResults
-				.findAll { tc -> tc?.finishedDate && LocalDate.now().until(tc.finishedDate, ChronoUnit.DAYS) == 0 }
+				.findAll { tc -> tc?.version == options.v && options.ds.contains(tc?.dbType )}
 				.count { it -> (it.getTestResult() != TestCase.Result.PASSED) }
 
 		println("fails total: " + failsTotal)
