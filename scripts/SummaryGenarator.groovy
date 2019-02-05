@@ -42,7 +42,7 @@ class SummaryGenarator {
 
 	static void main(String[] args) {
 
-		def cli = new CliBuilder(usage: 'showdate.groovy -[chflms] [date] [prefix]')
+		def cli = new CliBuilder()
 		cli.p(type: String, 'Path to results', required: true)
 		cli.v(type: String, 'Version', required: true)
 		cli.d(type: String, 'Database used', args: -2, valueSeparator: ' ', required: true)
@@ -54,7 +54,7 @@ class SummaryGenarator {
 
 		def start = System.currentTimeMillis()
 
-		rootDirectory = args?.size() == 1 ? args[0] : "files"
+		rootDirectory = options.p
 		def resultsDirectory = "${rootDirectory}/test-results"
 
 		if (!(new File("${resultsDirectory}")).exists()) {
