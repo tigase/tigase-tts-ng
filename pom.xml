@@ -376,6 +376,7 @@
                     <testFailureIgnore>false</testFailureIgnore>
 
                     <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng_features.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_server.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_muc.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_pubsub.xml</suiteXmlFile>
@@ -521,16 +522,7 @@
     <repositories>
         <repository>
             <id>tigase</id>
-            <name>Tigase repository</name>
-            <url>https://maven-repo.tigase.net/repository/release</url>
-        </repository>
-        <repository>
-            <id>tigase-snapshot</id>
-            <name>Tigase repository</name>
-            <url>https://maven-repo.tigase.net/repository/snapshot</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <url>http://maven-repo.tigase.org/repository/tigase</url>
         </repository>
     </repositories>
     <distributionManagement>

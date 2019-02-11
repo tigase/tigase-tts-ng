@@ -73,3 +73,6 @@ upload () {
         'server-name' = 'localhost'
     }
 }
+wg(class: tigase.workgroupqueues.WorkgroupQueuesComponent) {
+    'default-muc-domain' = muc.localhost
+}
