@@ -6,6 +6,11 @@
             <class name="tigase.tests.pubsub.TestPubSub"/>
         </classes>
     </test>
+    <test name="PEP support">
+        <classes>
+            <class name="tigase.tests.pubsub.TestPEP"/>
+        </classes>
+    </test>
     <test name="Removal of PEP nodes on user removal - #3544">
         <classes>
             <class name="tigase.tests.pubsub.TestRemovalOfPepNodeOnUserRemoval"/>

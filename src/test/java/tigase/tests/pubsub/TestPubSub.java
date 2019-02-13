@@ -20,6 +20,7 @@
  */
 package tigase.tests.pubsub;
 
+import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -27,15 +28,18 @@ import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.forms.TextMultiField;
 import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.tests.Mutex;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,6 +60,42 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class TestPubSub
 		extends TestPubSubAbstract {
+
+	@Test
+	public void testSupportAdvertisement() throws Exception {
+		final Mutex mutex = new Mutex();
+		jaxmpps.get(getInstanceHostnames()[0]).getModulesManager().getModule(DiscoveryModule.class).getInfo(
+				pubsubJid, new DiscoveryModule.DiscoInfoAsyncCallback(null) {
+					@Override
+					protected void onInfoReceived(String s, Collection<DiscoveryModule.Identity> identities,
+												  Collection<String> features) throws XMLException {
+						if (identities != null) {
+							identities.forEach(identity -> mutex.notify("discovery:identity:" + identity.getCategory() + ":" + identity.getType()));
+						}
+						if (features != null) {
+							features.forEach(feature -> mutex.notify("discovery:feature:" + feature));
+						}
+						mutex.notify("discovery:completed:success", "discovery:completed");
+					}
+
+					@Override
+					public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							throws JaxmppException {
+						mutex.notify("discovery:completed:error", "discovery:completed");
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("discovery:completed:timeout", "discovery:completed");
+					}
+				});
+
+		mutex.waitFor(10 * 1000, "discovery:completed");
+		assertTrue(mutex.isItemNotified("discovery:completed:success"));
+		assertTrue(mutex.isItemNotified("discovery:identity:pubsub:service"));
+		assertTrue(mutex.isItemNotified("discovery:feature:http://jabber.org/protocol/pubsub#publish"));
+		assertTrue(mutex.isItemNotified("discovery:feature:http://jabber.org/protocol/pubsub#subscribe"));
+	}
 
 	// Direct PubSub based implementation
 	public void createNode(String hostname, BareJID owner, String nodeName, String name, boolean collection)

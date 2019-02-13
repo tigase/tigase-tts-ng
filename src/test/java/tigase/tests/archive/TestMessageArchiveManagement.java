@@ -34,6 +34,7 @@ import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -83,6 +84,37 @@ public class TestMessageArchiveManagement
 	@AfterClass
 	public void cleanUp() throws Exception {
 		timer.cancel();
+	}
+
+	@Test
+	public void testSupportAdvertisement() throws Exception {
+		final Mutex mutex = new Mutex();
+		user1Jaxmpp.getModulesManager().getModule(DiscoveryModule.class).getInfo(
+				JID.jidInstance(user1Jaxmpp.getSessionObject().getUserBareJid()), new DiscoveryModule.DiscoInfoAsyncCallback(null) {
+					@Override
+					protected void onInfoReceived(String s, Collection<DiscoveryModule.Identity> identities,
+												  Collection<String> features) throws XMLException {
+						if (features != null) {
+							features.forEach(feature -> mutex.notify("discovery:feature:" + feature));
+						}
+						mutex.notify("discovery:completed:success", "discovery:completed");
+					}
+
+					@Override
+					public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							throws JaxmppException {
+						mutex.notify("discovery:completed:error", "discovery:completed");
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("discovery:completed:timeout", "discovery:completed");
+					}
+				});
+
+		mutex.waitFor(10 * 1000, "discovery:completed");
+		assertTrue(mutex.isItemNotified("discovery:completed:success"));
+		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:mam:1"));
 	}
 
 	@Test

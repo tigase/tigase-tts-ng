@@ -28,6 +28,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
@@ -92,6 +93,41 @@ public class TestPubSubMAM
 		pubsubJid = JID.jidInstance(LEAF.getPubsubJid());
 
 		publishedItems = Collections.unmodifiableList(publishItems(20));
+	}
+
+	@Test
+	public void testSupportAdvertisement() throws Exception {
+		final Mutex mutex = new Mutex();
+		jaxmpp.getModulesManager().getModule(DiscoveryModule.class).getInfo(
+				pubsubJid, new DiscoveryModule.DiscoInfoAsyncCallback(null) {
+					@Override
+					protected void onInfoReceived(String s, Collection<DiscoveryModule.Identity> identities,
+												  Collection<String> features) throws XMLException {
+						if (identities != null) {
+							identities.forEach(identity -> mutex.notify("discovery:identity:" + identity.getCategory() + ":" + identity.getType()));
+						}
+						if (features != null) {
+							features.forEach(feature -> mutex.notify("discovery:feature:" + feature));
+						}
+						mutex.notify("discovery:completed:success", "discovery:completed");
+					}
+
+					@Override
+					public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							throws JaxmppException {
+						mutex.notify("discovery:completed:error", "discovery:completed");
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						mutex.notify("discovery:completed:timeout", "discovery:completed");
+					}
+				});
+
+		mutex.waitFor(10 * 1000, "discovery:completed");
+		assertTrue(mutex.isItemNotified("discovery:completed:success"));
+		assertTrue(mutex.isItemNotified("discovery:identity:pubsub:service"));
+		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:mam:1"));
 	}
 
 	@Test
