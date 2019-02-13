@@ -18,7 +18,7 @@
  *
  */
 
-package tigase.tests.features;
+package tigase.tests.workgroup;
 
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.JID;
