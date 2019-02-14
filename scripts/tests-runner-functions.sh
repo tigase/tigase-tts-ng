@@ -252,7 +252,7 @@ function run_test() {
 
 	mvn clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
 
-
+    test_status=$?;
 
 	end_test=`date +%s`
 	total_time=$((end_test-start_test))
@@ -267,9 +267,11 @@ function run_test() {
 
 	sleep_fun 1
 
-	if [ -z "${SKIP_SERVER_START}" ] ; then
+	if [ ! -z "${SERVER_START}" ] ; then
         tig_stop_server ${_server_dir} "etc/tigase.conf"
     fi
 
     copy_results ${_server_dir} ${_output_dir}
+
+    return ${test_status};
 }

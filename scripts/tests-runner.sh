@@ -200,6 +200,8 @@ echo "Tests: ${tests}"
 
 
 idx=0
+export failed_tests=0
+
 for database in ${DATABASES[*]} ; do
 #    echo "Database: ${database}"
 
@@ -212,6 +214,10 @@ for database in ${DATABASES[*]} ; do
 #    echo "${database}, host: ${DATABASES_IPS[idx]}"
 
     run_test ${database} ${server_dir} ${IPS[idx]} ${DATABASES_IPS[idx]} ${tests}
+    if [[ ! $? -eq 0 ]] ; then
+        ((failed_tests++))
+    fi
+
     idx=$(expr $idx + 1)
     sleep_fun $(((${server_timeout} * 2)))
 done
@@ -224,4 +230,4 @@ else
     echo "Skipping summary page generation"
 fi
 
-
+exit ${failed_tests}

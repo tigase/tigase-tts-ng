@@ -397,7 +397,7 @@ public abstract class AbstractTest {
 		assertTrue("Message wasn't blocked", mutex.isItemNotified(rnd + ":" + ErrorCondition.forbidden));
 	}
 
-	protected final void sendAndWait(Jaxmpp j, final IQ iq, final AsyncCallback asyncCallback) throws Exception {
+	protected final boolean sendAndWait(Jaxmpp j, final IQ iq, final AsyncCallback asyncCallback) throws Exception {
 		final Mutex mutex = new Mutex();
 		iq.setId(nextRnd());
 		j.send(iq, new AsyncCallback() {
@@ -435,6 +435,8 @@ public abstract class AbstractTest {
 		});
 
 		mutex.waitFor(1000 * 30, "iq:" + iq.getId());
+
+		return mutex.isItemNotified("success");
 	}
 
 	protected final Message sendAndWait(Jaxmpp from, Jaxmpp to, final Message message) throws Exception {

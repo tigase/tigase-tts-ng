@@ -93,11 +93,11 @@ public class RetrieveVersion
 		iq.setTo(JID.jidInstance(adminJaxmpp.getSessionObject().getUserBareJid().getDomain()));
 		iq.addChild(ElementFactory.create("query", null, "jabber:iq:version"));
 
-		sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
+		final boolean versionReceived = sendAndWait(adminJaxmpp, iq, new AsyncCallback() {
 
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-				log("error" + responseStanza.getAsString(), false);
+				log("error: " + responseStanza.getAsString(), false);
 			}
 
 			@Override
@@ -106,7 +106,7 @@ public class RetrieveVersion
 //					log( "onSuccess: " + responseStanza.getAsString() );
 				log("onSuccess", false);
 				log("", false);
-				if (query != null && query.getChildren() != null && !query.getChildren().isEmpty()) {
+				if (query != null && query.getChildren() != null) {
 					for (Element child : query.getChildren()) {
 						log(child.getName() + ": " + child.getValue(), false);
 					}
@@ -119,6 +119,7 @@ public class RetrieveVersion
 				log("onTimeout");
 			}
 		});
+		assertTrue(versionReceived);
 	}
 
 	private void retrieveConfiguration(Jaxmpp adminJaxmpp) throws Exception {

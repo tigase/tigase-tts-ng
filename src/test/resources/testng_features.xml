@@ -1,10 +1,10 @@
-<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<!--<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >-->
 
-<suite name="Tigase XMPP Server Features Tests" verbose="1">
-    <!-- Generic tests -->
-    <test name="Check WorkGroup component">
-        <classes>
-            <class name="tigase.tests.features.*"/>
-        </classes>
-    </test>
-</suite>
+<!--<suite name="Tigase XMPP Server Features Tests" verbose="1">-->
+    <!--&lt;!&ndash; Generic tests &ndash;&gt;-->
+    <!--<test name="Check WorkGroup component">-->
+        <!--<classes>-->
+            <!--<class name="tigase.tests.workgroup.*"/>-->
+        <!--</classes>-->
+    <!--</test>-->
+<!--</suite>-->
