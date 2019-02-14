@@ -225,7 +225,7 @@ done
 if [[ -z "${SKIP_SUMMARY_PAGE_GET}" || ! "${SKIP_SUMMARY_PAGE_GET}" -eq 1 ]] ; then
     echo "Generating Summary page"
 
-    groovy scripts/SummaryGenarator.groovy -p ${ROOT_DIR} -v ${ver} -d ${DATABASES[*]}
+    groovy -cp libs/tigase-utils.jar scripts/SummaryGenarator.groovy -p ${ROOT_DIR} -v ${ver} -d ${DATABASES[*]}
     if [[ ! $? -eq 0 ]] ; then
         ((failed_tests++))
     fi

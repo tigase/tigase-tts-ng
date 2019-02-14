@@ -19,11 +19,12 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 
+import groovy.cli.commons.CliBuilder
 import groovy.text.Template
 import groovy.text.markup.MarkupTemplateEngine
 import groovy.text.markup.TemplateConfiguration
 import groovy.xml.XmlUtil
-import groovy.cli.commons.CliBuilder
+import tigase.util.Version
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -34,7 +35,6 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 class SummaryGenarator {
 
@@ -52,6 +52,8 @@ class SummaryGenarator {
 			return
 		}
 
+		Version paramVersion = Version.of(options.v);
+
 		def start = System.currentTimeMillis()
 
 		rootDirectory = options.p
@@ -64,9 +66,9 @@ class SummaryGenarator {
 
 		def times = []
 		ArrayList<TestCase> testResults = new ArrayList<TestCase>()
-		getVersions(resultsDirectory).each { ver ->
-			getTestGroups(resultsDirectory, ver).each { test ->
-				getDatabases(resultsDirectory, ver, test).each { db ->
+		getVersions(resultsDirectory).each { Version ver ->
+			getTestGroups(resultsDirectory, ver).each { String test ->
+				getDatabases(resultsDirectory, ver, test).each { String db ->
 					def startint = System.currentTimeMillis()
 					def metrics = getTestsMetrics(resultsDirectory, ver, test, db)
 					def logFile = getLogFile(resultsDirectory, ver, test, db)
@@ -86,13 +88,13 @@ class SummaryGenarator {
 		println sprintf("average time: %ss, total: ", average, times.size())
 		println sprintf("results parsing generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
-		Map<String, Map<String, Map<String, List<TestCase>>>> map
+		Map<String, Map<Version, Map<String, List<TestCase>>>> map
 		map = testResults.groupBy({ it.testType }, { it.version }, { it.dbType })
 		println sprintf("Group by time: %ss", (System.currentTimeMillis() - start) / 1000)
 
 		Map<String, Map<String, Map<String, TestCase>>> collectible
-		collectible = map.collectEntries { String testType, Map<String, Map<String, List<TestCase>>> versions ->
-			[ (testType): versions.collectEntries { String version, Map<String, List<TestCase>> databaseTypes ->
+		collectible = map.collectEntries { String testType, Map<Version, Map<String, List<TestCase>>> versions ->
+			[ (testType): versions.collectEntries { Version version, Map<String, List<TestCase>> databaseTypes ->
 				[ (version): databaseTypes.collectEntries { String dbType, List<TestCase> testCases ->
 					testCases.collectEntries { TestCase tc -> [ (dbType): tc ]
 					}
@@ -141,13 +143,19 @@ class SummaryGenarator {
 
 		println sprintf("total generation time: %ss", (System.currentTimeMillis() - start) / 1000)
 
-		def failsTotal = testResults
-				.findAll { tc -> tc?.version == options.v && options.ds.contains(tc?.dbType )}
-				.count { it -> (it.getTestResult() != TestCase.Result.PASSED) }
+		def resultsForVersion = testResults
+				.findAll { tc -> tc?.version == paramVersion && options.ds.contains(tc?.dbType )}
 
-		println("fails total: " + failsTotal)
+		if (resultsForVersion.isEmpty()) {
+			println("No test results matching version/database!")
+			System.exit(1)
+		} else {
+			def failsTotal = resultsForVersion.count { it -> (it.getTestResult() != TestCase.Result.PASSED) }
 
-		System.exit(failsTotal > 0 ? 1 : 0)
+			println("fails total: " + failsTotal)
+			System.exit(failsTotal > 0 ? 1 : 0)
+		}
+
 	}
 
 	static Map<String, Object> getTestsMetrics(path, version, test, db) {
@@ -205,8 +213,8 @@ class SummaryGenarator {
 		}
 	}
 
-	static String[] getVersions(String path) {
-		return getItems(path, "(\\d\\.){2}\\d(-(SNAPSHOT|RC)\\d*)?-b\\d{4}")
+	static List<Version> getVersions(String path) {
+		return getItems(path, "(\\d\\.){2}\\d(-(SNAPSHOT|RC)\\d*)?-b\\d{4,}"). collect { ver -> Version.of(ver) }
 	}
 
 	static String[] getTestGroups(rootPath, ver) {
@@ -229,7 +237,7 @@ class SummaryGenarator {
 
 class TestCase {
 
-	TestCase(String testType, String version, String dbType, Map metrics, File logFile, File reportFile,
+	TestCase(String testType, Version version, String dbType, Map metrics, File logFile, File reportFile,
 			 LocalDate date) {
 		this.testType = testType
 		this.version = version
@@ -241,7 +249,7 @@ class TestCase {
 	}
 
 	String testType
-	String version
+	Version version
 	String dbType
 	Map metrics
 	File logFile
