@@ -74,6 +74,8 @@ public class TestMessageArchiveManagement
 	private Account user3;
 	private Jaxmpp user3Jaxmpp;
 
+	public static final List<String> NAMESPACES = Arrays.asList("urn:xmpp:mam:0", "urn:xmpp:mam:1", "urn:xmpp:mam:2");
+
 	@Test
 	public void testSupportAdvertisement() throws Exception {
 		final Mutex mutex = new Mutex();
@@ -86,7 +88,10 @@ public class TestMessageArchiveManagement
 							identities.forEach(identity -> mutex.notify("discovery:identity:" + identity.getCategory() + ":" + identity.getType()));
 						}
 						if (features != null) {
-							features.forEach(feature -> mutex.notify("discovery:feature:" + feature));
+							features.stream()
+									.filter(NAMESPACES::contains)
+									.findAny()
+									.ifPresent(feature -> mutex.notify("discovery:feature:urn:xmpp:mam", "discovery:feature:" + feature));
 						}
 						mutex.notify("discovery:completed:success", "discovery:completed");
 					}
@@ -105,7 +110,7 @@ public class TestMessageArchiveManagement
 
 		mutex.waitFor(10 * 1000, "discovery:completed");
 		assertTrue(mutex.isItemNotified("discovery:completed:success"));
-		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:mam:1"));
+		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:mam"));
 	}
 
 	@Test
