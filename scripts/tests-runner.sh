@@ -182,7 +182,7 @@ if [ -f "${server_dir}/jars/tigase-server-dist.jar" ] ; then
     server_binary="${server_dir}/jars/tigase-server-dist.jar"
 fi
 
-ver=`unzip -qc ${server_binary} | grep "Tigase-Version" | sed -e "s/Tigase-Version: \(.*\)/\\1/" | sed 's/[[:space:]]//'`
+ver=`unzip -qc ${server_binary} META-INF/MANIFEST.MF | grep "Tigase-Version" | sed -e "s/Tigase-Version: \(.*\)/\\1/" | sed 's/[[:space:]]//'`
 
 [[ -z "${ROOT_DIR}" ]] && ROOT_DIR="files/"
 
@@ -226,6 +226,9 @@ if [[ -z "${SKIP_SUMMARY_PAGE_GET}" || ! "${SKIP_SUMMARY_PAGE_GET}" -eq 1 ]] ; t
     echo "Generating Summary page"
 
     groovy scripts/SummaryGenarator.groovy -p ${ROOT_DIR} -v ${ver} -d ${DATABASES[*]}
+    if [[ ! $? -eq 0 ]] ; then
+        ((failed_tests++))
+    fi
 else
     echo "Skipping summary page generation"
 fi
