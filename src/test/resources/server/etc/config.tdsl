@@ -66,6 +66,7 @@ pubsub () {
         'msg-pubsub-publisher' = 'sess-man@localhost'
     }
     pep () {}
+    'urn:xmpp:push:0' () {}
     'urn:xmpp:mam:1' () {}
 }
 upload () {
