@@ -204,7 +204,70 @@ public class TestPubSubMAM
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 	}
 
+	protected List<Item> updateExpectedItems(PubSubNode node) throws JaxmppException, InterruptedException {
+		List<Item> results = new ArrayList<>();
+		String queryId = UUID.randomUUID().toString();
+		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (sessionObject, queryid, messageId, timestamp, message) -> {
+			if (!queryId.equals(queryid)) {
+				return;
+			}
+
+			Element eventEl = message.getChildrenNS("event", "http://jabber.org/protocol/pubsub#event");
+			Element itemsEl = eventEl.getFirstChild("items");
+			Element itemEl = itemsEl.getFirstChild("item");
+			Item item = new Item(messageId, timestamp, itemEl.getAttribute("id"), itemEl.getFirstChild());
+			item.publishedAt = timestamp;
+			results.add(item);
+		};
+
+		jaxmpp.getEventBus()
+				.addHandler(
+						MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+						handler);
+
+		MessageArchiveManagementModule mamModule = jaxmpp.getModule(MessageArchiveManagementModule.class);
+
+		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
+		
+		mamModule.queryItems(query, pubsubJid, node.getName(), queryId, null,
+							 new MessageArchiveManagementModule.ResultCallback() {
+								 @Override
+								 public void onSuccess(String queryid, boolean complete, RSM rsm)
+										 throws JaxmppException {
+									 mutex.notify("mam:queryId:" + queryid + ":complete");
+								 }
+
+								 @Override
+								 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										 throws JaxmppException {
+
+								 }
+
+								 @Override
+								 public void onTimeout() throws JaxmppException {
+
+								 }
+							 });
+
+		mutex.waitFor(20 * 1000, "mam:queryId:" + queryId + ":complete");
+		assertTrue(mutex.isItemNotified("mam:queryId:" + queryId + ":complete"));
+
+		Thread.sleep(2000);
+
+		jaxmpp.getEventBus()
+				.remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+						handler);
+
+		results.sort(Comparator.comparing(o -> o.timestamp));
+
+		assertEquals(publishedItems.size(), results.size());
+
+		return results;
+	}
+
 	protected void testRetrieveWithTimestampsLimitAndAfterFrom(PubSubNode node) throws Exception {
+		publishedItems = updateExpectedItems(node);
+
 		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
 		RSM rsm = new RSM();
 		rsm.setMax(10);
@@ -281,7 +344,7 @@ public class TestPubSubMAM
 		mutex.waitFor(20 * 1000, "mam:queryId:" + queryId + ":complete:" + complete);
 		assertTrue(mutex.isItemNotified("mam:queryId:" + queryId + ":complete:" + complete));
 
-		Thread.sleep(200);
+		Thread.sleep(2000);
 
 		jaxmpp.getEventBus()
 				.remove(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
@@ -376,21 +439,39 @@ public class TestPubSubMAM
 		public boolean equals(Object obj) {
 			if (obj instanceof Item) {
 				Item i = (Item) obj;
-				if (itemId.equals(i.itemId) && payload.equals(i.payload)) {
-					if (publishedAt != null) {
-						double i11 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000 - ALLOWED_TIME_DRIFT;
-						double i12 = Math.ceil(((double) publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
-						double i2 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
-						return i11 <= i2 && i2 <= i12;
-					} else if (i.publishedAt != null) {
-						double i11 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000 - ALLOWED_TIME_DRIFT;
-						double i12 = Math.ceil(((double) i.publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
-						double i2 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
-						return i11 <= i2 && i2 <= i12;
+				try {
+					if (itemId.equals(i.itemId) && payload.getAsString().equals(i.payload.getAsString())) {
+						if (publishedAt != null) {
+							double i11 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000 - ALLOWED_TIME_DRIFT;
+							double i12 = Math.ceil(((double) publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
+							double i2 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
+							if (!(i11 <= i2 && i2 <= i12)) {
+								System.out.println("got error from 1: " + i11 + " : " + i12 + " : " + i2);
+							}
+							return i11 <= i2 && i2 <= i12;
+						} else if (i.publishedAt != null) {
+							double i11 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000 - ALLOWED_TIME_DRIFT;
+							double i12 = Math.ceil(((double) i.publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
+							double i2 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
+							if (!(i11 <= i2 && i2 <= i12)) {
+								System.out.println("got error from 2: " + i11 + " : " + i12 + " : " + i2);
+							}
+							return i11 <= i2 && i2 <= i12;
+						} else {
+							if (timestamp.getTime() != i.timestamp.getTime()) {
+								System.out.println("got error from 3: " + timestamp.getTime() + " : " + i.timestamp.getTime());
+							}
+
+							return timestamp.getTime() == i.timestamp.getTime();
+						}
 					} else {
-						return timestamp.getTime() == i.timestamp.getTime();
+						System.out.println("wrong id or payload!");
 					}
+				} catch (XMLException e) {
+					return false;
 				}
+			}  else {
+				System.out.println("wrong type!");
 			}
 			return false;
 		}
