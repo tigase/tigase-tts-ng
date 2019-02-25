@@ -60,7 +60,7 @@ import static org.testng.Assert.assertTrue;
  * XEP-0142: Workgroup Queues
  * https://xmpp.org/extensions/xep-0142.html
  */
-public class WGDiscovery
+public class TestWorkGroup
 		extends AbstractTest {
 
 	private static final String USER_PREFIX = "WG_";
