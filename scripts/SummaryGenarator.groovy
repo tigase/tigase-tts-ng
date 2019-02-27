@@ -303,8 +303,8 @@ class TestCase {
 
 	enum Result {
 
-		FAILED("warning"),
-		SKIPPED("info"),
+		FAILED("danger"),
+		SKIPPED("warning"),
 		PASSED("success")
 
 		private String cssClass

@@ -73,13 +73,16 @@ table > tbody > tr > td:nth-child(1) {
 }
 
 .table tbody tr > td.success {
-    background-color: #88ee88 !important;
+    background-color: #88ee88; !important;
 }
 
 .table tbody tr > td.warning {
-    background-color: #ff8888 !important;
+	background-color: #ffff77 !important;
 }
 
+.table tbody tr > td.danger {
+	background-color: #ff8888 !important;
+}
 
 .tooltip2 {
     position: relative;
