@@ -275,7 +275,7 @@ class TestCase {
 	}
 
 	def getMetricsAsString() {
-		return metrics ? "${metrics.passed} / ${metrics.failed} | ${metrics.total}" : null
+		return metrics ? "${metrics.passed} / ${metrics.skipped} / ${metrics.failed} | ${metrics.total}" : null
 	}
 
 	def getDuration() {
@@ -294,6 +294,8 @@ class TestCase {
 	Result getTestResult() {
 		if (metrics?.failed > 0) {
 			return Result.FAILED
+		} else if (!metrics || metrics?.skipped > 0) {
+			return Result.SKIPPED
 		} else {
 			return Result.PASSED
 		}
@@ -302,6 +304,7 @@ class TestCase {
 	enum Result {
 
 		FAILED("warning"),
+		SKIPPED("info"),
 		PASSED("success")
 
 		private String cssClass
