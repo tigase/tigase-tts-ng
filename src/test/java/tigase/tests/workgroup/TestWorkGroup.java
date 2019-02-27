@@ -61,7 +61,7 @@ import static org.testng.Assert.assertTrue;
  * https://xmpp.org/extensions/xep-0142.html
  */
 public class TestWorkGroup
-		extends AbstractTest {
+		extends AbstractWorkgroupTest {
 
 	private static final String USER_PREFIX = "WG_";
 	private final static String WG_XMLNS = "http://jabber.org/protocol/workgroup";
@@ -75,7 +75,7 @@ public class TestWorkGroup
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		workgroupBaseJID = JID.jidInstance("wg." + getDomain(0));
+		workgroupBaseJID = getComponentJID();
 		final String groupName = "support_" + nextRnd();
 		workgroupSupportJID = JID.jidInstance(groupName, workgroupBaseJID.getDomain());
 		agentUser = createAccount().setLogPrefix("agent").build();

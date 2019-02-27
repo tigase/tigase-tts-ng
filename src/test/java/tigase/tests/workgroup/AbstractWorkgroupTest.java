@@ -18,23 +18,23 @@
  * along with this program. Look for COPYING file in the top folder.
  * If not, see http://www.gnu.org/licenses/.
  */
-package tigase.tests.auditlog;
+package tigase.tests.workgroup;
 
 import org.testng.IHookable;
 import tigase.jaxmpp.core.client.JID;
 import tigase.tests.AbstractSkippableTest;
 
-public class AbstractAuditlogTest
+public class AbstractWorkgroupTest
 		extends AbstractSkippableTest
 		implements IHookable {
 
 	@Override
 	protected JID getComponentJID() {
-		return JID.jidInstance("audit-log@" + getDomain(0));
+		return JID.jidInstance("wg." + getDomain(0));
 	}
 
 	@Override
 	protected String getComponentName() {
-		return "AuditLog";
+		return "WorkGroup";
 	}
 }

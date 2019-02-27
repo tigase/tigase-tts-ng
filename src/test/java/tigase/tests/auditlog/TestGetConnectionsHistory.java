@@ -58,7 +58,7 @@ public class TestGetConnectionsHistory extends AbstractAuditlogTest {
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		if (!isAuditlogAvailable()) {
+		if (!isComponentAvailable()) {
 			return;
 		}
 		start = new Date();
@@ -226,7 +226,7 @@ public class TestGetConnectionsHistory extends AbstractAuditlogTest {
 
 		final Result result = new Result();
 
-		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(getAuditlogJID(), "get-connections-history", Action.execute, form, new AdHocCommansModule.AdHocCommansAsyncCallback() {
+		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(getComponentJID(), "get-connections-history", Action.execute, form, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {

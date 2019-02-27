@@ -57,7 +57,7 @@ public class TestGetConnectedUsers extends AbstractAuditlogTest {
 	
 	@BeforeClass
 	public void setUp() throws Exception {
-		if (!isAuditlogAvailable()) {
+		if (!isComponentAvailable()) {
 			return;
 		}
 
@@ -163,7 +163,7 @@ public class TestGetConnectedUsers extends AbstractAuditlogTest {
 			form.addTextSingleField("jidLike", userLike);
 		}
 		List<Element> results = new ArrayList<>();
-		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(getAuditlogJID(), "get-connected-users",
+		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(getComponentJID(), "get-connected-users",
 																Action.execute, form, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
 					@Override

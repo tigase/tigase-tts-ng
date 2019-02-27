@@ -58,7 +58,7 @@ public class TestGetDisconnectedUsers
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		if (!isAuditlogAvailable()) {
+		if (!isComponentAvailable()) {
 			 return;
 		}
 		
@@ -170,7 +170,7 @@ public class TestGetDisconnectedUsers
 			form.addTextSingleField("jidLike", userLike);
 		}
 		List<Element> results = new ArrayList<>();
-		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(getAuditlogJID(), "get-disconnected-users",
+		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(getComponentJID(), "get-disconnected-users",
 																Action.execute, form, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 
 					@Override
