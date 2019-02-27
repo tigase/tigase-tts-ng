@@ -58,10 +58,6 @@ public class TestGetDisconnectedUsers
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		if (!isComponentAvailable()) {
-			 return;
-		}
-		
 		user1 = createAccount().setLogPrefix(USER_PREFIX).build();
 		user1Jaxmpp = user1.createJaxmpp().setConnected(true).build();
 

@@ -54,6 +54,7 @@ pubsub () {
     'persistent-pep' = true
 }
 'sess-man' {
+    'audit-log' () {}
     'auth-timeout' = 20
     'jabber:iq:register' () {}
     'message-archive' () {
@@ -73,6 +74,9 @@ upload () {
     logic () {
         'server-name' = 'localhost'
     }
+}
+'audit-log' () {
+    searchableRepository () {}
 }
 wg(class: tigase.workgroupqueues.WorkgroupQueuesComponent) {
     'default-muc-domain' = muc.localhost

@@ -58,9 +58,6 @@ public class TestGetConnectionsHistory extends AbstractAuditlogTest {
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		if (!isComponentAvailable()) {
-			return;
-		}
 		start = new Date();
 		
 		user = createAccount().setLogPrefix(USER_PREFIX).build();

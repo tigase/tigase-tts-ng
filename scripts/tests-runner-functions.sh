@@ -94,6 +94,10 @@ function db_reload_sql() {
 	cd ${tts_dir}
 }
 
+function join_by {
+    local IFS="$1"; shift; echo "$*";
+}
+
 function tig_start_server() {
 
 	[[ -z ${1} ]] && local _src_dir="../server" || local _src_dir=${1}
@@ -250,7 +254,24 @@ function run_test() {
 	[[ -z ${MAIL_RECEIVER_ADDRESS} ]] || local _mail_receiver_user_address_param="-Dimap.username=${MAIL_RECEIVER_ADDRESS}"
 	[[ -z ${MAIL_RECEIVER_PASS} ]] || local _mail_receiver_pass_param="-Dimap.password=${MAIL_RECEIVER_PASS}"
 
-	mvn clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
+    additional_profiles=()
+    if [ "${_database}" = "mysql" ] ; then
+        additional_profiles+=("test-auditlog")
+    fi
+
+    if [ ! "${_database}" = "mongodb" ] ; then
+        additional_profiles+=("test-workgroup")
+    fi
+
+    echo ${additional_profiles[@]}
+
+    profile_activation=""
+
+    if [[ ${#additional_profiles[@]} -gt 0 ]] ; then
+        profile_activation="-P`join_by , "${additional_profiles[@]}"`"
+    fi
+
+	mvn ${profile_activation} clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
 
     test_status=$?;
 

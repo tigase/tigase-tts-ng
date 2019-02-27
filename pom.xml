@@ -32,6 +32,38 @@
 
     <profiles>
         <profile>
+            <id>test-auditlog</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <suiteXmlFiles combine.children="append">
+                                <suiteXmlFile>src/test/resources/testng_auditlog.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>test-workgroup</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <suiteXmlFiles combine.children="append">
+                                <suiteXmlFile>src/test/resources/testng_workgroup.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>dist</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -406,9 +438,7 @@
                         <suiteXmlFile>src/test/resources/testng_archive.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_external.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_custom.xml</suiteXmlFile>
-                        <suiteXmlFile>src/test/resources/testng_auditlog.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_jaxmpp.xml</suiteXmlFile>
-                        <suiteXmlFile>src/test/resources/testng_workgroup.xml</suiteXmlFile>
                     </suiteXmlFiles>
                     <!--<workingDirectory>target/</workingDirectory>-->
                     <properties>
