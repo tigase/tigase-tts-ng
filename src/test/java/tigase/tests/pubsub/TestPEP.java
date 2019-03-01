@@ -140,9 +140,12 @@ public class TestPEP extends AbstractTest {
 		jaxmpp2.disconnect(true);
 
 		mutex.clear();
+		Thread.sleep(500);
 
 		jaxmpp.login(true);
+		assertTrue(jaxmpp.isConnected());
 		jaxmpp2.login(true);
+		assertTrue(jaxmpp2.isConnected());
 
 		JabberDataElement config = null;
 		if (model != null) {
@@ -233,9 +236,12 @@ public class TestPEP extends AbstractTest {
 		jaxmpp2.disconnect(true);
 
 		mutex.clear();
+		Thread.sleep(500);
 
 		jaxmpp.login(true);
+		assertTrue(jaxmpp.isConnected());
 		jaxmpp2.login(true);
+		assertTrue(jaxmpp2.isConnected());
 
 		mutex.waitFor(10 * 1000, "user:node:item:received");
 		assertEquals(expectedUser1, mutex.isItemNotified("user:node:item:received"));
