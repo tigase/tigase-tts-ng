@@ -50,6 +50,7 @@ import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -183,6 +184,8 @@ public class TestBruteforcePrevention
 			AssertJUnit.fail("It should not happen!");
 		} catch (Exception ignored) {
 		}
+
+		TimeUnit.SECONDS.sleep(2);
 
 		checkUserStatus(user.getJid(), true);
 	}
