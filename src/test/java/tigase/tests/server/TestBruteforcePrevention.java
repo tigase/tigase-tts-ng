@@ -163,6 +163,8 @@ public class TestBruteforcePrevention
 		} catch (Exception ignored) {
 		}
 
+		TimeUnit.SECONDS.sleep(2);
+
 		checkUserStatus(user.getJid(), false);
 	}
 
@@ -214,6 +216,8 @@ public class TestBruteforcePrevention
 		} catch (Exception ignored) {
 		}
 
+		TimeUnit.SECONDS.sleep(2);
+
 		checkUserStatus(user.getJid(), true);
 	}
 
@@ -233,6 +237,8 @@ public class TestBruteforcePrevention
 		jaxmppOk = user.createJaxmpp().setConnected(true).build();
 		assertTrue(jaxmppOk.isConnected());
 		disconnect(jaxmppOk);
+
+		TimeUnit.SECONDS.sleep(2);
 
 		checkUserStatus(user.getJid(), true);
 	}
