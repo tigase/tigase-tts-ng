@@ -25,11 +25,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.NonSaslAuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.saslmechanisms.PlainMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.scram.ScramMechanism;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.scram.ScramSHA256Mechanism;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.scram.ScramSHA512Mechanism;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractJaxmppTest;
 import tigase.tests.utils.Account;
@@ -44,6 +46,10 @@ public class TestSaslAuthentication
 	private Account user;
 
 	private static Jaxmpp configureJaxmpp(Jaxmpp jaxmpp, SaslMechanism mechanism) {
+		NonSaslAuthModule nonSaslAuthModule = jaxmpp.getModulesManager().getModule(NonSaslAuthModule.class);
+		if (nonSaslAuthModule != null) {
+			jaxmpp.getModulesManager().unregister(nonSaslAuthModule);
+		}
 		SaslModule module = jaxmpp.getModule(SaslModule.class);
 
 		module.removeAllMechanisms();
@@ -173,6 +179,48 @@ public class TestSaslAuthentication
 	@Test
 	public void testSaslScramSHA256WithAuthzidFailure() throws JaxmppException {
 		jaxmpp = createJaxmppWithMechanism(new ScramSHA256Mechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, "some-user");
+		try {
+			jaxmpp.login(true);
+		} catch (Exception ex) {
+		}
+
+		assertFalse(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslScramSHA512() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA512Mechanism());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected() || !SaslModule.getAllowedSASLMechanisms(jaxmpp.getSessionObject()).contains("SCRAM-SHA-512"));
+	}
+
+	@Test
+	public void testSaslScramSHA512WithAuthzid() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA512Mechanism());
+		forceAuthzid();
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected() || !SaslModule.getAllowedSASLMechanisms(jaxmpp.getSessionObject()).contains("SCRAM-SHA-512"));
+	}
+
+	@Test
+	public void testSaslScramSHA512Failure() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA512Mechanism());
+		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
+		try {
+			jaxmpp.login(true);
+		} catch (Exception ex) {
+		}
+
+		assertFalse(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslScramSHA512WithAuthzidFailure() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA512Mechanism());
 		forceAuthzid();
 		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, "some-user");
 		try {
