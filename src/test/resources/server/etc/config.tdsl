@@ -15,6 +15,9 @@ c2s {
     seeOtherHost {}
     'urn:xmpp:sm:3' () {}
 }
+'disco-extensions' = {
+    'abuse-addresses' = [ 'mailto:abuse@localhost', 'xmpp:abuse@localhost' ]
+}
 ext () {}
 'ext-man' () {}
 http () {

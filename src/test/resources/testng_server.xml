@@ -128,4 +128,10 @@
         </classes>
     </test>
 
+    <test name="Service Discovery Extensions">
+        <classes>
+            <class name="tigase.tests.server.TestServiceDiscoveryExtensions"/>
+        </classes>
+    </test>
+
 </suite>
