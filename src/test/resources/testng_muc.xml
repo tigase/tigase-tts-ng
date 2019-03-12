@@ -16,4 +16,9 @@
             <class name="tigase.tests.muc.TestMucHistoryTimestamps"/>
         </classes>
     </test>
+    <test name="Modify list of the occupants to include room members - #8660">
+        <classes>
+            <class name="tigase.tests.muc.TestOfflineUsers"/>
+        </classes>
+    </test>
 </suite>
