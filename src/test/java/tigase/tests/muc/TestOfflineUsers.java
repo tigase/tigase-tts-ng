@@ -5,10 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import tigase.TestLogger;
-import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementBuilder;
@@ -18,11 +15,15 @@ import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.Action;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
+
+import java.util.Optional;
 
 public class TestOfflineUsers
 		extends AbstractTest {
@@ -82,6 +83,54 @@ public class TestOfflineUsers
 		Assert.assertTrue(mutex.isItemNotified("OccupantComes:user1"), "Expected user1 in room.");
 		Assert.assertTrue(mutex.isItemNotified("OccupantComes:" + user2.getJid().toString()),
 						  "Expected offline user 'user2' (nickname=" + user2.getJid().toString() + ") in room.");
+	}
+
+	@Test(groups = {"Multi User Chat"}, description = "#8660: Presence delivery from offline users (persistence change)")
+	public void testOfflineUsersPresence1() throws Exception {
+		Thread.sleep(100);
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.xa);
+
+		final Mutex mutex = new Mutex();
+		user2Jaxmpp.getEventBus().addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
+			@Override
+			public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
+				mutex.notify("user2:room:joined");
+			}
+		});
+		Room room = muc2Module.join(roomJID.getLocalpart(), roomJID.getDomain(), user2.getJid().toString());
+		mutex.waitFor(10 * 1000, "user2:room:joined");
+		Assert.assertTrue(mutex.isItemNotified("user2:room:joined"));
+		Thread.sleep(100);
+
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.online);
+
+		removePersistentMember(user2.getJid());
+		Thread.sleep(100);
+
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.online);
+
+		muc2Module.leave(room);
+		Thread.sleep(100);
+
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.offline);
+
+		addPersistentMember(user2.getJid());
+		Thread.sleep(100);
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.xa);
+
+		removePersistentMember(user2.getJid());
+		Thread.sleep(100);
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.offline);
+	}
+
+	private static Presence.Show getPresenceShow(MucModule muc1Module, BareJID roomJID, String nickname) {
+		return Optional.ofNullable(muc1Module.getRoom(roomJID).getPresences().get(nickname)).map(p -> {
+			try {
+				return p.getPresence().getShow();
+			} catch (XMLException e) {
+				return Presence.Show.offline;
+			}
+		}).orElse(Presence.Show.offline);
 	}
 
 	@BeforeTest
@@ -208,6 +257,40 @@ public class TestOfflineUsers
 
 		mutex.waitFor(20_000, "add:p_member");
 		Assert.assertTrue(mutex.isItemNotified("add:p_member:OK"), "Persistent member is not added!");
+
+	}
+
+	private void removePersistentMember(BareJID occupant) throws Exception {
+		Jaxmpp jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
+		AdHocCommansModule adhoc = jaxmppAdmin.getModule(AdHocCommansModule.class);
+
+		JabberDataElement data = new JabberDataElement(XDataType.submit);
+		data.addTextSingleField("room_name", roomJID.getLocalpart());
+		data.addTextSingleField("occupant_jid", occupant.toString());
+
+		adhoc.execute(JID.jidInstance(roomJID.getDomain()), "room-occupant-persistent-remove", Action.complete, data,
+					  new AsyncCallback() {
+						  @Override
+						  public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+								  throws JaxmppException {
+							  TestLogger.log("Cannot remove persistent member: " + error);
+							  mutex.notify("remove:p_member");
+						  }
+
+						  @Override
+						  public void onSuccess(Stanza responseStanza) throws JaxmppException {
+							  mutex.notify("remove:p_member:OK", "remove:p_member");
+						  }
+
+						  @Override
+						  public void onTimeout() throws JaxmppException {
+							  TestLogger.log("Cannot remove persistent member: timeout");
+							  mutex.notify("remove:p_member");
+						  }
+					  });
+
+		mutex.waitFor(20_000, "remove:p_member");
+		Assert.assertTrue(mutex.isItemNotified("remove:p_member:OK"), "Persistent member is not removed!");
 
 	}
 
