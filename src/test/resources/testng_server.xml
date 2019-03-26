@@ -85,6 +85,11 @@
             <class name="tigase.tests.server.TestPush"/>
         </classes>
     </test>
+    <test name="XEP-0357: Push Notifications - Groupchat">
+        <classes>
+            <class name="tigase.tests.server.TestPushGroupchat"/>
+        </classes>
+    </test>
 
     <!-- C2S -->
     <test name="C2S: TLS - Client Cert: Two-way TLS - #2939">

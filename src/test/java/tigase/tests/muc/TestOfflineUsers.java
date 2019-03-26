@@ -2,6 +2,7 @@ package tigase.tests.muc;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import tigase.TestLogger;
@@ -9,6 +10,7 @@ import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementBuilder;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
@@ -16,14 +18,18 @@ import tigase.jaxmpp.core.client.xmpp.modules.adhoc.Action;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
 import java.util.Optional;
+
+import static org.testng.Assert.assertTrue;
 
 public class TestOfflineUsers
 		extends AbstractTest {
@@ -226,6 +232,36 @@ public class TestOfflineUsers
 		addPersistentMember(user2.getJid());
 	}
 
+	@AfterTest
+	public void destroyMucRoom() throws JaxmppException, InterruptedException {
+		IQ iq = IQ.create();
+		iq.setType(StanzaType.set);
+		iq.setTo(JID.jidInstance(roomJID));
+
+		final Mutex mutex = new Mutex();
+		Element query = ElementFactory.create("query", null, "http://jabber.org/protocol/muc#owner");
+		query.addChild(ElementFactory.create("destroy"));
+		iq.addChild(query);
+		user1Jaxmpp.send(iq, new AsyncCallback() {
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				mutex.notify("room:destroyed:error:" + error,"room:destroyed");
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				mutex.notify("room:destroyed:success", "room:destroyed");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("room:destroyed:timeout", "room:destroyed");
+			}
+		});
+		mutex.waitFor(10 * 1000, "room:destroyed");
+		assertTrue(mutex.isItemNotified("room:destroyed:success"));
+	}
+	
 	private void addPersistentMember(BareJID occupant) throws Exception {
 		Jaxmpp jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
 		AdHocCommansModule adhoc = jaxmppAdmin.getModule(AdHocCommansModule.class);

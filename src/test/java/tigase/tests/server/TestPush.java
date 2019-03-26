@@ -48,7 +48,7 @@ public class TestPush
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		user = this.createAccount().setLogPrefix("pep-").build();
+		user = this.createAccount().setLogPrefix("push-").build();
 		jaxmpp = user.createJaxmpp().setConnected(true).build();
 	}
 
