@@ -546,7 +546,7 @@
         <dependency>
             <groupId>tigase</groupId>
             <artifactId>tigase-http-api</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
+            <version>2.1.0-SNAPSHOT</version>
         </dependency>
 
 
@@ -570,24 +570,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>tigase</groupId>
-            <artifactId>jaxmpp-core</artifactId>
-            <version>3.3.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>tigase</groupId>
-            <artifactId>jaxmpp-core</artifactId>
-            <version>3.3.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
 
     </dependencies>
     <repositories>
         <repository>
             <id>tigase</id>
-            <url>http://maven-repo.tigase.org/repository/tigase</url>
+            <url>https://maven-repo.tigase.net/repository/tigase</url>
         </repository>
     </repositories>
     <distributionManagement>
