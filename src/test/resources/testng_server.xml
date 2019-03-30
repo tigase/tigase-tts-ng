@@ -90,6 +90,11 @@
             <class name="tigase.tests.server.TestPushGroupchat"/>
         </classes>
     </test>
+    <test name="XEP-0398: User Avatar to vCard-Based Avatars Conversion">
+        <classes>
+            <class name="tigase.tests.server.TestPepUserAvatarToVCardConversion"/>
+        </classes>
+    </test>
 
     <!-- C2S -->
     <test name="C2S: TLS - Client Cert: Two-way TLS - #2939">
