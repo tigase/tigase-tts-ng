@@ -95,6 +95,11 @@
             <class name="tigase.tests.server.TestPepUserAvatarToVCardConversion"/>
         </classes>
     </test>
+    <test name="XEP-0411: Bookmarks Conversion">
+        <classes>
+            <class name="tigase.tests.server.TestPepBookmarksConversion"/>
+        </classes>
+    </test>
 
     <!-- C2S -->
     <test name="C2S: TLS - Client Cert: Two-way TLS - #2939">
