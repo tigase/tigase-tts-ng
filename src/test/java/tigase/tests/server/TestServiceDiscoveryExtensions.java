@@ -55,7 +55,7 @@ public class TestServiceDiscoveryExtensions extends AbstractJaxmppTest {
 	@Test
 	public void testDiscoveryUser() throws InterruptedException, JaxmppException {
 		final Mutex mutex = new Mutex();
-		Jaxmpp jaxmpp = createAccount().build().createJaxmpp().setConnected(true).build();
+		Jaxmpp jaxmpp = createAccount().setLogPrefix("queryuser").build().createJaxmpp().setConnected(true).build();
 
 		testDiscovery(mutex, jaxmpp);
 	}
