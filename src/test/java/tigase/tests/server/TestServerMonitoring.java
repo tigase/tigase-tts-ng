@@ -79,10 +79,10 @@ public class TestServerMonitoring
 			}
 		});
 
-		mutex.waitFor(30 * 1000, "enableTaskConfig");
+		mutex.waitFor(60 * 1000, "enableTaskConfig");
 		Assert.assertTrue(mutex.isItemNotified("enableTaskConfig:success"), "SampleTask is not enabled!");
 
-		boolean foundPattern = read(msgUID, 1000 * 120);
+		boolean foundPattern = read(msgUID, 1000 * 240);
 		Assert.assertTrue(foundPattern, "Mail with notification not received");
 
 		disableTaskConfig(monitorTaskJID, adHoc);

@@ -83,6 +83,7 @@ public class TestSendingXmppStanzaUsingREST
 
 	@BeforeMethod
 	public void setUp() throws Exception {
+		ensureAdminAccountExists();
 		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()),
