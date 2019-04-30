@@ -88,7 +88,6 @@ public class TestModificationOfPrivacyRulesUsingREST
 
 	@BeforeClass
 	public void prepareAdmin() throws JaxmppException, InterruptedException {
-		ensureAdminAccountExists();
 		target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		final Object adminBareJid = getAdminAccount().getJid();

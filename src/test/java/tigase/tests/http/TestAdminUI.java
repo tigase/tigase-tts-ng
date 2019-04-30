@@ -26,7 +26,6 @@ import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.*;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
@@ -54,12 +53,7 @@ public class TestAdminUI
 
 	private DefaultCredentialsProvider credentialProvider;
 	private WebClient webClient;
-
-	@BeforeClass
-	public void setUpClass() {
-		ensureAdminAccountExists();
-	}
-
+	
 	@BeforeMethod
 	public void setUp() throws Exception {
 		credentialProvider = new DefaultCredentialsProvider();
