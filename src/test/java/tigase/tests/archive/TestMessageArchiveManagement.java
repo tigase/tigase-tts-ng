@@ -25,9 +25,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.UIDGenerator;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.AbstractField;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
@@ -38,6 +40,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.core.client.xmpp.utils.RSM;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
@@ -194,7 +197,7 @@ public class TestMessageArchiveManagement
 			Jaxmpp sender = (i % 2 == 0) ? user2Jaxmpp : user1Jaxmpp;
 			Jaxmpp recipient = (i % 2 == 1) ? user2Jaxmpp : user1Jaxmpp;
 			expDates.add(new Date());
-			sendTestMessage(mutex, sender, recipient);
+			sendTestMessage(mutex, sender, recipient, i == 19);
 			Thread.sleep(2000);
 		}
 	}
@@ -358,9 +361,9 @@ public class TestMessageArchiveManagement
 		assertEquals(expectedMessageTags.size(), count.get());
 	}
 
-	public void sendTestMessage(final Mutex mutex, Jaxmpp sender, Jaxmpp recipient) throws Exception {
+	public void sendTestMessage(final Mutex mutex, Jaxmpp sender, Jaxmpp recipient, boolean noBodyWithStore) throws Exception {
 		JID to = JID.jidInstance(recipient.getSessionObject().getUserBareJid());
-		String msg = "Message-" + UUID.randomUUID().toString();
+		String msg = noBodyWithStore ?  null : "Message-" + UUID.randomUUID().toString();
 		String tag = "" + ResourceBinderModule.getBindedJID(sender.getSessionObject()) + ":" + to + ":" + msg;
 
 		MessageModule.MessageReceivedHandler handler = new MessageModule.MessageReceivedHandler() {
@@ -378,7 +381,18 @@ public class TestMessageArchiveManagement
 				.getEventBus()
 				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 
-		sender.getModule(MessageModule.class).sendMessage(to, null, msg);
+		if (noBodyWithStore) {
+			Message m = Message.create();
+			m.setType(StanzaType.chat);
+			m.setTo(to);
+			m.setId(UIDGenerator.next());
+
+			m.addChild(ElementFactory.create("store", null, "urn:xmpp:hints"));
+
+			sender.getContext().getWriter().write(m);
+		} else {
+			sender.getModule(MessageModule.class).sendMessage(to, null, msg);
+		}
 
 		mutex.waitFor(10 * 1000, tag);
 
