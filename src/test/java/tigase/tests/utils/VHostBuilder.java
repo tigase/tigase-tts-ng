@@ -39,12 +39,12 @@ public class VHostBuilder {
 	}
 
 	public VHostBuilder setClientCertCA(String path) {
-		parameters.put("Client Certificate CA", path);
+		parameters.put("client-trust-extension-ca-cert-path", path);
 		return this;
 	}
 
 	public VHostBuilder setClientCertRequired(boolean value) {
-		parameters.put("Client Certificate Required", value);
+		parameters.put("client-trust-extension-cert-required", value ? "true" : "false");
 		return this;
 	}
 
