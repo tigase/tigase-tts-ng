@@ -128,9 +128,10 @@ public class TestServerMonitoring
 
 			Session session = Session.getDefaultInstance(props, null);
 
+			EmailAccount emailAccount = getGlobalServerReceiverAccount();
 			Store store = session.getStore("imaps");
-			store.connect(this.props.getProperty("imap.server"), this.props.getProperty("imap.username"),
-						  this.props.getProperty("imap.password"));
+			store.connect(emailAccount.server, emailAccount.imapsServerPort, emailAccount.username,
+						  emailAccount.password);
 
 			Folder inbox = store.getFolder("inbox");
 			inbox.open(Folder.READ_WRITE);

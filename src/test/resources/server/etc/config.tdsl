@@ -38,8 +38,8 @@ mailer (class: tigase.extras.mailer.Mailer) {
     'mailer-from-address' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
     'mailer-smtp-host' = env('MAIL_SMTP_HOST', 'localhost')
     'mailer-smtp-password' = env('MAIL_SENDER_PASS', 'password')
-    'mailer-smtp-port' = '587'
-    'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender@localhost')
+    'mailer-smtp-port' = env('MAIL_SENDER_PORT', '3025')
+    'mailer-smtp-username' = env('MAIL_SENDER_ADDRESS', 'sender')
 }
 'message-archive' () {
     'tags-support' = true

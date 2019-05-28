@@ -26,6 +26,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.icegreen.greenmail.util.DummySSLSocketFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.TestLogger;
@@ -39,6 +40,7 @@ import javax.mail.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Security;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -50,6 +52,7 @@ public class TestPasswordReset
 
 	private Account user;
 	private Jaxmpp userJaxmpp;
+	private EmailAccount userEmail;
 
 	@BeforeMethod
 	public void setup() throws JaxmppException, InterruptedException {
@@ -58,6 +61,7 @@ public class TestPasswordReset
 			jaxmpp.getModulesManager().register(new HttpFileUploadModule());
 			return jaxmpp;
 		}).setConnected(true).build();
+		userEmail = getEmailAccountForUser(user.getJid().getLocalpart());
 	}
 
 	@Test
@@ -71,7 +75,7 @@ public class TestPasswordReset
 		HtmlPage p = (HtmlPage) p1;
 		HtmlForm form = p.getForms().get(0);
 		form.getInputByName("jid").setValueAttribute(user.getJid().toString());
-		form.getInputByName("email").setValueAttribute(getEmailAddressForUser(user.getJid().getLocalpart()));
+		form.getInputByName("email").setValueAttribute(userEmail.email);
 
 		HtmlButton button = (HtmlButton) form.getHtmlElementsByTagName("button").get(0);
 		p = button.click();
@@ -100,6 +104,7 @@ public class TestPasswordReset
 
 	private URL read(final long timeout) throws Exception {
 		Properties props = new Properties();
+		Security.setProperty("ssl.SocketFactory.provider", DummySSLSocketFactory.class.getName());
 
 		props.put("mail.imaps.ssl.checkserveridentity", "false");
 		props.put("mail.imaps.ssl.trust", "*");
@@ -108,8 +113,8 @@ public class TestPasswordReset
 			Session session = Session.getDefaultInstance(props, null);
 
 			Store store = session.getStore("imaps");
-			store.connect(this.props.getProperty("imap.server"), this.props.getProperty("imap.username"),
-						  this.props.getProperty("imap.password"));
+			store.connect(userEmail.server, userEmail.imapsServerPort, userEmail.username,
+						  userEmail.password);
 
 			Folder inbox = store.getFolder("inbox");
 			inbox.open(Folder.READ_WRITE);

@@ -118,10 +118,7 @@ public class AccountBuilder {
 			password = username;
 		}
 		if (email == null) {
-			email = test.getEmailAddressForUser(username);
-			if (email == null) {
-				email = username + "@wp.pl";
-			}
+			email = test.getEmailAccountForUser(username).email;
 		}
 
 		Account account = new Account(test, logPrefix, BareJID.bareJIDInstance(username, domain), password, this.unregistrationHandlers);

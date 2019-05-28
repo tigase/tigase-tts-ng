@@ -20,6 +20,8 @@
  */
 package tigase.tests;
 
+import com.icegreen.greenmail.util.GreenMail;
+import com.icegreen.greenmail.util.ServerSetupTest;
 import org.testng.Assert;
 import org.testng.ISuite;
 import org.testng.ITestContext;
@@ -46,9 +48,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.security.SecureRandom;
-import java.util.Properties;
-import java.util.Random;
-import java.util.UUID;
+import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -238,26 +241,110 @@ public abstract class AbstractTest {
 		return "http://" + hostname + ":" + port + "/";
 	}
 
-	public String getEmailAddressForUser(String username) {
-		String address = props.getProperty("imap.username");
-		if (address == null) {
-			return null;
-		}
-		String localpart = address;
-		String domain = props.getProperty("imap.server");
-		if (address.contains("@")) {
-			String[] parts = address.split("@");
-			localpart = parts[0];
-			domain = parts[1];
-		}
+	private static GreenMail greenMail;
+	private static final AtomicInteger mailServerCounter = new AtomicInteger(0);
+	static {
+		greenMail = new GreenMail(ServerSetupTest.ALL);
+	}
+	private static EmailAccount globalServerSenderAccount = null;
+	public static EmailAccount getGlobalServerSenderAccount() {
+		return globalServerSenderAccount;
+	}
+	private static EmailAccount globalServerReceiverAccount = null;
 
-		if (username == null) {
-			return localpart + "@" + domain;
-		} else {
-			return localpart + "+" + username + "@" + domain;
+	public static EmailAccount getGlobalServerReceiverAccount() {
+		return globalServerReceiverAccount;
+	}
+	private static synchronized void setUpMailServer() {
+		if ("true".equals(props.getProperty("mail.useExternalServer"))) {
+			return;
+		}
+		if (mailServerCounter.getAndIncrement() == 0) {
+			greenMail.start();
+			// Preparing sender account
+			String email = props.getProperty("smtp.email");
+			String username = props.getProperty("smtp.username");
+			String password = props.getProperty("smtp.password");
+			String server = props.getProperty("smtp.server");
+			if (email != null && username != null && password != null && server != null) {
+				globalServerSenderAccount = createEmailAccount(email, username, server, password);
+			}
+
+			// Preparing main receiver account
+			email = props.getProperty("imap.email");
+			username = props.getProperty("imap.username");
+			password = props.getProperty("imap.password");
+			server = props.getProperty("imap.server");
+			if (email != null && username != null && password != null && server != null) {
+				globalServerReceiverAccount = createEmailAccount(email, username, server, password);
+			}
+		}
+	}
+	private static synchronized void tearDownMailServer() {
+		if ("true".equals(props.getProperty("mail.useExternalServer"))) {
+			return;
+		}
+		if (mailServerCounter.decrementAndGet() == 0) {
+			greenMail.stop();
+			userToEmailMap.clear();
+		}
+	}
+	private static EmailAccount createEmailAccount(String email, String username, String server, String password) {
+		EmailAccount emailAccount = new EmailAccount(email, username, server, greenMail.getImaps().getPort(), greenMail.getSmtp().getPort(), password);
+		greenMail.setUser(email, username, password);
+		userToEmailMap.put(email, emailAccount);
+		return emailAccount;
+	}
+
+	private static final Map<String, EmailAccount> userToEmailMap = new ConcurrentHashMap<>();
+
+	public static class EmailAccount {
+
+		public final String email;
+		public final String username;
+		public final String server;
+		public final int imapsServerPort;
+		public final int smtpServerPort;
+		public final String password;
+
+		private EmailAccount(String email, String username, String server, int imapsServerPort, int smtpServerPort, String password) {
+			this.email = email;
+			this.username = username;
+			this.server = server;
+			this.smtpServerPort = smtpServerPort;
+			this.imapsServerPort = imapsServerPort;
+			this.password = password;
 		}
 	}
 
+	public EmailAccount getEmailAccountForUser(String username) {
+		if ("true".equals(props.getProperty("mail.useExternalServer"))) {
+			String address = props.getProperty("imap.username");
+			if (address != null) {
+				String localpart = address;
+				String domain = props.getProperty("imap.server");
+				if (address.contains("@")) {
+					String[] parts = address.split("@");
+					localpart = parts[0];
+					domain = parts[1];
+				}
+
+				return new EmailAccount(
+						username == null ? (localpart + "@" + domain) : (localpart + "+" + username + "@" + domain),
+						address, domain, -1, -1, (String) props.get("imap.password"));
+			}
+			return null;
+		} else {
+			return userToEmailMap.computeIfAbsent(username, key -> {
+				String domain = Optional.ofNullable(props.getProperty("imap.server")).orElse("localhost");
+				String email = UUID.randomUUID().toString() + "@" + domain;
+				EmailAccount emailAccount = new EmailAccount(email, key, domain, greenMail.getImaps().getPort(), greenMail.getSmtp().getPort(), UUID.randomUUID().toString());
+				greenMail.setUser(email, key, emailAccount.password);
+				return emailAccount;
+			});
+		}
+	}
+	
 	public void removeUserAccount(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		accountManager.unregisterAccount(jaxmpp);
 	}
@@ -574,6 +661,7 @@ public abstract class AbstractTest {
 		System.out.println("setting up suite " + context.getSuite().getName());
 		loadProperties();
 		setLoggerLevel(Level.FINER, connectorLogsEnabled);
+		setUpMailServer();
 		ensureAdminAccountExists();
 	}
 
@@ -583,6 +671,7 @@ public abstract class AbstractTest {
 		vHostManager.scopeFinished();
 		apiKeyManager.scopeFinished();
 		accountManager.scopeFinished();
+		tearDownMailServer();
 		CURRENT_SUITE.remove();
 	}
 
