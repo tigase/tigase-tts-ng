@@ -51,11 +51,11 @@ SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
     db_root_pass="root"
 
 
-    MAIL_SMTP_HOST="localhost"
-    MAIL_IMAP_HOST="localhost"
-    MAIL_SENDER_ADDRESS="sender@localhost"
-    MAIL_SENDER_PASS="bt555ml"
-    MAIL_RECEIVER_ADDRESS="receiver@localhost"
+#    MAIL_SMTP_HOST="localhost"
+#    MAIL_IMAP_HOST="localhost"
+#    MAIL_SENDER_ADDRESS="sender@localhost"
+#    MAIL_SENDER_PASS="bt555ml"
+#    MAIL_RECEIVER_ADDRESS="receiver@localhost"
 
     tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
 
@@ -70,11 +70,11 @@ SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
 export MIN_MEM=$MS_MEM
 export MAX_MEM=$MX_MEM
 
-export MAIL_SMTP_HOST=${MAIL_SMTP_HOST}
-export MAIL_IMAP_HOST=${MAIL_IMAP_HOST}
-export MAIL_SENDER_ADDRESS=${MAIL_SENDER_ADDRESS}
-export MAIL_SENDER_PASS=${MAIL_SENDER_PASS}
-export MAIL_RECEIVER_ADDRESS=${MAIL_RECEIVER_ADDRESS}
+[ -n "${MAIL_SMTP_HOST}" ] && export MAIL_SMTP_HOST=${MAIL_SMTP_HOST}
+[ -n "${MAIL_IMAP_HOST}" ] && export MAIL_IMAP_HOST=${MAIL_IMAP_HOST}
+[ -n "${MAIL_SENDER_ADDRESS}" ] && export MAIL_SENDER_ADDRESS=${MAIL_SENDER_ADDRESS}
+[ -n "${MAIL_SENDER_PASS}" ] && export MAIL_SENDER_PASS=${MAIL_SENDER_PASS}
+[ -n "${MAIL_RECEIVER_ADDRESS}" ] && export MAIL_RECEIVER_ADDRESS=${MAIL_RECEIVER_ADDRESS}
 
 
 FUNCTIONS_FILE=`dirname ${0}`/tests-runner-functions.sh
