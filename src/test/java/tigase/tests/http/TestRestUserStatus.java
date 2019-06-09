@@ -39,6 +39,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
@@ -216,6 +217,97 @@ public class TestRestUserStatus extends AbstractTest {
 	}
 
 	@Test
+	public void testAdvancedWithActivity() throws IOException, InterruptedException, JaxmppException {
+		final Mutex mutex = new Mutex();
+		user1Jaxmpp.getModule(PresenceModule.class)
+				.addContactChangedPresenceHandler((sessionObject, stanza, jid, show, status, priority) -> {
+					Element activityEl = stanza.getFirstChild("activity");
+					Element textEl = activityEl != null ? activityEl.getFirstChild("text") : null;
+					String text = textEl != null ? textEl.getValue() : null;
+					Element categoryEl = activityEl != null ? activityEl.getFirstChild() : null;
+					String category = categoryEl != null ? categoryEl.getName() : null;
+					Element typeEl = categoryEl != null ? categoryEl.getFirstChild() : null;
+					String type = typeEl != null ? typeEl.getName() : null;
+
+					mutex.notify("presence:received:" + jid + ":" + show + ":" + priority + ":" + status + ":" + category + ":" + type + ":" + text);
+				});
+
+		changePresence(user2.getJid(), "test1", Presence.Show.online, null, null);
+
+		String item = "presence:received:" + user2.getJid() + "/test1" + ":" + Presence.Show.online + ":" + (-1) + ":" + null + ":" + null + ":" + null + ":" + null;
+		mutex.waitFor(10 * 1000,item);
+		assertTrue(mutex.isItemNotified(item));
+
+		Map<String, Presence> presenceMap = user1Jaxmpp.getModule(PresenceModule.class)
+				.getPresenceStore()
+				.getPresences(user2.getJid());
+
+		assertTrue(presenceMap.containsKey("test1"));
+		assertTrue(presenceMap.get("test1").getShow() == Presence.Show.online);
+
+		user2Jaxmpp.getConnectionConfiguration().setResource("test2");
+		user2Jaxmpp.login(true);
+
+		String item2 = "presence:received:" + user2.getJid() + "/test2" + ":" + Presence.Show.online + ":" + 0 + ":" + null + ":" + null + ":" + null + ":" + null;
+		mutex.waitFor(10 * 1000, item2);
+		mutex.isItemNotified(item2);
+
+		Thread.sleep(100);
+
+		assertTrue(presenceMap.containsKey("test1"));
+		assertTrue(presenceMap.get("test1").getShow() == Presence.Show.online, presenceMap.get("test1").getAsString());
+		assertTrue(presenceMap.containsKey("test2"));
+		assertTrue(presenceMap.get("test2").getShow() == Presence.Show.online);
+
+		changePresence(user2.getJid(), "test3", Presence.Show.away, "Test 1", -2, "talking", "on_the_phone", null);
+
+		String item3 = "presence:received:" + user2.getJid() + "/test3" + ":" + Presence.Show.away + ":" + (-2) + ":" + "Test 1:talking:on_the_phone" + ":" + null;
+		mutex.waitFor(10 * 1000,item3);
+		assertTrue(mutex.isItemNotified(item3));
+
+		assertTrue(presenceMap.containsKey("test1"));
+		assertTrue(presenceMap.get("test1").getShow() == Presence.Show.online);
+		assertTrue(presenceMap.containsKey("test2"));
+		assertTrue(presenceMap.get("test2").getShow() == Presence.Show.online);
+
+		assertTrue(presenceMap.containsKey("test3"));
+		assertTrue(presenceMap.get("test3").getShow() == Presence.Show.away);
+		assertEquals(presenceMap.get("test3").getPriority(), new Integer(-2));
+		assertEquals(presenceMap.get("test3").getStatus(), "Test 1");
+
+		changePresence(user2.getJid(), "test3", Presence.Show.away, "Test 2", -2, "talking", "on_the_phone", "with Jenny");
+
+		item3 = "presence:received:" + user2.getJid() + "/test3" + ":" + Presence.Show.away + ":" + (-2) + ":" + "Test 2:talking:on_the_phone:with Jenny";
+		mutex.waitFor(10 * 1000,item3);
+		assertTrue(mutex.isItemNotified(item3));
+
+		assertTrue(presenceMap.containsKey("test1"));
+		assertTrue(presenceMap.get("test1").getShow() == Presence.Show.online);
+		assertTrue(presenceMap.containsKey("test2"));
+		assertTrue(presenceMap.get("test2").getShow() == Presence.Show.online);
+
+		assertTrue(presenceMap.containsKey("test3"));
+		assertTrue(presenceMap.get("test3").getShow() == Presence.Show.away);
+		assertEquals(presenceMap.get("test3").getPriority(), new Integer(-2));
+		assertEquals(presenceMap.get("test3").getStatus(), "Test 2");
+
+		changePresence(user2.getJid(), "test1", Presence.Show.offline, null, null, null, null, null);
+		String item4 = "presence:received:" + user2.getJid() + "/test1" + ":" + Presence.Show.offline + ":" + (-1) + ":" + null + ":" + null + ":" + null + ":" + null;
+		mutex.waitFor(10 * 1000,item4);
+		assertTrue(mutex.isItemNotified(item4));
+
+		assertTrue(presenceMap.containsKey("test1"));
+		assertTrue(presenceMap.get("test1").getShow() == Presence.Show.offline);
+		assertTrue(presenceMap.containsKey("test2"));
+		assertTrue(presenceMap.get("test2").getShow() == Presence.Show.online);
+
+		assertTrue(presenceMap.containsKey("test3"));
+		assertTrue(presenceMap.get("test3").getShow() == Presence.Show.away);
+		assertEquals(presenceMap.get("test3").getPriority(), new Integer(-2));
+		assertEquals(presenceMap.get("test3").getStatus(), "Test 2");
+	}
+	
+	@Test
 	public void testAdvancedCluster() throws IOException, InterruptedException, JaxmppException {
 		final Mutex mutex = new Mutex();
 		user1Jaxmpp.getModule(PresenceModule.class)
@@ -293,8 +385,19 @@ public class TestRestUserStatus extends AbstractTest {
 		String hostname = getInstanceHostnames()[0];
 		changePresence(hostname, user, resource, show, status, priority);
 	}
+
+	private void changePresence(BareJID user, String resource, Presence.Show show, String status, Integer priority, String activityCategory, String activityType, String activityText)
+			throws IOException {
+		String hostname = getInstanceHostnames()[0];
+		changePresence(hostname, user, resource, show, status, priority, activityCategory, activityType, activityText);
+	}
 	
 	private void changePresence(String hostname, BareJID user, String resource, Presence.Show show, String status, Integer priority)
+			throws IOException {
+		changePresence(hostname, user, resource, show, status, priority, null, null, null);
+	}
+	
+	private void changePresence(String hostname, BareJID user, String resource, Presence.Show show, String status, Integer priority, String activityCategory, String activityType, String activityText)
 			throws IOException {
 		int port = Integer.parseInt(getHttpPort());
 		HttpHost target = new HttpHost(hostname, port, "http");
@@ -320,6 +423,17 @@ public class TestRestUserStatus extends AbstractTest {
 		}
 		if (priority != null) {
 			params.put("priority", String.valueOf(priority));
+		}
+		if (activityCategory != null) {
+			Map<String, String> activity = new HashMap<>();
+			activity.put("category", activityCategory);
+			if (activityType != null) {
+				activity.put("type", activityType);
+			}
+			params.put("activity", activity);
+			if (activityText != null) {
+				activity.put("text", activityText);
+			}
 		}
 
 		String content = new JsonBuilder(params).toString();
