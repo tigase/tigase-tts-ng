@@ -145,7 +145,6 @@ public class AccountsManager
 			jaxmpp1.getConnectionConfiguration().setServer(server);
 		}
 		jaxmpp1.getConnectionConfiguration().setDomain(builder.getDomain());
-		jaxmpp1.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
 		jaxmpp1.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
 
 		final Mutex mutex = new Mutex();
@@ -240,7 +239,6 @@ public class AccountsManager
 		}
 		jaxmpp.getConnectionConfiguration().setUserJID(account.getJid());
 		jaxmpp.getConnectionConfiguration().setUserPassword(account.getPassword());
-		jaxmpp.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
 
 		log("!!!!!!!!! "+account.getJid());
 		jaxmpp.login(true);

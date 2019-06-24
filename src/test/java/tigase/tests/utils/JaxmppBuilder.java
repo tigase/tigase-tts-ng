@@ -69,8 +69,6 @@ public class JaxmppBuilder {
 //			if (domain != null)
 //				jaxmpp1.getConnectionConfiguration().setDomain(account.);
 
-		//jaxmpp1.getSessionObject().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.TRUE);
-
 		if (configurator != null) {
 			jaxmpp1 = configurator.apply(jaxmpp1);
 		}

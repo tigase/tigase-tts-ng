@@ -5,7 +5,10 @@ admins = [ 'admin@localhost' ]
 'sm-threads-pool' = 'custom:200'
 trusted = [ 'admin@localhost', 'http@{clusterNode}', 'user-status-endpoint@http.{clusterNode}' ]
 'vhost-disable-dns-check' = true
-debug = ['extras', 'extras.mailer', 'monitor', 'monitor.tasks']
+debug = ['server', 'xmpp', 'extras', 'extras.mailer', 'monitor', 'monitor.tasks']
+logging () {
+    'packet-debug-full' = true
+}
 dataSource {
     default () {
         uri = env('JDBC_URI', 'jdbc://server/database')
