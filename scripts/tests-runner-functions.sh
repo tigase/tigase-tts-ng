@@ -184,7 +184,7 @@ function run_test() {
         echo "Setting default JDBC_URI: ${JDBC_URI}"
     fi
 
-    if [ ! -z "${TEST_SETUP" ] ; then
+    if [ ! -z "${TEST_SETUP}" ] ; then
       export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
     else
       export CONFIG_BASE_DIR="${_server_dir}"
