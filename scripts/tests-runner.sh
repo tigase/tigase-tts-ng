@@ -96,6 +96,7 @@ function usage() {
 	echo "  --debug|-d                   Turns on debug mode"
 	echo "  --skip-rebuild-tts|-srb      Turns off rebuilding TTS-NG and only runs already build tests"
 	echo "  --skip-summary-page-get|-sp  Turns off automatic generation of Summary Page"
+	echo "  --skip-overriding-config     Turns off copying default TTS-NG test config"
 
 
 
@@ -126,6 +127,11 @@ while [ "${found}" == "1" ] ; do
 			export SKIP_SUMMARY_PAGE_GET=1
 			shift
 			;;
+		--test-setup)
+		    export TEST_SETUP=1
+		    tests="tigase.tests.setup.TestSetup"
+		    shift
+		    ;;
 		--download-latest|-dl)
 			export SERVER_DOWNLOAD=1
 			shift

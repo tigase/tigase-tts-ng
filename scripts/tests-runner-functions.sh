@@ -184,7 +184,12 @@ function run_test() {
         echo "Setting default JDBC_URI: ${JDBC_URI}"
     fi
 
-    export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
+    if [ ! -z "${TEST_SETUP" ] ; then
+      export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
+    else
+      export CONFIG_BASE_DIR="${_server_dir}"
+    fi
+
 
 	if [ ! -z "${DB_RELOAD}" ] ; then
 	  echo "Re-creating database: ${_database}"
