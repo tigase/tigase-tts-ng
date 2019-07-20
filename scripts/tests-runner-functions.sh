@@ -235,12 +235,23 @@ function run_test() {
                 return
             fi
 
-            if ! nc -z ${_server_ip} 5222 ; then
-                echo -ne "waiting for server: ${counter}\r"
-                sleep $(((${server_timeout} / 10)))
-                counter=$((counter-5))
+            if [ -z "${TEST_SETUP}" ] ; then
+                if ! nc -z ${_server_ip} 5222 ; then
+                    echo -ne "waiting for server: ${counter}\r"
+                    sleep $(((${server_timeout} / 10)))
+                    counter=$((counter-5))
+                else
+                    break;
+                fi
             else
-                break;
+                if ! nc -z ${_server_ip} 8080 ; then
+                    echo -ne "waiting for server: ${counter}\r"
+                    sleep $(((${server_timeout} / 10)))
+                    counter=$((counter-5))
+                else
+                    sleep $(((${server_timeout} / 10)))
+                    break;
+                fi
             fi
         done
 
