@@ -148,7 +148,7 @@ function copy_results() {
 
     [[ ! -z "${only_server_logs}" ]] && return
 
-    for file in testng-results.xml html xml ; do
+    for file in testng-results.xml testng-results-compact.xml html xml ; do
         if [[ -e "target/surefire-reports/${file}" ]] ; then
             cp -r target/surefire-reports/${file} "${_output_dir}/"
         fi

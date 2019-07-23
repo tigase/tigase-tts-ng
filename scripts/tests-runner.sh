@@ -230,11 +230,7 @@ done
 
 if [[ -z "${SKIP_SUMMARY_PAGE_GET}" || ! "${SKIP_SUMMARY_PAGE_GET}" -eq 1 ]] ; then
     echo "Generating Summary page"
-
-    groovy -cp libs/tigase-utils.jar scripts/SummaryGenarator.groovy -p ${ROOT_DIR} -v ${ver} -d ${DATABASES[*]}
-    if [[ ! $? -eq 0 ]] ; then
-        ((failed_tests++))
-    fi
+    mvn exec:java -Dexec.mainClass="tigase.tests.SummaryGenerator" -Dexec.args="${ROOT_DIR}"
 else
     echo "Skipping summary page generation"
 fi

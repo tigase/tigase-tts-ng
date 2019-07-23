@@ -445,7 +445,7 @@
                         <property>
                             <name>listener</name>
                             <value>org.uncommons.reportng.HTMLReporter, org.uncommons.reportng.JUnitXMLReporter,
-                                tigase.DotTestListener
+                                tigase.DotTestListener, tigase.CompactXMLReporter
                             </value>
                         </property>
                     </properties>
@@ -495,6 +495,11 @@
             <version>4.0.0</version>
         </dependency>
         <dependency>
+            <groupId>tigase</groupId>
+            <artifactId>tigase-xmltools</artifactId>
+            <version>4.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.icegreen</groupId>
             <artifactId>greenmail</artifactId>
             <version>1.5.10</version>
@@ -517,13 +522,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.4.1</version>
-            <scope>test</scope>
+            <version>4.5.9</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.htmlunit</groupId>
@@ -543,12 +542,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.1.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>tigase</groupId>
             <artifactId>tigase-http-api</artifactId>
             <version>2.1.0-SNAPSHOT</version>
@@ -562,7 +555,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <dependency>
             <groupId>org.uncommons</groupId>
             <artifactId>reportng</artifactId>
@@ -575,8 +567,27 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>1.7</version>
+        </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.7.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <repositories>
         <repository>
             <id>tigase</id>
