@@ -53,8 +53,8 @@ public class SummaryGenerator {
 			AssetsHolder.copyAssetsTo(dao);
 		});
 
-		System.out.println("Generating took: " + LocalTime.ofNanoOfDay(
-				Duration.ofMillis(System.currentTimeMillis() - start).getNano()));
+		System.out.println("Generating took: " + LocalTime.ofSecondOfDay(
+				Duration.ofMillis(System.currentTimeMillis() - start).getSeconds()));
 		System.exit(0);
 	}
 
