@@ -54,7 +54,7 @@ public class SummaryGenerator {
 		});
 
 		System.out.println("Generating took: " + LocalTime.ofSecondOfDay(
-				Duration.ofMillis(System.currentTimeMillis() - start).getSeconds()));
+				Duration.ofMillis(System.currentTimeMillis() - start).getSeconds()).format(DateTimeFormatter.ISO_TIME));
 		System.exit(0);
 	}
 
