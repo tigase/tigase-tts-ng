@@ -320,6 +320,14 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <classpathScope>compile</classpathScope>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
@@ -403,7 +411,7 @@
                                 process.waitFor()
 
                                 def describe = process.in.text.trim()
-                                println "setting revision to: " + describe
+                                log.info("setting revision to: " + describe)
 
                                 project.properties.setProperty('gitVersion', describe)
                             </source>
@@ -532,7 +540,7 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.11</version>
+            <version>6.14.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
