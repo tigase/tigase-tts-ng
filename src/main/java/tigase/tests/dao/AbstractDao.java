@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -51,7 +52,7 @@ abstract class AbstractDao
 		Map<String, List<Version>> testTypes = new ConcurrentHashMap<>();
 
 		getVersionsList().stream().parallel().flatMap(ver -> getTypesOf(ver).stream().parallel()).forEach(vtt -> {
-			testTypes.computeIfAbsent(vtt.getKey(), s -> new ArrayList<>())
+			testTypes.computeIfAbsent(vtt.getKey(), s -> new CopyOnWriteArrayList<>())
 					.add(getVersion(vtt.getValue(), vtt.getKey()));
 		});
 
