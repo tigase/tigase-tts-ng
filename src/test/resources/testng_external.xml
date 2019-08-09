@@ -21,7 +21,7 @@
 
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="Tigase External Component &amp; Manager" verbose="1">
+<suite name="Tigase External Component and Manager" verbose="1">
     <test name="External Component - testing external component settings and connectivity ">
         <classes>
             <class name="tigase.tests.ext.ComponentProtocolTest"/>
