@@ -308,9 +308,10 @@ function run_test() {
 
 	sleep_fun 1
 
-	if [ ! -z "${SERVER_START}" ] ; then
+# for now just try stopping Tigase as it could start JVM but failed to start properly
+#	if [ ! -z "${SERVER_START}" ] ; then
         tig_stop_server ${_server_dir} "etc/tigase.conf"
-    fi
+#    fi
 
     copy_results ${_server_dir} ${_output_dir}
 
