@@ -21,4 +21,9 @@
             <class name="tigase.tests.muc.TestOfflineUsers"/>
         </classes>
     </test>
+    <test name="Test MUC VCard support">
+        <classes>
+            <class name="tigase.tests.muc.TestVCard"></class>
+        </classes>
+    </test>
 </suite>
