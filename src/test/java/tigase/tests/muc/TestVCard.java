@@ -245,7 +245,7 @@ public class TestVCard extends AbstractTest {
 				String photo = vcard.getPhotoVal();
 				try {
 					MessageDigest md = MessageDigest.getInstance("SHA-1");
-					String hash = bytesToHex(md.digest(Base64.decode(photo));
+					String hash = bytesToHex(md.digest(Base64.decode(photo)));
 					mutex.notify("getVCard:photo:hash:" + hash);
 				} catch (NoSuchAlgorithmException e) {
 					e.printStackTrace();
