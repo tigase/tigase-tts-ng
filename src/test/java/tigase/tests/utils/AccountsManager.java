@@ -103,7 +103,7 @@ public class AccountsManager
 	public Jaxmpp createJaxmpp(String logPrefix) {
 		try {
 			Jaxmpp jaxmpp1 = new Jaxmpp();
-			jaxmpp1.getSessionObject().setProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
+			jaxmpp1.getSessionObject().setUserProperty(SocketConnector.TRUST_MANAGERS_KEY, dummyTrustManagers);
 			if (logPrefix != null) {
 				jaxmpp1.getSessionObject().setUserProperty(LOG_PREFIX_KEY, logPrefix);
 			}
