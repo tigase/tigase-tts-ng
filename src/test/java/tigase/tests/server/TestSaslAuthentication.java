@@ -81,6 +81,26 @@ public class TestSaslAuthentication
 	}
 
 	@Test
+	public void testSaslPlainWithAuthzidWithUsername() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new PlainMechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().getLocalpart());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslPlainWithAuthzidWithBareJID() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new PlainMechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().toString());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
 	public void testSaslPlainFailure() throws JaxmppException {
 		jaxmpp = createJaxmppWithMechanism(new PlainMechanism());
 		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
@@ -117,6 +137,26 @@ public class TestSaslAuthentication
 	public void testSaslScramSHA1WithAuthzid() throws JaxmppException {
 		jaxmpp = createJaxmppWithMechanism(new ScramMechanism());
 		forceAuthzid();
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslScramSHA1WithAuthzidWithUsername() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramMechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().getLocalpart());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslScramSHA1WithAuthzidWithBareJID() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramMechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().toString());
 		jaxmpp.login(true);
 
 		assertTrue(jaxmpp.isConnected());
@@ -165,6 +205,26 @@ public class TestSaslAuthentication
 	}
 
 	@Test
+	public void testSaslScramSHA256WithAuthzidWithUsername() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA256Mechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().getLocalpart());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslScramSHA256WithAuthzidWithBareJID() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA256Mechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().toString());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
 	public void testSaslScramSHA256Failure() throws JaxmppException {
 		jaxmpp = createJaxmppWithMechanism(new ScramSHA256Mechanism());
 		jaxmpp.getConnectionConfiguration().setUserPassword("DUMMY_PASSWORD");
@@ -204,6 +264,26 @@ public class TestSaslAuthentication
 		jaxmpp.login(true);
 
 		assertTrue(jaxmpp.isConnected() || !SaslModule.getAllowedSASLMechanisms(jaxmpp.getSessionObject()).contains("SCRAM-SHA-512"));
+	}
+
+	@Test
+	public void testSaslScramSHA512WithAuthzidWithUsername() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA512Mechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().getLocalpart());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
+	}
+
+	@Test
+	public void testSaslScramSHA512WithAuthzidWithBareJID() throws JaxmppException {
+		jaxmpp = createJaxmppWithMechanism(new ScramSHA512Mechanism());
+		forceAuthzid();
+		jaxmpp.getSessionObject().setUserProperty(AuthModule.LOGIN_USER_NAME_KEY, user.getJid().toString());
+		jaxmpp.login(true);
+
+		assertTrue(jaxmpp.isConnected());
 	}
 
 	@Test
