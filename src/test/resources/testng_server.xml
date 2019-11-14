@@ -83,11 +83,14 @@
     <test name="XEP-0357: Push Notifications">
         <classes>
             <class name="tigase.tests.server.TestPush"/>
+            <class name="tigase.tests.server.TestPushMuted"></class>
+            <class name="tigase.tests.server.TestPushEncryped"></class>
         </classes>
     </test>
     <test name="XEP-0357: Push Notifications - Groupchat">
         <classes>
             <class name="tigase.tests.server.TestPushGroupchat"/>
+            <class name="tigase.tests.server.TestPushGroupchatFiltered"/>
         </classes>
     </test>
     <test name="XEP-0398: User Avatar to vCard-Based Avatars Conversion">

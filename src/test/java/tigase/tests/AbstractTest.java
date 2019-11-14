@@ -405,6 +405,22 @@ public abstract class AbstractTest {
 		}
 	}
 
+	protected void ensureConnected(Jaxmpp jaxmpp) throws JaxmppException {
+		if (jaxmpp.isConnected()) {
+			return;
+		} else {
+			jaxmpp.login(true);
+			assertTrue(jaxmpp.isConnected());
+		}
+	}
+
+	protected void ensureDisconnected(Jaxmpp jaxmpp) throws JaxmppException {
+		if (jaxmpp.isConnected()) {
+			jaxmpp.disconnect(true);
+			assertFalse(jaxmpp.isConnected());
+		}
+	}
+
 	protected void ensureAdminAccountExists() {
 		String user = props.getProperty("test.admin.username");
 		String pass = props.getProperty("test.admin.password");
