@@ -21,7 +21,7 @@
 package tigase.tests.server;
 
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.criteria.Criteria;
@@ -47,6 +47,8 @@ import tigase.tests.utils.Account;
 
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -66,7 +68,7 @@ public class TestPush
 	private Jaxmpp pushJaxmpp;
 
 
-	@BeforeClass
+	@BeforeMethod
 	public void setUp() throws Exception {
 		user1 = this.createAccount().setLogPrefix("push1-").build();
 		user1Jaxmpp = user1.createJaxmpp().setConfigurator(jaxmpp -> {
@@ -258,6 +260,61 @@ public class TestPush
 	}
 
 	@Test
+	public void testAutomaticDisablingOnFailure() throws JaxmppException, InterruptedException {
+		final Mutex mutex = new Mutex();
+
+		String body = "Some body - " + UUID.randomUUID().toString();
+
+		AtomicInteger counter = new AtomicInteger(0);
+
+		pushJaxmpp.getEventBus()
+				.addHandler(DummyPushModule.PushReceivedHandler.PushReceivedEvent.class,
+							new DummyPushModule.PushReceivedHandler() {
+								@Override
+								public void receivedPush(SessionObject sessionObject, Element pushElement, String body,
+														 String nickname) {
+									mutex.notify("push:received:" + counter.get() + ":body:" + body, "push:received:" + counter.get() + ":nickname:" + nickname,
+												 "push:received:" + counter.get());
+								}
+							});
+
+		counter.incrementAndGet();
+
+		Message msg = Message.create();
+		msg.setTo(JID.jidInstance(user1.getJid()));
+		msg.addChild(ElementFactory.create("body", body, null));
+		user2Jaxmpp.getContext().getWriter().write(msg);
+
+		mutex.waitFor(10 * 1000, "push:received:1");
+		Assert.assertTrue(mutex.isItemNotified("push:received:1"));
+		Assert.assertTrue(mutex.isItemNotified("push:received:1:body:" + body));
+
+		pushJaxmpp.getModulesManager().getModule(DummyPushModule.class).resultGenerator = DummyPushModule.RETURN_ERROR;
+
+		counter.incrementAndGet();
+
+		msg = Message.create();
+		msg.setTo(JID.jidInstance(user1.getJid()));
+		msg.addChild(ElementFactory.create("body", body, null));
+		user2Jaxmpp.getContext().getWriter().write(msg);
+
+		mutex.waitFor(10 * 1000, "push:received:2");
+		Assert.assertTrue(mutex.isItemNotified("push:received:2"));
+		Assert.assertTrue(mutex.isItemNotified("push:received:2:body:" + body));
+
+		counter.incrementAndGet();
+
+		msg = Message.create();
+		msg.setTo(JID.jidInstance(user1.getJid()));
+		msg.addChild(ElementFactory.create("body", body, null));
+		user2Jaxmpp.getContext().getWriter().write(msg);
+
+		mutex.waitFor(10 * 1000, "push:received:3");
+		Assert.assertFalse(mutex.isItemNotified("push:received:3"));
+		Assert.assertFalse(mutex.isItemNotified("push:received:3:body:" + body));
+	}
+
+	@Test
 	public void testSupportAdvertisement() throws Exception {
 		Jaxmpp user1Jaxmpp = user1.createJaxmpp().setConnected(true).build();
 		assertTrue(user1Jaxmpp.isConnected());
@@ -359,6 +416,36 @@ public class TestPush
 		private static final Criteria CRITERIA = ElementCriteria.name("iq")
 				.add(ElementCriteria.name("pubsub", "http://jabber.org/protocol/pubsub"));
 
+		private static Function<IQ, Element> RETURN_OK = stanza -> {
+			try {
+				Element result = ElementFactory.create(stanza.getName(), null, null);
+				result.setAttribute("type", "result");
+				result.setAttribute("to", stanza.getAttribute("from"));
+				result.setAttribute("id", stanza.getAttribute("id"));
+				return result;
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+		};
+
+		private static Function<IQ, Element> RETURN_ERROR = stanza -> {
+			try {
+				Element result = ElementFactory.create(stanza.getName(), null, null);
+				result.setAttribute("type", "error");
+				result.setAttribute("to", stanza.getAttribute("from"));
+				result.setAttribute("id", stanza.getAttribute("id"));
+
+				Element error = ElementFactory.create("error", null, null);
+				error.addChild(ElementFactory.create("item-not-found", null, "urn:ietf:params:xml:ns:xmpp-stanzas"));
+				result.addChild(error);
+				return result;
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+		};
+
+		private Function<IQ, Element> resultGenerator = RETURN_OK;
+
 		@Override
 		public Criteria getCriteria() {
 			return CRITERIA;
@@ -388,6 +475,7 @@ public class TestPush
 			context.getEventBus()
 					.fire(new DummyPushModule.PushReceivedHandler.PushReceivedEvent(context.getSessionObject(), pushElement, body,
 																									  nickname));
+			context.getWriter().write(resultGenerator.apply(element));
 		}
 
 		private interface PushReceivedHandler
