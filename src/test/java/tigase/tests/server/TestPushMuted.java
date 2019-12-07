@@ -84,9 +84,11 @@ public class TestPushMuted
 			enable.setAttribute("away", "true");
 		}
 		if (muted != null) {
-			Element mutedEl = ElementFactory.create("muted", null, "tigase:push:muted:0");
+			Element mutedEl = ElementFactory.create("muted", null, "tigase:push:filter:muted:0");
 			for (BareJID jid :  muted) {
-				mutedEl.addChild(ElementFactory.create("jid", jid.toString(), null));
+				Element item = ElementFactory.create("item", null, null);
+				item.setAttribute("jid", jid.toString());
+				mutedEl.addChild(item);
 			}
 			enable.addChild(mutedEl);
 		}
@@ -266,6 +268,7 @@ public class TestPushMuted
 		assertTrue(mutex.isItemNotified("discovery:completed:success"));
 		assertTrue(mutex.isItemNotified("discovery:identity:account:registered"));
 		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:push:0"));
+		assertTrue(mutex.isItemNotified("discovery:feature:tigase:push:filter:muted:0"));
 	}
 	
 	@Override
@@ -321,7 +324,7 @@ public class TestPushMuted
 			isComponentAvailable = mutex.isItemNotified("discovery:completed:success") &&
 					mutex.isItemNotified("discovery:identity:account:registered") &&
 					mutex.isItemNotified("discovery:feature:urn:xmpp:push:0") &&
-					mutex.isItemNotified("discovery:feature:tigase:push:muted:0");
+					mutex.isItemNotified("discovery:feature:tigase:push:filter:muted:0");
 		} catch (Exception ex) {
 			isComponentAvailable = false;
 		}

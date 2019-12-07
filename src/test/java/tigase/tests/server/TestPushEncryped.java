@@ -93,7 +93,7 @@ public class TestPushEncryped
 
 		String encKey = Base64.getEncoder().encodeToString(secretKey.getEncoded());
 		Element encrypt = ElementFactory.create("encrypt", encKey, "tigase:push:encrypt:0");
-		encrypt.setAttribute("alg", "aes-gcm");
+		encrypt.setAttribute("alg", "aes-128-gcm");
 		enable.addChild(encrypt);
 		iq.addChild(enable);
 		jaxmpp.getContext().getWriter().write(iq, new AsyncCallback() {
@@ -277,6 +277,8 @@ public class TestPushEncryped
 		assertTrue(mutex.isItemNotified("discovery:completed:success"));
 		assertTrue(mutex.isItemNotified("discovery:identity:account:registered"));
 		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:push:0"));
+		assertTrue(mutex.isItemNotified("discovery:feature:tigase:push:encrypt:0"));
+		assertTrue(mutex.isItemNotified("discovery:feature:tigase:push:encrypt:aes-128-gcm"));
 	}
 
 

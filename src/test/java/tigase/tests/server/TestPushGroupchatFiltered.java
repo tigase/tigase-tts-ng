@@ -87,23 +87,25 @@ public class TestPushGroupchatFiltered
 			enable.setAttribute("away", "true");
 		}
 		if (filters != null) {
-			enable.addChild(ElementFactory.create("muc", null, "tigase:push:muc:0"));
+			enable.addChild(ElementFactory.create("groupchat", null, "tigase:push:filter:groupchat:0"));
 			for (Filter filter : filters) {
-				if (filter.when == When.Never) {
+				if (filter.allow == Allow.Never) {
 					Element mutedEl = enable.getFirstChild("muted");
 					if (mutedEl == null) {
-						mutedEl = ElementFactory.create("muted", null, "tigase:push:muted:0");
+						mutedEl = ElementFactory.create("muted", null, "tigase:push:filter:muted:0");
 						enable.addChild(mutedEl);
 					}
-					mutedEl.addChild(ElementFactory.create("jid", filter.jid.toString(), null));
+					Element item = ElementFactory.create("item", null, null);
+					item.setAttribute("jid", filter.jid.toString());
+					mutedEl.addChild(item);
 				} else {
 					Element item = ElementFactory.create("room", null, null);
 					item.setAttribute("jid", filter.jid.toString());
-					item.setAttribute("when", filter.when == When.Always ? "always" : "mentioned");
+					item.setAttribute("allow", filter.allow == Allow.Always ? "always" : "mentioned");
 					if (filter.nickname != null) {
 						item.setAttribute("nickname", filter.nickname);
 					}
-					enable.getFirstChild("muc").addChild(item);
+					enable.getFirstChild("groupchat").addChild(item);
 				}
 			}
 		}
@@ -477,8 +479,8 @@ public class TestPushGroupchatFiltered
 			isComponentAvailable = mutex.isItemNotified("discovery:completed:success") &&
 					mutex.isItemNotified("discovery:identity:account:registered") &&
 					mutex.isItemNotified("discovery:feature:urn:xmpp:push:0") &&
-					mutex.isItemNotified("discovery:feature:tigase:push:muc:0") &&
-					mutex.isItemNotified("discovery:feature:tigase:push:muted:0");
+					mutex.isItemNotified("discovery:feature:tigase:push:filter:groupchat:0") &&
+					mutex.isItemNotified("discovery:feature:tigase:push:filter:muted:0");
 		} catch (Exception ex) {
 			isComponentAvailable = false;
 		}
@@ -550,7 +552,7 @@ public class TestPushGroupchatFiltered
 		}
 	}
 
-	private enum When {
+	private enum Allow {
 		Never,
 		Metioned,
 		Always
@@ -559,24 +561,24 @@ public class TestPushGroupchatFiltered
 	private static class Filter {
 
 		static Filter never(BareJID jid) {
-			return new Filter(jid, When.Never, null);
+			return new Filter(jid, Allow.Never, null);
 		}
 
 		static Filter always(BareJID jid) {
-			return new Filter(jid, When.Always, null);
+			return new Filter(jid, Allow.Always, null);
 		}
 		
 		static Filter mentioned(BareJID jid, String nickname) {
-			return new Filter(jid, When.Metioned, nickname);
+			return new Filter(jid, Allow.Metioned, nickname);
 		}
 
-		protected final When when;
+		protected final Allow allow;
 		protected final BareJID jid;
 		protected final String nickname;
 
-		Filter(BareJID jid, When when, String nickname) {
+		Filter(BareJID jid, Allow allow, String nickname) {
 			this.jid = jid;
-			this.when = when;
+			this.allow = allow;
 			this.nickname = nickname;
 		}
 
