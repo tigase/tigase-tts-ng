@@ -24,8 +24,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.ConnectorWrapper;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
+import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
@@ -47,6 +50,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -234,6 +238,37 @@ public class TestWebSocketConnectivity
 		assertEquals(testConnectionHeaderCaseSensitivity("Upgrade".toLowerCase()), HTTP_RESPONSE_101, "Unexpected response!");
 		assertEquals(testConnectionHeaderCaseSensitivity("Upgrade".toUpperCase()), HTTP_RESPONSE_101, "Unexpected response!");
 		assertNotEquals(testConnectionHeaderCaseSensitivity("ERROR"), HTTP_RESPONSE_101, "Unexpected response!");
+	}
+
+	@Test
+	public void testWebSocket_StartTLSFeature() throws IOException, InterruptedException, JaxmppException {
+		String wsUri = "ws://" + getInstanceHostname() + ":5290/";
+		userJaxmpp1.getConnectionConfiguration().setConnectionType(ConnectionConfiguration.ConnectionType.websocket);
+		userJaxmpp1.getConnectionConfiguration().setBoshService(wsUri);
+
+		ensureDisconnected(userJaxmpp1);
+
+		final Mutex mutex = new Mutex();
+
+		userJaxmpp1.getEventBus().addHandler(
+				StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent.class, new StreamFeaturesModule.StreamFeaturesReceivedHandler() {
+					@Override
+					public void onStreamFeaturesReceived(SessionObject sessionObject, Element element)
+							throws JaxmppException {
+						List<Element> features = element.getChildren();
+						if (features != null) {
+							for (Element feature : features) {
+								mutex.notify(("received:feature:" + feature.getName() + ":" + feature.getXMLNS()));
+							}
+						}
+						mutex.notify("received:features:success");
+					}
+				});
+
+		ensureConnected(userJaxmpp1);
+		mutex.waitFor(10 * 1000, "received:features:success");
+		assertTrue(mutex.isItemNotified("received:features:success"));
+		assertFalse(mutex.isItemNotified("received:feature:starttls:urn:ietf:params:xml:ns:xmpp-tls"));
 	}
 
 	public byte[] testConnectionHeaderCaseSensitivity(String header) throws IOException, InterruptedException {
