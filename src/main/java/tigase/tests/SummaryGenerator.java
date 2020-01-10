@@ -65,7 +65,10 @@ public class SummaryGenerator {
 
 		System.out.println("testTypes: " + testTypes);
 		testTypes.forEach(testType -> {
-			System.out.println("testType: " + testTypes + " versions: " + testType.getVersions());
+			System.out.println("testType: " + testType + " versions: ");
+			testType.getVersions().forEach(version -> {
+				System.out.println(testType + ": " + version);
+			});
 		});
 		System.out.println("dao.getAllDatabases(): " + dao.getAllDatabases());
 
