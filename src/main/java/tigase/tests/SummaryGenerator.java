@@ -64,6 +64,9 @@ public class SummaryGenerator {
 		final List<ReportsDao.TestType> testTypes = dao.getTestTypes();
 
 		System.out.println("testTypes: " + testTypes);
+		testTypes.forEach(testType -> {
+			System.out.println("testType: " + testTypes + " versions: " + testType.getVersions());
+		});
 		System.out.println("dao.getAllDatabases(): " + dao.getAllDatabases());
 
 		context.put("rootPath", ReportsDao.TEST_RESULTS_PATH);

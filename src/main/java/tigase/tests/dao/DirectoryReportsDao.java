@@ -98,11 +98,14 @@ public class DirectoryReportsDao
 	TestReport getTestReportFromFile(Path resultsPath, String version, String testType, String database) {
 		try {
 			String lines = String.join("", Files.readAllLines(resultsPath));
+			log.log(Level.FINEST, "Parsing from path: {0}, data: {1}", new Object[]{resultsPath, lines});
 			final Optional<Element> element = DaoHelper.parseData(lines);
 			if (element.isPresent()) {
 				final Results metrics = DaoHelper.getResults(element.get());
 				final Optional<LocalDate> finishedAt = DaoHelper.geFinishedTimeFromData(element.get());
 				return new TestReport(testType, version, database, metrics, finishedAt.orElse(LocalDate.now()));
+			} else {
+				log.log(Level.WARNING, "Parsing failed for version: {0}, type: {1}, database: {2}, data: {3}", new Object[]{version, testType, database, lines});
 			}
 		} catch (IOException e) {
 			log.log(Level.WARNING, "Can't get test report from file: " + resultsPath);

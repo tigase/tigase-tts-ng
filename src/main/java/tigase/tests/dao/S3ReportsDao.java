@@ -133,9 +133,12 @@ class S3ReportsDao
 			String lines = bufferedReader.lines().collect(Collectors.joining());
 			final Optional<Element> element = DaoHelper.parseData(lines);
 			if (element.isPresent()) {
+				log.log(Level.FINEST, "Parsing for version: {0}, type: {1}, database: {2}, data: {3}", new Object[]{version, testType, database, lines});
 				final Results metrics = DaoHelper.getResults(element.get());
 				final Optional<LocalDate> finishedAt = DaoHelper.geFinishedTimeFromData(element.get());
 				return new TestReport(testType, version, database, metrics, finishedAt.orElse(LocalDate.now()));
+			} else {
+				log.log(Level.WARNING, "Parsing failed for version: {0}, type: {1}, database: {2}, data: {3}", new Object[]{version, testType, database, lines});
 			}
 		} catch (IOException e) {
 			log.log(Level.WARNING, "Problem getting test data from: " + results, e);
