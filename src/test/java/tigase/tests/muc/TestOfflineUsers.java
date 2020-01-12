@@ -2,8 +2,8 @@ package tigase.tests.muc;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.TestLogger;
 import tigase.jaxmpp.core.client.*;
@@ -129,6 +129,33 @@ public class TestOfflineUsers
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.offline);
 	}
 
+	@Test(groups = {"Multi User Chat"}, description = "#8660: Presence delivery to persistent user")
+	public void testPresenceDeliveryToPersistentUserOnJoin() throws Exception {
+		Thread.sleep(400);
+		Room muc3Room = muc3Module.join(roomJID.getLocalpart(), roomJID.getDomain(), "user3");
+		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.xa);
+
+		final Mutex mutex = new Mutex();
+		user2Jaxmpp.getEventBus().addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
+			@Override
+			public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
+				mutex.notify("user2:room:joined");
+			}
+		});
+		Room room = muc2Module.join(roomJID.getLocalpart(), roomJID.getDomain(), user2.getJid().toString());
+		mutex.waitFor(10 * 1000, "user2:room:joined");
+		Assert.assertTrue(mutex.isItemNotified("user2:room:joined"));
+		Thread.sleep(100);
+
+		Assert.assertEquals(getPresenceShow(muc2Module, roomJID, "user1"), Presence.Show.online);
+		Assert.assertEquals(getPresenceShow(muc2Module, roomJID, "user3"), Presence.Show.online);
+
+		muc3Module.leave(muc3Room);
+		Thread.sleep(100);
+
+		Assert.assertEquals(getPresenceShow(muc2Module, roomJID, user3.getJid().toString()), Presence.Show.offline);
+	}
+	
 	private static Presence.Show getPresenceShow(MucModule muc1Module, BareJID roomJID, String nickname) {
 		return Optional.ofNullable(muc1Module.getRoom(roomJID).getPresences().get(nickname)).map(p -> {
 			try {
@@ -139,7 +166,7 @@ public class TestOfflineUsers
 		}).orElse(Presence.Show.offline);
 	}
 
-	@BeforeTest
+	@BeforeMethod
 	void prepareMucRoom() throws Exception {
 		mutex.clear();
 		this.user1 = createAccount().setLogPrefix("user1").build();
@@ -232,7 +259,7 @@ public class TestOfflineUsers
 		addPersistentMember(user2.getJid());
 	}
 
-	@AfterTest
+	@AfterMethod
 	public void destroyMucRoom() throws JaxmppException, InterruptedException {
 		IQ iq = IQ.create();
 		iq.setType(StanzaType.set);
