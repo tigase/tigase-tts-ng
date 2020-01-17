@@ -43,6 +43,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
+import tigase.xml.SingletonFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -89,7 +90,8 @@ public class TestVCard extends AbstractTest {
 
 	@BeforeClass
 	protected void setUp() throws Exception {
-		BINVAL = generateRandomImage(2 * 1024, 1024);
+		BINVAL = generateRandomImage(480, 480);
+		assertTrue(BINVAL.length() < SingletonFactory.getParserInstance().MAX_CDATA_SIZE);
 		byte[] binval = Base64.decode(BINVAL);
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 		
@@ -146,6 +148,7 @@ public class TestVCard extends AbstractTest {
 		muc1Module.setRoomConfiguration(muc1Module.getRoom(roomJID), roomConfig.getValue(), new AsyncCallback() {
 			@Override
 			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				TestLogger.log("Received error: " + error + ", stanza: " + responseStanza.getAsString());
 				mutex.notify("setConfig:error", "setConfig");
 			}
 

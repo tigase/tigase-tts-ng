@@ -79,6 +79,7 @@ pubsub () {
     }
     'urn:xmpp:mam:1' () {}
 }
+'cm-traffic-throttling' = 'xmpp:0:0:disc,bin:0:0:disc'
 upload () {
     logic () {
         'server-name' = 'localhost'
