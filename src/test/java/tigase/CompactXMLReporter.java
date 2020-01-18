@@ -52,7 +52,11 @@ public class CompactXMLReporter
 		int skipped = 0;
 		int passed = 0;
 
+		System.out.println("Processing " + suites.size() + " suites");
+
 		for (ISuite suite : suites) {
+			System.out.println("Processing " + suite.getName());
+
 			final Element suiteEl = new Element("suite");
 			suiteEl.setAttribute("name", suite.getName());
 
@@ -83,6 +87,8 @@ public class CompactXMLReporter
 			suiteEl.setAttribute("finished-at",
 								 String.valueOf(LocalDateTime.ofInstant(end.toInstant(), ZoneId.systemDefault())));
 			suiteEl.setAttribute("duration-ms", String.valueOf(duration));
+
+			System.out.println("Generated suite element: " + suiteEl.childrenToString());
 
 			results.addChild(suiteEl);
 		}
