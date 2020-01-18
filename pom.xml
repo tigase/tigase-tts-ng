@@ -423,10 +423,10 @@
                 <configuration>
                     <!--<redirectTestOutputToFile>true</redirectTestOutputToFile>-->
                     <argLine>-Xmx2048m -XX:MaxPermSize=256m</argLine>
-                    <forkMode>once</forkMode>
-                    <reuseForks>false</reuseForks>
+<!--                    <forkMode>once</forkMode>-->
+<!--                    <reuseForks>false</reuseForks>-->
                     <argLine>-Dfile.encoding=UTF-8</argLine>
-                    <useSystemClassLoader>false</useSystemClassLoader>
+<!--                    <useSystemClassLoader>false</useSystemClassLoader>-->
                     <printSummary>true</printSummary>
                     <reportFormat>plain</reportFormat>
                     <trimStackTrace>false</trimStackTrace>
