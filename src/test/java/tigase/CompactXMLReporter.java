@@ -52,10 +52,10 @@ public class CompactXMLReporter
 		int skipped = 0;
 		int passed = 0;
 
-		System.out.println("Processing " + suites.size() + " suites");
+		System.out.println("Processing suites: " + suites.size());
 
 		for (ISuite suite : suites) {
-			System.out.println("Processing " + suite.getName());
+			System.out.println("Processing suite: " + suite.getName() + ", results: " + suite.getResults());
 
 			final Element suiteEl = new Element("suite");
 			suiteEl.setAttribute("name", suite.getName());
@@ -88,7 +88,7 @@ public class CompactXMLReporter
 								 String.valueOf(LocalDateTime.ofInstant(end.toInstant(), ZoneId.systemDefault())));
 			suiteEl.setAttribute("duration-ms", String.valueOf(duration));
 
-			System.out.println("Generated suite element: " + suiteEl.childrenToString());
+			System.out.println("Generated suite element: " + suiteEl);
 
 			results.addChild(suiteEl);
 		}
@@ -96,6 +96,8 @@ public class CompactXMLReporter
 		results.setAttribute("skipped", String.valueOf(skipped));
 		results.setAttribute("passed", String.valueOf(passed));
 		results.setAttribute("total", String.valueOf(failed + skipped + passed));
+
+		System.out.println("Generated suites results: " + results);
 
 		try {
 			Files.write(Paths.get(outputDirectoryName, TESTNG_RESULTS_COMPACT), results.toStringPretty().getBytes());
