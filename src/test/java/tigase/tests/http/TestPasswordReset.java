@@ -77,7 +77,7 @@ public class TestPasswordReset
 		form.getInputByName("jid").setValueAttribute(user.getJid().toString());
 		form.getInputByName("email").setValueAttribute(userEmail.email);
 
-		HtmlButton button = (HtmlButton) form.getHtmlElementsByTagName("button").get(0);
+		HtmlButton button = (HtmlButton) form.getElementsByTagName("button").get(0);
 		p = button.click();
 
 		assertTrue(p.getForms().isEmpty());
@@ -92,7 +92,7 @@ public class TestPasswordReset
 		form.getInputByName("password-entry").setValueAttribute(newPassword);
 		form.getInputByName("password-reentry").setValueAttribute(newPassword);
 
-		p = ((HtmlButton) form.getHtmlElementsByTagName("button").get(0)).click();
+		p = ((HtmlButton) form.getElementsByTagName("button").get(0)).click();
 
 		assertTrue(p.getForms().isEmpty());
 

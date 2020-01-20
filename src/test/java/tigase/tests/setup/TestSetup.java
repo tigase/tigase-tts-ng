@@ -167,7 +167,7 @@ public class TestSetup {
 		assertEquals(input.isChecked(), true);
 		input = form.getInputByName("5_urn:xmpp:push:0");
 		assertNotNull(input);
-		assertEquals(input.isChecked(), false);
+		assertEquals(input.isChecked(), true);
 		input = form.getInputByName("5_upload");
 		assertNotNull(input);
 		assertEquals(input.isChecked(), false);
