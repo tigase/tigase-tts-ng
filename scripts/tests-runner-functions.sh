@@ -187,7 +187,15 @@ function run_test() {
     if [ -z "${TEST_SETUP}" ] ; then
       export CONFIG_BASE_DIR=`pwd`"/src/test/resources/server"
     else
+      # setup overrides default file so we should create backup and recreate it from backup each time
       export CONFIG_BASE_DIR="${_server_dir}"
+      if [[ -e "${CONFIG_BASE_DIR}/etc/config.tdsl.back" ]] ; then
+        echo "Restoring configuration file from: ${CONFIG_BASE_DIR}/etc/config.tdsl"
+        mv ${CONFIG_BASE_DIR}/etc/config.tdsl.back ${CONFIG_BASE_DIR}/etc/config.tdsl
+      else
+        echo "Backing up configuration file to: ${CONFIG_BASE_DIR}/etc/config.tdsl.back"
+        cp ${CONFIG_BASE_DIR}/etc/config.tdsl ${CONFIG_BASE_DIR}/etc/config.tdsl.back
+      fi
     fi
 
 
@@ -301,8 +309,16 @@ function run_test() {
 	if [[ "$(uname -s)" == "Darwin" ]] ; then
 		total_str=`date -u -r $total_time +%H:%M:%S`
 	else
-        total_str=`date -u -d @$total_time +%H:%M:%S`
+    total_str=`date -u -d @$total_time +%H:%M:%S`
 	fi
+
+    if [ ! -z "${TEST_SETUP}" ] ; then
+      export CONFIG_BASE_DIR="${_server_dir}"
+      if [[ -e "${CONFIG_BASE_DIR}/etc/config.tdsl.back" ]] ; then
+        echo "Restoring configuration file from: ${CONFIG_BASE_DIR}/etc/config.tdsl"
+        mv ${CONFIG_BASE_DIR}/etc/config.tdsl.back ${CONFIG_BASE_DIR}/etc/config.tdsl
+      fi
+    fi
 
 	echo "Test finished after: ${total_str}"
 
