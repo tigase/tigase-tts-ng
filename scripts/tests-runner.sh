@@ -57,7 +57,7 @@ SETTINGS_FILE=`dirname ${0}`/tests-runner-settings.sh
 #    MAIL_SENDER_PASS="bt555ml"
 #    MAIL_RECEIVER_ADDRESS="receiver@localhost"
 
-    tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
+    tigase_distribution_url="https://build.tigase.net/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
 
 	MS_MEM=100
 	MX_MEM=1000
@@ -178,7 +178,7 @@ if [ ! -z "${SERVER_DOWNLOAD}" ] ; then
 
     mkdir -p ${server_dir}
 
-    wget -O tmp/tigase-server.tar.gz ${tigase_distribution_url}
+    wget --no-verbose -O tmp/tigase-server.tar.gz ${tigase_distribution_url}
 
     tar -xf tmp/tigase-server.tar.gz -C ${server_dir} --strip-components=1
 fi
