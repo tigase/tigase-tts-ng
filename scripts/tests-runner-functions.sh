@@ -318,6 +318,7 @@ function run_test() {
         echo "Restoring configuration file from: ${CONFIG_BASE_DIR}/etc/config.tdsl"
         mv ${CONFIG_BASE_DIR}/etc/config.tdsl.back ${CONFIG_BASE_DIR}/etc/config.tdsl
       fi
+      cat tmp/tigase-server/logs/tigase-console.log
     fi
 
 	echo "Test finished after: ${total_str}"
