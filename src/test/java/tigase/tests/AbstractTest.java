@@ -465,7 +465,7 @@ public abstract class AbstractTest {
 
 			this.adminAccount = builder.setRegister(true).build();
 		} catch (JaxmppException | InterruptedException e) {
-			assertNull(e);
+			fail(e);
 		}
 	}
 
