@@ -123,7 +123,8 @@ mvn -Pdist clean install
 
 # License
 
-<img alt="Tigase Tigase Logo"  src="https://github.com/tigaseinc/website-assets/blob/master/tigase/images/tigase-logo.png?raw=true" width="25px"/>This is official <a href="https://tigase.net/">Tigase</a> Repository.
-Copyright (c) 2013-2019 Tigase, Inc.
+<img alt="Tigase Tigase Logo" src="https://github.com/tigase/website-assets/blob/master/tigase/images/tigase-logo.png?raw=true" width="25"/> Official <a href="https://tigase.net/">Tigase</a> repository is available at: https://github.com/tigase/tigase-tts-ng/.
+
+Copyright (c) 2004 Tigase, Inc.
 
 Licensed under AGPL License Version 3. Other licensing options available upon request.
