@@ -46,10 +46,11 @@ public class Account {
 	private final List<Consumer<Account>> unregistrationHandlers;
 
 	public Account(AbstractTest test, String logPrefix, BareJID jid, String password) {
-	    this(test, logPrefix, jid, password, Collections.emptyList());
+		this(test, logPrefix, jid, password, Collections.emptyList());
 	}
 
-	public Account(AbstractTest test, String logPrefix, BareJID jid, String password, List<Consumer<Account>> unregistrationHandlers) {
+	public Account(AbstractTest test, String logPrefix, BareJID jid, String password,
+				   List<Consumer<Account>> unregistrationHandlers) {
 		this.test = test;
 		this.logPrefix = logPrefix;
 		this.jid = jid;

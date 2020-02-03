@@ -20,8 +20,13 @@
  */
 package tigase.tests.utils;
 
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StreamPacket;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
@@ -47,7 +52,27 @@ public class JaxmppBuilder {
 		Jaxmpp jaxmpp1 = account.test.accountManager.createJaxmpp(
 				logPrefix == null ? account.getLogPrefix() : logPrefix);
 		jaxmpp1.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
+		jaxmpp1.getEventBus().addHandler(SocketConnector.StanzaReceivedHandler.StanzaReceivedEvent.class, new Connector.StanzaReceivedHandler() {
+			@Override
+			public void onStanzaReceived(SessionObject sessionObject, StreamPacket stanza) {
+				try {
+					TestLogger.log(" >> "+stanza.getAsString());
+				} catch (XMLException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		jaxmpp1.getEventBus().addHandler(SocketConnector.StanzaSendingHandler.StanzaSendingEvent.class, new Connector.StanzaSendingHandler() {
+			@Override
+			public void onStanzaSending(SessionObject sessionObject, Element stanza) throws JaxmppException {
+				try {
+					TestLogger.log(" << "+stanza.getAsString());
+				} catch (XMLException e) {
+					e.printStackTrace();
+				}
+			}
 
+		});
 		if (null == host) {
 			String instanceHostname = account.test.getInstanceHostname();
 			if (instanceHostname != null) {

@@ -22,6 +22,7 @@ package tigase.tests;
 
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetupTest;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
 import org.testng.ISuite;
 import org.testng.ITestContext;
@@ -57,9 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static org.testng.Assert.assertNull;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.*;
 import static tigase.TestLogger.log;
 
 public abstract class AbstractTest {
@@ -135,7 +134,7 @@ public abstract class AbstractTest {
 	public Jaxmpp getJaxmppAdmin() {
 		return jaxmppAdmin;
 	}
-	
+
 	public AccountBuilder createAccount() {
 		return new AccountBuilder(this);
 	}
@@ -243,18 +242,23 @@ public abstract class AbstractTest {
 
 	private static GreenMail greenMail;
 	private static final AtomicInteger mailServerCounter = new AtomicInteger(0);
+
 	static {
 		greenMail = new GreenMail(ServerSetupTest.ALL);
 	}
+
 	private static EmailAccount globalServerSenderAccount = null;
+
 	public static EmailAccount getGlobalServerSenderAccount() {
 		return globalServerSenderAccount;
 	}
+
 	private static EmailAccount globalServerReceiverAccount = null;
 
 	public static EmailAccount getGlobalServerReceiverAccount() {
 		return globalServerReceiverAccount;
 	}
+
 	private static synchronized void setUpMailServer() {
 		if ("true".equals(props.getProperty("mail.useExternalServer"))) {
 			return;
@@ -280,6 +284,7 @@ public abstract class AbstractTest {
 			}
 		}
 	}
+
 	private static synchronized void tearDownMailServer() {
 		if ("true".equals(props.getProperty("mail.useExternalServer"))) {
 			return;
@@ -289,8 +294,10 @@ public abstract class AbstractTest {
 			userToEmailMap.clear();
 		}
 	}
+
 	private static EmailAccount createEmailAccount(String email, String username, String server, String password) {
-		EmailAccount emailAccount = new EmailAccount(email, username, server, greenMail.getImaps().getPort(), greenMail.getSmtp().getPort(), password);
+		EmailAccount emailAccount = new EmailAccount(email, username, server, greenMail.getImaps().getPort(),
+													 greenMail.getSmtp().getPort(), password);
 		greenMail.setUser(email, username, password);
 		userToEmailMap.put(email, emailAccount);
 		return emailAccount;
@@ -307,7 +314,8 @@ public abstract class AbstractTest {
 		public final int smtpServerPort;
 		public final String password;
 
-		private EmailAccount(String email, String username, String server, int imapsServerPort, int smtpServerPort, String password) {
+		private EmailAccount(String email, String username, String server, int imapsServerPort, int smtpServerPort,
+							 String password) {
 			this.email = email;
 			this.username = username;
 			this.server = server;
@@ -338,13 +346,15 @@ public abstract class AbstractTest {
 			return userToEmailMap.computeIfAbsent(username, key -> {
 				String domain = Optional.ofNullable(props.getProperty("imap.server")).orElse("localhost");
 				String email = UUID.randomUUID().toString() + "@" + domain;
-				EmailAccount emailAccount = new EmailAccount(email, key, domain, greenMail.getImaps().getPort(), greenMail.getSmtp().getPort(), UUID.randomUUID().toString());
+				EmailAccount emailAccount = new EmailAccount(email, key, domain, greenMail.getImaps().getPort(),
+															 greenMail.getSmtp().getPort(),
+															 UUID.randomUUID().toString());
 				greenMail.setUser(email, key, emailAccount.password);
 				return emailAccount;
 			});
 		}
 	}
-	
+
 	public void removeUserAccount(Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
 		accountManager.unregisterAccount(jaxmpp);
 	}
@@ -500,6 +510,81 @@ public abstract class AbstractTest {
 		assertTrue("Message wasn't blocked", mutex.isItemNotified(rnd + ":" + ErrorCondition.forbidden));
 	}
 
+	public abstract static class Response {
+
+		public IQ getRequest() {
+			return request;
+		}
+
+		private final IQ request;
+
+		protected Response(IQ request, IQ response) {
+			this.request = request;
+			this.response = response;
+		}
+
+		public IQ getResponse() {
+			return response;
+		}
+
+		private final IQ response;
+
+		public final static class Success
+				extends Response {
+
+			public Success(IQ request, IQ response) {
+				super(request, response);
+			}
+		}
+
+		public static class Error
+				extends Response {
+
+			public ErrorCondition getError() {
+				return error;
+			}
+
+			private final ErrorCondition error;
+
+			protected Error(IQ request, IQ response, ErrorCondition error) {
+				super(request, response);
+				this.error = error;
+			}
+		}
+	}
+
+	protected final Response sendRequest(final Jaxmpp j, final IQ iq) throws JaxmppException, InterruptedException {
+		final MutableObject<Response> result = new MutableObject<>(null);
+		final Mutex mutex = new Mutex();
+		if (iq.getId() == null) {
+			iq.setId(nextRnd());
+		}
+		j.send(iq, new AsyncCallback() {
+			@Override
+			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+				result.setValue(new Response.Error(iq, (IQ) responseStanza, error));
+				mutex.notify("error", "iq:" + responseStanza.getId());
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				result.setValue(new Response.Success(iq, (IQ) responseStanza));
+				mutex.notify("success", "iq:" + responseStanza.getId());
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				result.setValue(new Response.Error(iq, null, ErrorCondition.remote_server_timeout));
+				mutex.notify("timeout", "iq:" + iq.getId());
+			}
+		});
+		mutex.waitFor(1000 * 30, "iq:" + iq.getId());
+
+		assertNotNull("There must be any Result!",result.getValue());
+
+		return result.getValue();
+	}
+
 	protected final boolean sendAndWait(Jaxmpp j, final IQ iq, final AsyncCallback asyncCallback) throws Exception {
 		final Mutex mutex = new Mutex();
 		iq.setId(nextRnd());
@@ -509,7 +594,6 @@ public abstract class AbstractTest {
 			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
 				try {
 					asyncCallback.onError(responseStanza, error);
-					mutex.notify("error", "iq:" + responseStanza.getId());
 				} catch (Exception e) {
 					fail(e);
 				}
