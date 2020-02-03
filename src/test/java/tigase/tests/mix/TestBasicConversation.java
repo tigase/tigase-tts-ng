@@ -18,6 +18,8 @@ import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestBasicConversation
 		extends AbstractTest {
@@ -27,6 +29,8 @@ public class TestBasicConversation
 	private Jaxmpp jaxmpp1;
 	private Jaxmpp jaxmpp2;
 	private Jaxmpp jaxmpp3;
+
+	private Map<String, String> participants = new HashMap<>();
 
 	private JID mixJID;
 
@@ -107,13 +111,41 @@ public class TestBasicConversation
 		}
 	}
 
+	private static class ParticipantsRetractHandler
+			implements PubSubModule.NotificationReceivedHandler {
+
+		private final Mutex mutex;
+		private final Map<String, String> participants;
+
+		public ParticipantsRetractHandler(Mutex mutex, Map<String, String> participants) {
+			this.mutex = mutex;
+			this.participants = participants;
+		}
+
+		@Override
+		public void onNotificationReceived(SessionObject sessionObject, Message message, JID pubSubJID, String nodeName,
+										   String itemId, Element payload, Date delayTime, String itemType) {
+			if (nodeName.equals("urn:xmpp:mix:nodes:participants") && itemType.equals("retract")) {
+				try {
+					String user = message.getTo().getLocalpart();
+					String nickname = participants.remove(user + ":" + itemId);
+					mutex.notify(user + ":" + nickname);
+				} catch (Exception e) {
+					fail(e);
+				}
+			}
+		}
+	}
+
 	private static class ParticipantsHandler
 			implements PubSubModule.NotificationReceivedHandler {
 
 		private final Mutex mutex;
+		private final Map<String, String> participants;
 
-		public ParticipantsHandler(Mutex mutex) {
+		public ParticipantsHandler(Mutex mutex, Map<String, String> participants) {
 			this.mutex = mutex;
+			this.participants = participants;
 		}
 
 		@Override
@@ -122,7 +154,9 @@ public class TestBasicConversation
 			if (nodeName.equals("urn:xmpp:mix:nodes:participants")) {
 				try {
 					String user = message.getTo().getLocalpart();
-					mutex.notify(user + ":" + payload.getFirstChild("nick").getValue());
+					String nickname = payload.getFirstChild("nick").getValue();
+					participants.put(user + ":" + itemId, nickname);
+					mutex.notify(user + ":" + nickname);
 				} catch (Exception e) {
 					fail(e);
 				}
@@ -133,7 +167,7 @@ public class TestBasicConversation
 	@Test(dependsOnMethods = {"testCreateChannel"})
 	public void testJoinUser1() throws Exception {
 		final Mutex mutex = new Mutex();
-		final ParticipantsHandler handler = new ParticipantsHandler(mutex);
+		final ParticipantsHandler handler = new ParticipantsHandler(mutex, participants);
 
 		try {
 			jaxmpp1.getEventBus()
@@ -160,7 +194,7 @@ public class TestBasicConversation
 	@Test(dependsOnMethods = {"testJoinUser1"})
 	public void testJoinUser2() throws Exception {
 		final Mutex mutex = new Mutex();
-		final ParticipantsHandler handler = new ParticipantsHandler(mutex);
+		final ParticipantsHandler handler = new ParticipantsHandler(mutex, participants);
 
 		try {
 			jaxmpp1.getEventBus()
@@ -194,7 +228,7 @@ public class TestBasicConversation
 	@Test(dependsOnMethods = {"testJoinUser2"})
 	public void testJoinUser3() throws Exception {
 		final Mutex mutex = new Mutex();
-		final ParticipantsHandler handler = new ParticipantsHandler(mutex);
+		final ParticipantsHandler handler = new ParticipantsHandler(mutex, participants);
 
 		try {
 			jaxmpp1.getEventBus()
@@ -307,6 +341,47 @@ public class TestBasicConversation
 	}
 
 	@Test(dependsOnMethods = {"testPublishMessageByUser2"})
+	public void testLeaveUser2() throws Exception {
+		final Mutex mutex = new Mutex();
+		final ParticipantsRetractHandler handler = new ParticipantsRetractHandler(mutex, participants);
+
+		try {
+			jaxmpp1.getEventBus()
+					.addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class, handler);
+			jaxmpp2.getEventBus()
+					.addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class, handler);
+			jaxmpp3.getEventBus()
+					.addHandler(PubSubModule.NotificationReceivedHandler.NotificationReceivedEvent.class, handler);
+
+			ElementBuilder leaveBuilder = ElementBuilder.create("iq")
+					.setAttribute("id", "leave-1")
+					.setAttribute("type", "set")
+					.setAttribute("to", jaxmpp2.getSessionObject().getUserBareJid().toString())
+					.child("client-leave")
+					.setXMLNS("urn:xmpp:mix:pam:2")
+					.setAttribute("channel", channelName + "@" + mixJID)
+					.child("leave")
+					.setXMLNS("urn:xmpp:mix:core:1");
+
+			Response result = sendRequest(jaxmpp2, (IQ) Stanza.create(leaveBuilder.getElement()));
+			AssertJUnit.assertTrue("User2 cannot leave channel", result instanceof Response.Success);
+
+			mutex.waitFor(30000, jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user2",
+						  jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user2");
+
+			AssertJUnit.assertTrue("User1 didn't get participant retract from user2", mutex.isItemNotified(
+					jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user2"));
+			AssertJUnit.assertTrue("User3 didn't get participant retract from user2", mutex.isItemNotified(
+					jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user2"));
+
+		} finally {
+			jaxmpp1.getEventBus().remove(handler);
+			jaxmpp2.getEventBus().remove(handler);
+			jaxmpp3.getEventBus().remove(handler);
+		}
+	}
+
+	@Test(dependsOnMethods = {"testLeaveUser2"})
 	public void testDestroyChannel() throws Exception {
 		ElementBuilder request = ElementBuilder.create("iq")
 				.setAttribute("id", "create-01")
