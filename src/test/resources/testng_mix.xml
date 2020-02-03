@@ -1,0 +1,27 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Tigase MIX Component Tests" verbose="1">
+
+    <test name="Check MIX Create Channel">
+        <classes>
+            <class name="tigase.tests.mix.TestCreate"/>
+            <class name="tigase.tests.mix.TestDiscovery"/>
+        </classes>
+    </test>
+    <test name="Check MIX Join">
+        <classes>
+            <class name="tigase.tests.mix.TestJoin"/>
+        </classes>
+    </test>
+    <test name="Check MIX Destroy Channel">
+        <classes>
+            <class name="tigase.tests.mix.TestDestroy"/>
+        </classes>
+    </test>
+
+    <test name="Check Basic MIX Conversation Scenario">
+        <classes>
+            <class name="tigase.tests.mix.TestBasicConversation"/>
+        </classes>
+    </test>
+</suite>
