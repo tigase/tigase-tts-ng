@@ -3,16 +3,16 @@ package tigase.tests.mix;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementBuilder;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StreamPacket;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
@@ -70,16 +70,16 @@ public class TestBasicConversation
 				.child("join")
 				.setXMLNS("urn:xmpp:mix:core:1")
 				.child("subscribe")
-				.setXMLNS("urn:xmpp:mix:nodes:messages")
+				.setAttribute("node", "urn:xmpp:mix:nodes:messages")
 				.up()
 				.child("subscribe")
-				.setXMLNS("urn:xmpp:mix:nodes:presence")
+				.setAttribute("node", "urn:xmpp:mix:nodes:presence")
 				.up()
 				.child("subscribe")
-				.setXMLNS("urn:xmpp:mix:nodes:participants")
+				.setAttribute("node", "urn:xmpp:mix:nodes:participants")
 				.up()
 				.child("subscribe")
-				.setXMLNS("urn:xmpp:mix:nodes:info")
+				.setAttribute("node", "urn:xmpp:mix:nodes:info")
 				.up()
 				.child("nick")
 				.setValue(nickname);
@@ -87,8 +87,9 @@ public class TestBasicConversation
 		return (IQ) Stanza.create(joinRequest.getElement());
 	}
 
+	// swich to StanzaReceivedHandler as MessageModule was not firing those events for message of type `groupchat`.
 	private static class MessageHandler
-			implements MessageModule.MessageReceivedHandler {
+			implements Connector.StanzaReceivedHandler {
 
 		private final Mutex mutex;
 
@@ -96,8 +97,7 @@ public class TestBasicConversation
 			this.mutex = mutex;
 		}
 
-		@Override
-		public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
+		public void onMessageReceived(SessionObject sessionObject, Message stanza) {
 			try {
 				Element mix = stanza.getChildrenNS("mix", "urn:xmpp:mix:core:1");
 				if (mix != null) {
@@ -107,6 +107,13 @@ public class TestBasicConversation
 				}
 			} catch (Exception e) {
 				fail(e);
+			}
+		}
+
+		@Override
+		public void onStanzaReceived(SessionObject sessionObject, StreamPacket stanza) {
+			if (stanza instanceof Message) {
+				onMessageReceived(sessionObject, (Message) stanza);
 			}
 		}
 	}
@@ -128,7 +135,7 @@ public class TestBasicConversation
 			if (nodeName.equals("urn:xmpp:mix:nodes:participants") && itemType.equals("retract")) {
 				try {
 					String user = message.getTo().getLocalpart();
-					String nickname = participants.remove(user + ":" + itemId);
+					String nickname = participants.get(itemId);
 					mutex.notify(user + ":" + nickname);
 				} catch (Exception e) {
 					fail(e);
@@ -155,7 +162,7 @@ public class TestBasicConversation
 				try {
 					String user = message.getTo().getLocalpart();
 					String nickname = payload.getFirstChild("nick").getValue();
-					participants.put(user + ":" + itemId, nickname);
+					participants.put(itemId, nickname);
 					mutex.notify(user + ":" + nickname);
 				} catch (Exception e) {
 					fail(e);
@@ -180,10 +187,7 @@ public class TestBasicConversation
 			Response result = sendRequest(jaxmpp1, createJoinRequest(jaxmpp1, "user1"));
 			AssertJUnit.assertTrue("User1 cannot join to Channel", result instanceof Response.Success);
 
-			mutex.waitFor(30000, jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user1");
-
-			AssertJUnit.assertTrue("User1 didn't get participant user1", mutex.isItemNotified(
-					jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user1"));
+			participants.put(result.getResponse().getFirstChild("client-join").getFirstChild("join").getAttribute("id"), "user1");
 		} finally {
 			jaxmpp1.getEventBus().remove(handler);
 			jaxmpp2.getEventBus().remove(handler);
@@ -206,18 +210,13 @@ public class TestBasicConversation
 			Response result = sendRequest(jaxmpp2, createJoinRequest(jaxmpp2, "user2"));
 			AssertJUnit.assertTrue("User2 cannot join to Channel", result instanceof Response.Success);
 
-			mutex.waitFor(30000, jaxmpp2.getSessionObject().getUserBareJid().getLocalpart() + ":user2",
-						  jaxmpp2.getSessionObject().getUserBareJid().getLocalpart() + ":user1",
+			mutex.waitFor(30000,
 						  jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user2");
 
-			AssertJUnit.assertTrue("User2 didn't get participant user2", mutex.isItemNotified(
-					jaxmpp2.getSessionObject().getUserBareJid().getLocalpart() + ":user2"));
-
-			AssertJUnit.assertTrue("User2 didn't get participant user1", mutex.isItemNotified(
-					jaxmpp2.getSessionObject().getUserBareJid().getLocalpart() + ":user1"));
 			AssertJUnit.assertTrue("User1 didn't get participant user2", mutex.isItemNotified(
 					jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user2"));
 
+			participants.put(result.getResponse().getFirstChild("client-join").getFirstChild("join").getAttribute("id"), "user2");
 		} finally {
 			jaxmpp1.getEventBus().remove(handler);
 			jaxmpp2.getEventBus().remove(handler);
@@ -240,25 +239,18 @@ public class TestBasicConversation
 			Response result = sendRequest(jaxmpp3, createJoinRequest(jaxmpp3, "user3"));
 			AssertJUnit.assertTrue("User3 cannot join to Channel", result instanceof Response.Success);
 
-			mutex.waitFor(30000, jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user3",
-						  jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user2",
-						  jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user1",
-
+			mutex.waitFor(30000,
 						  jaxmpp2.getSessionObject().getUserBareJid().getLocalpart() + ":user3",
 						  jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user3"
 
 			);
-			AssertJUnit.assertTrue("User3 didn't get participant user3", mutex.isItemNotified(
-					jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user3"));
-			AssertJUnit.assertTrue("User3 didn't get participant user2", mutex.isItemNotified(
-					jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user2"));
-			AssertJUnit.assertTrue("User3 didn't get participant user1", mutex.isItemNotified(
-					jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user1"));
 
 			AssertJUnit.assertTrue("User2 didn't get participant user3", mutex.isItemNotified(
 					jaxmpp2.getSessionObject().getUserBareJid().getLocalpart() + ":user3"));
 			AssertJUnit.assertTrue("User1 didn't get participant user3", mutex.isItemNotified(
 					jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user3"));
+
+			participants.put(result.getResponse().getFirstChild("client-join").getFirstChild("join").getAttribute("id"), "user3");
 		} finally {
 			jaxmpp1.getEventBus().remove(handler);
 			jaxmpp2.getEventBus().remove(handler);
@@ -273,9 +265,9 @@ public class TestBasicConversation
 		final String msg = "msg-" + nextRnd();
 
 		try {
-			jaxmpp1.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
-			jaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
-			jaxmpp3.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
+			jaxmpp1.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, handler);
+			jaxmpp2.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, handler);
+			jaxmpp3.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, handler);
 
 			ElementBuilder msgBuilder = ElementBuilder.create("message")
 					.setAttribute("type", "groupchat")
@@ -310,9 +302,9 @@ public class TestBasicConversation
 		final String msg = "msg-" + nextRnd();
 
 		try {
-			jaxmpp1.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
-			jaxmpp2.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
-			jaxmpp3.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
+			jaxmpp1.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, handler);
+			jaxmpp2.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, handler);
+			jaxmpp3.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, handler);
 
 			ElementBuilder msgBuilder = ElementBuilder.create("message")
 					.setAttribute("type", "groupchat")
@@ -368,6 +360,12 @@ public class TestBasicConversation
 
 			mutex.waitFor(30000, jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user2",
 						  jaxmpp3.getSessionObject().getUserBareJid().getLocalpart() + ":user2");
+
+			participants.entrySet()
+					.stream()
+					.filter(e -> "user2".equals(e.getValue()))
+					.findFirst()
+					.ifPresent(participants::remove);
 
 			AssertJUnit.assertTrue("User1 didn't get participant retract from user2", mutex.isItemNotified(
 					jaxmpp1.getSessionObject().getUserBareJid().getLocalpart() + ":user2"));

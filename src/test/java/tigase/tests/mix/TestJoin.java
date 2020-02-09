@@ -93,6 +93,10 @@ public class TestJoin
 				Element cj = response.getResponse().getChildrenNS("client-join", "urn:xmpp:mix:pam:2");
 				Element j = cj.getChildrenNS("join", "urn:xmpp:mix:core:1");
 
+				// jid is not always required?? or maybe it is?
+				// according to MIX:Core participant id should be placed within `id` attribute but PAM for some reason
+				// forces usage of `jid` attribute in for `participant-id#channel-jid`
+				// if this will be an issue in the furure we can do "rewrite" on the server level
 				assertNotNull(j.getAttribute("jid"));
 
 				assertNotNull("Missing node urn:xmpp:mix:nodes:messages",
