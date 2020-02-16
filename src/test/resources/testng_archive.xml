@@ -6,6 +6,11 @@
             <class name="tigase.tests.archive.TestMessageArchiveManagement"/>
         </classes>
     </test>
+    <test name="XEP-0313 - Message Archive Management: 2">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchiveManagement2"/>
+        </classes>
+    </test>
     <test name="XEP-0136 - Message Archiving - basic tests">
         <classes>
             <class name="tigase.tests.archive.TestMessageArchivingBasic"/>
