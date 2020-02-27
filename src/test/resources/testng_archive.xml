@@ -36,4 +36,9 @@
             <class name="tigase.tests.archive.TestMessageArchivingMUC"/>
         </classes>
     </test>
+    <test name="Archiving messages while recipient is oflfine">
+        <classes>
+            <class name="tigase.tests.archive.TestMessageArchivingOffline"/>
+        </classes>
+    </test>
 </suite>

@@ -78,7 +78,6 @@ pubsub () {
     'auth-timeout' = 20
     'jabber:iq:register' () {}
     'message-archive' () {
-        'msg-archive-paths' = [ '-/message/result[urn:xmpp:mam:1]', '-/message/result[urn:xmpp:mam:2]', '/message/body', '/message/subject', '/message/store[urn:xmpp:hints]' ]
     }
     'message-archive-xep-0136' () {}
     'msg-offline-pubsub-publisher-notifier' () {
