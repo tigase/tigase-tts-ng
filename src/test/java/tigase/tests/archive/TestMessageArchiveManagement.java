@@ -48,6 +48,7 @@ import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.AssertJUnit.assertEquals;
@@ -300,10 +301,15 @@ public class TestMessageArchiveManagement
 			expDates.clear();
 		}
 
+		AtomicBoolean done = new AtomicBoolean(false);
+
 		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = new MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler() {
 			@Override
 			public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId,
 											  Date timestamp, Message message) throws JaxmppException {
+				if (done.get()) {
+					return;
+				}
 				mutex.notify("item:" + message.getFrom() + ":" + message.getTo() + ":" + message.getBody());
 				if (updateExpDates) {
 					expDates.add(timestamp);
@@ -323,14 +329,9 @@ public class TestMessageArchiveManagement
 								  @Override
 								  public void onSuccess(String queryid, boolean complete, RSM rsm)
 										  throws JaxmppException {
+								  	  done.set(true);
 									  mutex.notify("items:received:" + queryid + ":" + complete);
-									  timer.schedule(new TimerTask() {
-										  @Override
-										  public void run() {
-											  mutex.notify("items:received");
-										  }
-									  }, 1000);
-
+									  mutex.notify("items:received");
 								  }
 
 								  @Override
