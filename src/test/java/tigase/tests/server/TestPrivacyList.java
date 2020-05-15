@@ -29,6 +29,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
@@ -131,11 +132,13 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 
 		user1jaxmpp1.getConnector().stop(true);
 		StreamManagementModule.reset(user1jaxmpp1.getSessionObject());
+		user1jaxmpp1.getSessionObject().setProperty(ResourceBinderModule.BINDED_RESOURCE_JID, null);
 
 		Thread.sleep(100);
 
 		user1jaxmpp1.login(true);
 		Thread.sleep(100);
+		assertTrue(user1jaxmpp1.isConnected());
 		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
 		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
 	}
