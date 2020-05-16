@@ -214,10 +214,13 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 			ex.printStackTrace();
 		}
 		assertEquals(Connector.State.disconnected, user2Jaxmpp.getConnector().getState());
+		user2Jaxmpp.getSessionObject().setProperty(ResourceBinderModule.BINDED_RESOURCE_JID, null);
 
 		JID destination = fullJid ? JID.jidInstance(user2.getJid(), "test-x") : JID.jidInstance(user2.getJid());
 		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");
+
+		Thread.sleep(100);
 
 		String body = UUID.randomUUID().toString();
 
