@@ -329,10 +329,15 @@ public class TestMessageArchiveManagement
 								  @Override
 								  public void onSuccess(String queryid, boolean complete, RSM rsm)
 										  throws JaxmppException {
-								  	  done.set(true);
 									  mutex.notify("items:received:" + queryid + ":" + complete);
-									  mutex.notify("items:received");
-								  }
+									  // TODO: this delay should be removed in tests for 8.2.0! but not before..
+									  timer.schedule(new TimerTask() {
+										  @Override
+										  public void run() {
+											  done.set(true);
+											  mutex.notify("items:received");
+										  }
+									  }, 1000);								  }
 
 								  @Override
 								  public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
