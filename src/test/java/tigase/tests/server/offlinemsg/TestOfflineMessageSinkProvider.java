@@ -145,6 +145,30 @@ public class TestOfflineMessageSinkProvider
 			});
 		}
 
+		final Mutex mutex = new Mutex();
+		pubSub.subscribe(testNode.getPubsubJid(), testNode.getName(), JID.jidInstance(ownerJaxmpp.getSessionObject().getUserBareJid()), new PubSubModule.SubscriptionAsyncCallback() {
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("subscribe", "subscribe:timeout");
+			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				mutex.notify("subscribe", "subscribe:error");
+			}
+
+			@Override
+			protected void onSubscribe(IQ iq, PubSubModule.SubscriptionElement subscriptionElement) {
+				mutex.notify("subscribe", "subscribe:true");
+			}
+		});
+
+		mutex.waitFor(1000 * 30, "subscribe");
+
+		Assert.assertTrue(mutex.isItemNotified("subscribe:true"));
+
 		pubSubManager.remove(testNode);
 	}
 }
