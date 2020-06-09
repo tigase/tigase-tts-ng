@@ -15,6 +15,13 @@ dataSource {
     }
 }
 'account-email-password-resetter' () {}
+authRepository {
+    default () {
+       credentialDecoders () {
+            'SCRAM-SHA-512' () {}
+        }
+    }
+}
 c2s {
     seeOtherHost {}
     'urn:xmpp:sm:3' () {}
