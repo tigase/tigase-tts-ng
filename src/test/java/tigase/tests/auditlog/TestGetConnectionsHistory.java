@@ -40,10 +40,7 @@ import tigase.tests.utils.Account;
 import tigase.util.datetime.TimestampHelper;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.testng.Assert.*;
 
@@ -183,10 +180,10 @@ public class TestGetConnectionsHistory extends AbstractAuditlogTest {
 		value = fields.get(5).getFirstChild("value");
 		assertNotNull(value);
 
-		if (!(Double.parseDouble(value.getValue()) < 30.0)) {
+		if (!((Double.parseDouble(value.getValue().replace(',', '.')) % 3600.0) < 30.0)) {
 			TestLogger.log("Connection duration over 30.0s!! what is going on? (real value: " + value.getValue() + ")");
 		}
-		assertTrue (Double.parseDouble(value.getValue()) < 60.0);
+		assertTrue ((Double.parseDouble(value.getValue().replace(',', '.')) % 3600.0) < 60.0);
 	}
 
 	private void assertHistoryEntry(Element elem, Date ts, String state, double duration, String error)
@@ -207,7 +204,7 @@ public class TestGetConnectionsHistory extends AbstractAuditlogTest {
 
 		value = fields.get(4).getFirstChild("value");
 		assertNotNull(value);
-		assertTrue(Math.abs(duration - Double.parseDouble(value.getValue())) < 10.0);
+		assertTrue(Math.abs(duration - Double.parseDouble(value.getValue().replace(',', '.'))) < 10.0);
 
 		value = fields.get(5).getFirstChild("value");
 		if (error == null) {
@@ -264,7 +261,7 @@ public class TestGetConnectionsHistory extends AbstractAuditlogTest {
 									List<Element> fields = el.getChildren();
 									result.numberOfDisconnections = Long.parseLong(fields.get(0).getFirstChild("value").getValue());
 									result.numberOfConnections = Long.parseLong(fields.get(1).getFirstChild("value").getValue());
-									result.avgConnectionDuration = Double.parseDouble(fields.get(2).getFirstChild("value").getValue());
+									result.avgConnectionDuration = Optional.ofNullable(fields.get(2).getFirstChild("value").getValue()).map(s -> s.replace(',', '.')).map(Double::parseDouble).orElse(-1.0);
 									result.numberOfConnectionFailures = Long.parseLong(fields.get(3).getFirstChild("value").getValue());
 									break;
 							}
