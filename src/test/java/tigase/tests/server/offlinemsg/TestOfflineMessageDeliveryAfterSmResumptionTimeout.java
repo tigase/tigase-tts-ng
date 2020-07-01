@@ -49,6 +49,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
+import static org.junit.Assert.assertNull;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 import static tigase.TestLogger.log;
@@ -282,13 +283,17 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 			Method m = connector.getClass().getDeclaredMethod("onStreamTerminate");
 			m.setAccessible(true);
 			m.invoke(connector);
-			if (!resume) {
-				user2Jaxmpp.getSessionObject().clear();
-			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		Thread.sleep(100);
+		if (!resume) {
+			user2Jaxmpp.getSessionObject().clear();
+		}
 		assertEquals(Connector.State.disconnected, user2Jaxmpp.getConnector().getState());
+		if (!resume) {
+			assertNull(ResourceBinderModule.getBindedJID(user2Jaxmpp.getSessionObject()));
+		}
 
 		// sending message from user 1 to user 2
 		String body = UUID.randomUUID().toString();

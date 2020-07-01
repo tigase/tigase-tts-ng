@@ -94,6 +94,9 @@ public class TestPasswordReset
 
 		p = ((HtmlButton) form.getElementsByTagName("button").get(0)).click();
 
+		if (!p.getForms().isEmpty()) {
+			TestLogger.log(p.asText());
+		}
 		assertTrue(p.getForms().isEmpty());
 
 		userJaxmpp.getConnectionConfiguration().setUserPassword(newPassword);
