@@ -262,7 +262,7 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 		assertTrue("Message was not delivered!", mutex.isItemNotified("message:" + body));
 	}
 
-	public void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayPresence,
+	public synchronized void testMessageDeliveryReliability(boolean resume, boolean fullJid, long delayPresence,
 											   StanzaType messageType, long delayBinding) throws Exception {
 
 		long estimatedMessageDeliveryTime = estimateMessageDeliveryTime();
