@@ -602,6 +602,9 @@ public abstract class AbstractTest {
 			@Override
 			public void onMessageReceived(SessionObject sessionObject, Chat chat, Message stanza) {
 				try {
+					if (!uid.equals(stanza.getId())) {
+						return;
+					}
 					result[0] = stanza;
 					mutex.notify("msg:" + stanza.getId());
 				} catch (Exception e) {
@@ -634,7 +637,11 @@ public abstract class AbstractTest {
 
 			mutex.waitFor(5 * 1000, "msg:" + uid);
 
-			return result[0];
+			if (mutex.isItemNotified("msg:" + uid)) {
+				return result[0];
+			} else {
+				return null;
+			}
 		} finally {
 			to.getEventBus().remove(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 			from.getEventBus().remove(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, errorHandler);
