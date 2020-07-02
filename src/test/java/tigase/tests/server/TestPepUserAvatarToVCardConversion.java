@@ -23,10 +23,7 @@ package tigase.tests.server;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.Base64;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -145,8 +142,21 @@ public class TestPepUserAvatarToVCardConversion extends AbstractJaxmppTest {
 
 		Thread.sleep(2000);
 
+		PresenceModule.ContactChangedPresenceHandler handler = (sessionObject, presence1, jid, show, s, integer) -> {
+			if (jid != null && show != null) {
+				mutex.notify("pep:received:presence:" + jid.getBareJid() + ":" + show.name());
+			}
+		};
+
+		user2Jaxmpp.getEventBus().addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, handler);
 		user1Jaxmpp.getModule(PresenceModule.class).setPresence(Presence.Show.away, null, null);
-		Thread.sleep(500);
+
+		mutex.waitFor(10 * 1000, "pep:received:presence:" + user1.getJid() + ":" + Presence.Show.away);
+		assertTrue(mutex.isItemNotified("pep:received:presence:" + user1.getJid() + ":" + Presence.Show.away));
+
+		user2Jaxmpp.getEventBus().remove(handler);
+
+		Thread.sleep(100);
 
 		presence = PresenceModule.getPresenceStore(user2Jaxmpp.getSessionObject()).getPresence(ResourceBinderModule.getBindedJID(user1Jaxmpp.getSessionObject()));
 		assertNotNull(presence);
