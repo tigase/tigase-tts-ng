@@ -49,6 +49,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
@@ -302,7 +303,12 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
 		sendMessage(user1Jaxmpp, destination, messageType, "test1");
 
+		log("\n\n\n===== sending dummy message so client will discover it is disconnected (workaround) \n");
+		sendMessage(user1Jaxmpp, destination, messageType, "test2");
+
 		Thread.sleep((estimatedMessageDeliveryTime * 2) + 1000);
+
+		Thread.sleep(2000);
 
 		user2Jaxmpp.getEventBus()
 				.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class,
@@ -357,6 +363,8 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 		log("\n\n\n===== reconnecting client (resumption of stream or binding using same resource) \n");
 		user2Jaxmpp.login(true);
 
+		assertTrue(user2Jaxmpp.isConnected());
+		assertNotNull(ResourceBinderModule.getBindedJID(user2Jaxmpp.getSessionObject()));
 		Thread.sleep(delayPresence);
 
 		log("\n\n\n===== broadcasting presence \n");
