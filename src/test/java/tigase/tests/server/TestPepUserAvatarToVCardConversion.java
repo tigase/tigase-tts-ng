@@ -23,7 +23,10 @@ package tigase.tests.server;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.*;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.Base64;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -112,6 +115,8 @@ public class TestPepUserAvatarToVCardConversion extends AbstractJaxmppTest {
 				});
 		mutex.waitFor(10 * 1000, "pep:data:publish");
 		assertTrue(mutex.isItemNotified("pep:data:publish:" + photoHash + ":success"));
+
+		Thread.sleep(1000);
 
 		Element metdata = ElementFactory.create("metadata", null, "urn:xmpp:avatar:metadata");
 		Element info = ElementFactory.create("info" );
