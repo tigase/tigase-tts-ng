@@ -21,6 +21,7 @@
 package tigase.tests.server.offlinemsg;
 
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
@@ -164,24 +165,28 @@ public class TestOfflineMessageDeliveryAfterSmResumptionTimeout
 	}
 
 	//	 Message type == chat but with binding delay
-	@Test
+	//@Test
+	@Ignore
 	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithFullJidWithDelayedBinding() throws Exception {
 		testMessageDeliveryReliability(false, true, 0, StanzaType.chat, 2000);
 	}
 
-	@Test
+	//@Test
+	@Ignore
 	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithoutFullJidWithDelayedBinding()
 			throws Exception {
 		testMessageDeliveryReliability(false, false, 0, StanzaType.chat, 2000);
 	}
 
-	@Test
+	//@Test
+	@Ignore
 	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithFullJidAndDelayWithDelayedBinding()
 			throws Exception {
 		testMessageDeliveryReliability(false, true, 2000, StanzaType.chat, 2000);
 	}
 
-	@Test
+	//@Test
+	@Ignore
 	public void testMessageDeliveryReliabilityChatWithoutResumptionAndWithoutFullJidAndDelayWithDelayedBinding()
 			throws Exception {
 		testMessageDeliveryReliability(false, false, 2000, StanzaType.chat, 2000);
