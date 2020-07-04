@@ -36,7 +36,7 @@ import java.util.Optional;
 
 public class SummaryGenerator {
 
-	private static boolean ignoreSkipped = true;
+	private static boolean ignoreSkipped = false;
 
 	public static void main(String[] args) throws Exception {
 
