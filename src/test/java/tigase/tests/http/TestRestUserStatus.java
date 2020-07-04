@@ -49,6 +49,8 @@ import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 import tigase.tests.utils.ApiKey;
 
+import static tigase.TestLogger.log;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -441,7 +443,7 @@ public class TestRestUserStatus extends AbstractTest {
 		entity.setContentType("application/json");
 		postRequest.setEntity(entity);
 
-		System.out.println("sending request:" + target + " - " + postRequest);
+		log("sending request:" + target + " - " + postRequest);
 
 		HttpResponse response = httpClient.execute(target, postRequest);
 

@@ -51,6 +51,8 @@ import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
+import static tigase.TestLogger.log;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
@@ -262,7 +264,7 @@ public class TestPEP extends AbstractTest {
 
 	private void createMutualSubscriptions(Mutex mutex, Jaxmpp jaxmpp1, Jaxmpp jaxmpp2)
 			throws JaxmppException, InterruptedException {
-		System.out.println("creating mutual subscriptions between: " + jaxmpp1.getSessionObject().getUserBareJid() + " <-> " + jaxmpp2.getSessionObject().getUserBareJid());
+		log("creating mutual subscriptions between: " + jaxmpp1.getSessionObject().getUserBareJid() + " <-> " + jaxmpp2.getSessionObject().getUserBareJid());
 		String id = UUID.randomUUID().toString();
 		PresenceModule.SubscribeRequestHandler handler2 = (SessionObject sessionObject, Presence stanza, BareJID jid) -> {
 			try {

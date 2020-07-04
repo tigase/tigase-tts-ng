@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.testng.Assert.assertTrue;
+import static tigase.TestLogger.log;
 
 public class ApiKeyManager extends AbstractManager {
 
@@ -68,14 +69,14 @@ public class ApiKeyManager extends AbstractManager {
 	public void add(ApiKey apiKey) {
 		Object key = getScopeKey();
 		if (apiKeys.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).add(apiKey)) {
-			System.out.println("added api-key = " + apiKey.getKey());
+			log("added api-key = " + apiKey.getKey());
 		}
 	}
 
 	public void remove(ApiKey apiKey) {
 		Object key = getScopeKey();
 		if (apiKeys.getOrDefault(key, new HashSet<>()).remove(apiKey)) {
-			System.out.println("removed vhost = " + apiKey.getKey());
+			log("removed vhost = " + apiKey.getKey());
 		}
 	}
 

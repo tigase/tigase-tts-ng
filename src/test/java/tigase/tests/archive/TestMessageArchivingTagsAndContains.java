@@ -44,6 +44,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static tigase.TestLogger.log;
+
 import static org.testng.Assert.*;
 
 /**
@@ -209,7 +211,7 @@ public class TestMessageArchivingTagsAndContains
 		int retry = 0;
 		int count = 0;
 		while ((count = queryTagsInternal(userJaxmpp, id, count)) < expected) {
-			System.out.println("got " + count + " while expected " + expected);
+			log("got " + count + " while expected " + expected);
 			if (retry >= 5) {
 				assertEquals(expected, count, "retry " + retry + " still failing...");
 				return;
@@ -311,7 +313,7 @@ public class TestMessageArchivingTagsAndContains
 		int retry = 0;
 		int count = 0;
 	    while ((count = retrieveArchivedMessagesInternal(jaxmppUser1, id, crit, count)) < expected) {
-	    	System.out.println("got " + count + " while expected " + expected);
+	    	log("got " + count + " while expected " + expected);
 	    	if (retry >= 5) {
 	    		assertEquals(expected, count, "retry " + retry + " still failing...");
 			}

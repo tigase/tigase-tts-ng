@@ -67,6 +67,7 @@ public class TestTwoWayTLS
 	public void createRequiredVHost() throws JaxmppException, InterruptedException {
 		String vhost = props.getProperty("server.client_auth.domain");
 		String caCertPath = new File(getServerConfigBaseDir(), props.getProperty("server.client_auth.ca_cert")).getAbsolutePath();
+		log("== registering required domain: " + vhost);
 		createVHost(vhost).setClientCertCA(caCertPath).setClientCertRequired(true).updateIfExists(true).build();
 	}
 

@@ -40,6 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.testng.Assert.assertTrue;
+import static tigase.TestLogger.log;
 import static tigase.tests.AbstractTest.nextRnd;
 
 /**
@@ -66,6 +67,9 @@ public class VHostManager extends AbstractManager {
 		final Mutex mutex = new Mutex();
 
 		final BareJID userBareJid = adminJaxmpp.getSessionObject().getUserBareJid();
+
+		log("Removing Vhost: " + vhosts + " using admin: " + userBareJid);
+
 		adminJaxmpp.getModule(AdHocCommansModule.class)
 				.execute(JID.jidInstance("vhost-man", userBareJid.getDomain()), removeVHostCommand, null, null,
 						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
@@ -130,14 +134,14 @@ public class VHostManager extends AbstractManager {
 	public void add(String vhost) {
 		Object key = getScopeKey();
 		if (vhosts.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).add(vhost)) {
-			System.out.println("added vhost = " + vhost);
+			log("added vhost = " + vhost);
 		}
 	}
 
 	public void remove(String vhost) {
 		Object key = getScopeKey();
 		if (vhosts.getOrDefault(key, new HashSet<>()).remove(vhost)) {
-			System.out.println("removed vhost = " + vhost);
+			log("removed vhost = " + vhost);
 		}
 	}
 
@@ -146,7 +150,7 @@ public class VHostManager extends AbstractManager {
 			try {
 				removeVHost(account);
 			} catch (JaxmppException | InterruptedException e) {
-				Logger.getLogger("tigase").log(Level.WARNING, "failed to remove account " + account, e);
+				log("failed to remove account " + account + ", exception: " + e);
 			}
 		});
 	}
@@ -171,6 +175,8 @@ public class VHostManager extends AbstractManager {
 		final String addVHostCommand = "comp-repo-item-add";
 		final BareJID adminJID = adminJaxmpp.getSessionObject().getUserBareJid();
 		final JID vhostManJid = JID.jidInstance("vhost-man", adminJID.getDomain());
+
+		log("Adding Vhost: " + domain + " using admin: " + adminJID + ", id: " + id);
 
 		AdHocCommansModule adhocModule = adminJaxmpp.getModule(AdHocCommansModule.class);
 		adhocModule.execute(vhostManJid, addVHostCommand, null, null,

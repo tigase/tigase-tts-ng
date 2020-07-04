@@ -45,6 +45,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static tigase.TestLogger.log;
+
 import static org.testng.AssertJUnit.assertTrue;
 
 /**
@@ -107,7 +109,7 @@ public class PubSubManager extends AbstractManager {
 
 	public void add(PubSubNode node, Object scopeKey) {
 		if (nodes.computeIfAbsent(scopeKey, (k) -> new CopyOnWriteArraySet<>()).add(node)) {
-			System.out.println("created pubsub node = " + node);
+			log("created pubsub node = " + node);
 		}
 	}
 
@@ -118,7 +120,7 @@ public class PubSubManager extends AbstractManager {
 
 	public void remove(PubSubNode node, Object key) {
 		if (nodes.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).remove(node)) {
-			System.out.println("deleted pubsub node = " + node);
+			log("deleted pubsub node = " + node);
 		}
 	}
 

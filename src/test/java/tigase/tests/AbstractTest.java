@@ -681,7 +681,7 @@ public abstract class AbstractTest {
 	@BeforeSuite
 	protected void setupSuite(ITestContext context) throws Exception {
 		CURRENT_SUITE.set(context.getSuite());
-		System.out.println("setting up suite " + context.getSuite().getName());
+		log("setting up suite " + context.getSuite().getName());
 		loadProperties();
 		setLoggerLevel(Level.FINER, connectorLogsEnabled);
 		setUpMailServer();
@@ -701,7 +701,7 @@ public abstract class AbstractTest {
 	@BeforeClass
 	protected void setupClass(ITestContext context) throws JaxmppException {
 		CURRENT_CLASS.set(this.getClass());
-		System.out.println("setting up for class " + this.getClass().getCanonicalName() + " = " + this.toString());
+		log("setting up for class " + this.getClass().getCanonicalName() + " = " + this.toString());
 		if (jaxmppAdmin == null || !jaxmppAdmin.isConnected()) {
 			jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
 		}
@@ -709,7 +709,7 @@ public abstract class AbstractTest {
 
 	@AfterClass
 	protected void tearDownClass(ITestContext context) {
-		System.out.println("tearing down class " + this.getClass().getCanonicalName() + " = " + this.toString());
+		log("tearing down class " + this.getClass().getCanonicalName() + " = " + this.toString());
 		pubSubManager.scopeFinished();
 		apiKeyManager.scopeFinished();
 		accountManager.scopeFinished();
@@ -723,15 +723,12 @@ public abstract class AbstractTest {
 			jaxmppAdmin = getAdminAccount().createJaxmpp().setConnected(true).build();
 		}
 		CURRENT_METHOD.set(method);
-		System.out.println(
-				"setting up for method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() +
-						"()");
+		log("setting up for method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
 	}
 
 	@AfterMethod
 	protected void tearDownMethod(Method method, ITestContext context) {
-		System.out.println(
-				"tearing down method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
+		log("tearing down method " + method.getDeclaringClass().getCanonicalName() + "." + method.getName() + "()");
 		pubSubManager.scopeFinished();
 		apiKeyManager.scopeFinished();
 		accountManager.scopeFinished();

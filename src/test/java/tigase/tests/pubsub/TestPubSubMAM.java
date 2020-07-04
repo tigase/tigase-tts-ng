@@ -42,6 +42,8 @@ import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 import tigase.tests.utils.PubSubNode;
 
+import static tigase.TestLogger.log;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -446,7 +448,7 @@ public class TestPubSubMAM
 							double i12 = Math.ceil(((double) publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
 							double i2 = Math.floor(((double) i.timestamp.getTime()) / 10000) * 10000;
 							if (!(i11 <= i2 && i2 <= i12)) {
-								System.out.println("got error from 1: " + i11 + " : " + i12 + " : " + i2);
+								log("got error from 1: " + i11 + " : " + i12 + " : " + i2);
 							}
 							return i11 <= i2 && i2 <= i12;
 						} else if (i.publishedAt != null) {
@@ -454,24 +456,24 @@ public class TestPubSubMAM
 							double i12 = Math.ceil(((double) i.publishedAt.getTime()) / 10000) * 10000 + ALLOWED_TIME_DRIFT;
 							double i2 = Math.floor(((double) timestamp.getTime()) / 10000) * 10000;
 							if (!(i11 <= i2 && i2 <= i12)) {
-								System.out.println("got error from 2: " + i11 + " : " + i12 + " : " + i2);
+								log("got error from 2: " + i11 + " : " + i12 + " : " + i2);
 							}
 							return i11 <= i2 && i2 <= i12;
 						} else {
 							if (timestamp.getTime() != i.timestamp.getTime()) {
-								System.out.println("got error from 3: " + timestamp.getTime() + " : " + i.timestamp.getTime());
+								log("got error from 3: " + timestamp.getTime() + " : " + i.timestamp.getTime());
 							}
 
 							return timestamp.getTime() == i.timestamp.getTime();
 						}
 					} else {
-						System.out.println("wrong id or payload!");
+						log("wrong id or payload!");
 					}
 				} catch (XMLException e) {
 					return false;
 				}
 			}  else {
-				System.out.println("wrong type!");
+				log("wrong type!");
 			}
 			return false;
 		}

@@ -96,7 +96,7 @@ public class AccountsManager
 
 	public void add(Account account, Object key) {
 		if (accounts.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).add(account)) {
-			System.out.println("created account = " + account);
+			log("created account = " + account);
 		}
 	}
 
@@ -205,7 +205,7 @@ public class AccountsManager
 	public void remove(Account account) {
 		Object key = getScopeKey();
 		if (accounts.computeIfAbsent(key, (k) -> new CopyOnWriteArraySet<>()).remove(account)) {
-			System.out.println("removed account = " + account);
+			log("removed account = " + account);
 		}
 	}
 

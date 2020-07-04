@@ -33,6 +33,8 @@ import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 import tigase.tests.utils.Account;
 
+import static tigase.TestLogger.log;
+
 public class PresencePreApproval
 		extends AbstractTest {
 
@@ -78,7 +80,7 @@ public class PresencePreApproval
 		mutex.waitFor(5 * 1000, "featureReceived");
 		Assert.assertTrue(mutex.isItemNotified("featureReceived"), "Feature present!");
 
-		System.out.println(":: connected: " + user1Jaxmpp.isConnected());
+		log(":: connected: " + user1Jaxmpp.isConnected());
 
 		if (user1Jaxmpp.isConnected() && user2Jaxmpp.isConnected()) {
 			user1Jaxmpp.getModule(PresenceModule.class).subscribed(user2JID);

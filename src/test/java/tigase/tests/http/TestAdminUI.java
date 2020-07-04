@@ -43,6 +43,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.UUID;
 
+import static tigase.TestLogger.log;
+
 import static org.testng.Assert.*;
 
 /**
@@ -70,7 +72,7 @@ public class TestAdminUI
 
 	@Test(groups = {"HTTP - Admin"}, description = "Check authorization requirement")
 	public void testAuthorization() throws IOException {
-		System.out.println("##### Check authorization requirement");
+		log("##### Check authorization requirement");
 		WebClient webClient = new WebClient();
 		try {
 			Page p = webClient.getPage(getAdminUrl());
@@ -85,7 +87,7 @@ public class TestAdminUI
 
 	@Test(groups = {"HTTP - Admin"}, description = "Check 'Users' contains valid commands")
 	public void testCommandsAvailability() throws IOException {
-		System.out.println("##### Check 'Users' contains valid commands");
+		log("##### Check 'Users' contains valid commands");
 		HtmlPage p = webClient.getPage(getAdminUrl());
 		HtmlAnchor userGroupLink = p.getAnchorByText("Users");
 		p = userGroupLink.click();
@@ -98,7 +100,7 @@ public class TestAdminUI
 
 	@Test(groups = {"HTTP - Admin"}, description = "Check adding user")
 	public void testAddUser() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
-		System.out.println("##### Check adding user");
+		log("##### Check adding user");
 		HtmlPage p = webClient.getPage(getAdminUrl());
 		HtmlAnchor userGroupLink = p.getAnchorByText("Users");
 		p = userGroupLink.click();
@@ -130,7 +132,7 @@ public class TestAdminUI
 
 	@Test(groups = {"HTTP - Admin"}, description = "Check delete user")
 	public void testDeleteUser() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
-		System.out.println("##### Check delete user");
+		log("##### Check delete user");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
 
 		HtmlPage p = webClient.getPage(getAdminUrl());
@@ -154,7 +156,7 @@ public class TestAdminUI
 
 	@Test(groups = {"HTTP - Admin"}, description = "Check modify user")
 	public void testModifyUser() throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
-		System.out.println("##### Check modify user");
+		log("##### Check modify user");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
 		Jaxmpp userJaxmpp1 = user1.createJaxmpp().setConnected(true).build();
 		assertTrue(userJaxmpp1.isConnected());
@@ -231,7 +233,7 @@ public class TestAdminUI
 	@Test(groups = {"HTTP - Admin"}, description = "Check get user info - user online")
 	public void testGetUserInfoUserOnline()
 			throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
-		System.out.println("##### Check get user info - online");
+		log("##### Check get user info - online");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
 		accountManager.remove(user1);
 		Jaxmpp userJaxmpp1 = user1.createJaxmpp().setConnected(true).build();
@@ -270,7 +272,7 @@ public class TestAdminUI
 	@Test(groups = {"HTTP - Admin"}, description = "Check get user info - user offline")
 	public void testGetUserInfoUserOffline()
 			throws IOException, TigaseStringprepException, JaxmppException, InterruptedException {
-		System.out.println("##### Check get user info - offline");
+		log("##### Check get user info - offline");
 		Account user1 = createAccount().setLogPrefix(getUserPrefix()).build();
 		Jaxmpp userJaxmpp1 = user1.createJaxmpp().setConnected(true).build();
 		String userJid1Resource = ResourceBinderModule.getBindedJID(userJaxmpp1.getSessionObject()).getResource();
