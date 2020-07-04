@@ -20,6 +20,8 @@
 
 package tigase.tests.dao;
 
+import tigase.tests.SummaryGenerator;
+
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -68,8 +70,10 @@ public class Results {
 		return duration;
 	}
 
-	public String getMetricsInfo() {
-		return String.format("%1$s / %2$s / %3$s | %4$s", passed, skipped, failed, total);
+	public String getMetricsInfo(boolean includeSkipped) {
+		return SummaryGenerator.isIgnoreSkipped()
+			   ? String.format("%1$s / %2$s | %3$s", passed, failed, total)
+			   : String.format("%1$s / %2$s / %3$s | %4$s", passed, skipped, failed, total);
 	}
 
 	public String getFormattedDuration() {

@@ -84,7 +84,7 @@
                                             #if($test.getMetrics())
                                                 <a href='$rootPath/$test.getReportPath()'>
                                                     <div class='tooltip2 results'>
-                                                        <span class='tooltiptext2 left'>Passed / Skipped / Failed | Total</span>
+                                                        <span class='tooltiptext2 left'>$test.getTooltipText()</span>
                                                         $test.getMetrics().getMetricsInfo()
                                                     </div>
                                                     <div class='tooltip2 time'>

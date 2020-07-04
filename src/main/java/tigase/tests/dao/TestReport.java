@@ -20,6 +20,8 @@
 
 package tigase.tests.dao;
 
+import tigase.tests.SummaryGenerator;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -109,10 +111,13 @@ public class TestReport {
 		return version;
 	}
 
+	public String getTooltipText() {
+		return  SummaryGenerator.isIgnoreSkipped() ? "Passed / Failed | Total" : "Passed / Skipped / Failed | Total";
+	}
 	public ResultType getTestResult() {
 		if (metrics != null && metrics.getFailed() > 0) {
 			return ResultType.FAILED;
-		} else if (metrics == null || metrics.getSkipped() > 0) {
+		} else if (metrics == null || (!SummaryGenerator.isIgnoreSkipped() && metrics.getSkipped() > 0)) {
 			return ResultType.SKIPPED;
 		} else {
 			return ResultType.PASSED;

@@ -36,6 +36,8 @@ import java.util.Optional;
 
 public class SummaryGenerator {
 
+	private static boolean ignoreSkipped = true;
+
 	public static void main(String[] args) throws Exception {
 
 		final long start = System.currentTimeMillis();
@@ -43,6 +45,10 @@ public class SummaryGenerator {
 		if (args.length != 1) {
 			System.err.println("Please provide path to results");
 			System.exit(1);
+		}
+
+		if (args.length == 2) {
+			ignoreSkipped = Boolean.parseBoolean(args[1]);
 		}
 
 		final ReportsDao dao = DaoFactory.createDao(args[0]);
@@ -56,6 +62,10 @@ public class SummaryGenerator {
 		System.out.println("Generating took: " + LocalTime.ofSecondOfDay(
 				Duration.ofMillis(System.currentTimeMillis() - start).getSeconds()).format(DateTimeFormatter.ISO_TIME));
 		System.exit(0);
+	}
+
+	public static boolean isIgnoreSkipped() {
+		return ignoreSkipped;
 	}
 
 	private static void generate(ReportsDao dao, Writer writer) {
