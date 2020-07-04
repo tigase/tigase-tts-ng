@@ -78,12 +78,13 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		Mutex mutex = new Mutex();
 		createMutualSubscriptions(mutex, user1jaxmpp1, user2jaxmpp);
 
-		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
-		assertNotNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-after-sub1-" + UUID.randomUUID().toString()));
+		assertNotNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u3-u1j1-after-sub1-" + UUID.randomUUID().toString()));
 
 		Element list = ElementFactory.create("list");
 		list.setAttribute("name", "blocked");
 
+		// block users without subscription
 		Element item = createItem("subscription", "none", "deny", 100);
 		item.addChild(ElementFactory.create("message"));
 		list.addChild(item);
@@ -102,23 +103,21 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 
 		user1jaxmpp1 = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setResource("conn-1").setConnected(true).build();
 
-//		user1jaxmpp1.login(true);
-
 		assertTrue(user1jaxmpp1.isConnected());
 
-		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
-		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-reconnect1-" + UUID.randomUUID().toString()));
+		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u3-u1j1-reconnect1-" + UUID.randomUUID().toString()));
 
 		user1jaxmpp2.login(true);
 
-		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
-		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-connect_u1j2-" + UUID.randomUUID().toString()));
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp2, "u2-u1j2-connect_u1j2-" + UUID.randomUUID().toString()));
+		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u3-u1j1-connect_u1j2-" + UUID.randomUUID().toString()));
 
 		user1jaxmpp1.disconnect(true);
 
-		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp2, UUID.randomUUID().toString()));
-		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp2, UUID.randomUUID().toString()));
-
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp2, "u2-u1j1-disconnect_u1j1-" + UUID.randomUUID().toString()));
+		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp2, "u2-u1j1-disconnect_u1j1-" + UUID.randomUUID().toString()));
 
 
 		user1jaxmpp2.disconnect(true);
@@ -126,8 +125,9 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		user1jaxmpp1.getConnector().stop(true);
 
 		user1jaxmpp1.login(true);
-		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
-		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
+		Thread.sleep(100);
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-reconnect2_u1j1-" + UUID.randomUUID().toString()));
+		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u3-u1j1-reconnect2_u1j1-" + UUID.randomUUID().toString()));
 
 
 		user1jaxmpp1.getConnector().stop(true);
@@ -139,8 +139,8 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		user1jaxmpp1.login(true);
 		Thread.sleep(100);
 		assertTrue(user1jaxmpp1.isConnected());
-		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
-		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, UUID.randomUUID().toString()));
+		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-stream_management_u1j1-" + UUID.randomUUID().toString()));
+		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u2-u1j1-stream_management_u1j1-" + UUID.randomUUID().toString()));
 	}
 
 	private void createMutualSubscriptions(Mutex mutex, Jaxmpp jaxmpp1, Jaxmpp jaxmpp2)
