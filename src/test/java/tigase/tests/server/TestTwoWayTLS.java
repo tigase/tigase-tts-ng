@@ -33,21 +33,32 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import tigase.tests.AbstractTest;
 import tigase.tests.utils.Account;
+import tigase.tests.utils.AccountBuilder;
+import tigase.tests.utils.JaxmppBuilder;
 
 import javax.net.ssl.KeyManagerFactory;
 import java.io.*;
-import java.security.KeyPair;
-import java.security.KeyStore;
+import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 
+import static org.junit.Assert.assertFalse;
 import static tigase.TestLogger.log;
 
+/**
+ * The intention of this test is to check client's certificate validation durint TLS (and not SASL-EXTERNAL).
+ * To that end, there is client certificate, which path is configured under `server.client_auth.ca_cert` variable,
+ * signed by servers certificate (`src/test/resources/server/certs/root_ca.pem`). VHost is configured to: Require TLS,
+ * use configured server certificate as CA and *require* client's certificate.
+ *
+ * There is no authentication done in the test and only passing of STARTTLS and registration afterwards is checked.
+ */
 public class TestTwoWayTLS
 		extends AbstractTest {
 
-	private Jaxmpp jaxmpp;
-	private Account user;
+	private AccountBuilder accountBuilder;
 
 	public static byte[] getBytesFromInputStream(InputStream is) throws IOException {
 		try (ByteArrayOutputStream os = new ByteArrayOutputStream();) {
@@ -66,25 +77,17 @@ public class TestTwoWayTLS
 	@BeforeClass
 	public void createRequiredVHost() throws JaxmppException, InterruptedException {
 		String vhost = props.getProperty("server.client_auth.domain");
-		String caCertPath = new File(getServerConfigBaseDir(), props.getProperty("server.client_auth.ca_cert")).getAbsolutePath();
+		String caCertPath = new File(getServerConfigBaseDir(),
+									 props.getProperty("server.client_auth.ca_cert")).getAbsolutePath();
 		log("== registering required domain: " + vhost);
 		createVHost(vhost).setClientCertCA(caCertPath).setClientCertRequired(true).updateIfExists(true).build();
 	}
 
 	@BeforeMethod
 	public void setUp() throws JaxmppException, InterruptedException {
-		user = createAccount().setLogPrefix("admin")
-				.setUsername(props.getProperty("test.admin.username"))
+		accountBuilder = createAccount().setLogPrefix("two-way-tsl-user")
 				.setDomain(props.getProperty("server.client_auth.domain"))
-				.setPassword(props.getProperty("test.admin.password"))
-				.build();
-
-		jaxmpp = user.createJaxmpp().setHost(getInstanceHostname()).setConfigurator(jaxmpp -> {
-			jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
-			jaxmpp.getProperties().setUserProperty(SocketConnector.HOSTNAME_VERIFIER_DISABLED_KEY, Boolean.TRUE);
-			jaxmpp.getProperties().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.FALSE);
-			return jaxmpp;
-		}).build();
+				.setRegister(false);
 	}
 
 	/**
@@ -95,60 +98,104 @@ public class TestTwoWayTLS
 
 	@Test(groups = {"TLS - Client Cert"}, description = "Two-way TLS with client certificate")
 	public void testConnectionWithCertificate() throws Exception {
-		log("== testConnectionWithCertificate");
-		InputStreamReader crtStream = new InputStreamReader(getClass().getResourceAsStream("/client.pem"));
-		CertificateEntry ce = CertificateUtil.parseCertificate(crtStream);
-		log(ce.toString());
-		crtStream.close();
+		log("== test connection with OK certificate");
+		CertificateEntry ce = getCertificateEntry("/client.pem");
+		KeyManagerFactory kmf = getKeyManagerFactory(ce);
 
-		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-		keyStore.load(null, "".toCharArray());
-		keyStore.setKeyEntry("client", ce.getPrivateKey(), "".toCharArray(), ce.getCertChain());
-		kmf.init(keyStore, "".toCharArray());
+		final Account account = accountBuilder.setLogPrefix("two-way-tsl-user-OK").build();
+		final JaxmppBuilder jaxmppBuilder = getJaxmppBuilderForAccountBuilder(account);
+		jaxmppBuilder.setConfigurator(jaxmpp -> {
+			jaxmpp.getSessionObject().setProperty(SocketConnector.KEY_MANAGERS_KEY, kmf.getKeyManagers());
+			return jaxmpp;
+		});
 
-		jaxmpp.getSessionObject().setProperty(SocketConnector.KEY_MANAGERS_KEY, kmf.getKeyManagers());
-
+		Jaxmpp jaxmpp = jaxmppBuilder.build();
 		try {
-			jaxmpp.login(true);
+			final boolean registered = accountManager.registerAccount(accountBuilder, jaxmpp);
+			org.junit.Assert.assertTrue(registered);
 		} catch (Exception e) {
 			fail(e);
-		} finally {
-			Assert.assertNotNull(ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject()));
 		}
 	}
 
 	@Test(groups = {"TLS - Client Cert"}, description = "Two-way TLS without client certificate")
 	public void testConnectionWithoutCertificate() throws Exception {
-		log("== testConnectionWithoutCertificate");
-		try {
-			jaxmpp.login(true);
-		} catch (Exception e) {
-		} finally {
-			Assert.assertNull(ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject()));
-		}
+		log("== testing connection WITHOUT certificate");
+		final Account account = accountBuilder.setLogPrefix("two-way-tsl-user-WITHOUT").build();
+		final JaxmppBuilder jaxmppBuilder = getJaxmppBuilderForAccountBuilder(account);
+		Jaxmpp jaxmpp = jaxmppBuilder.build();
+
+		final boolean registered = accountManager.registerAccount(accountBuilder, jaxmpp);
+		assertFalse(registered);
 	}
 
 	@Test(groups = {"TLS - Client Cert"}, description = "Two-way TLS with wrong client certificate")
 	public void testConnectionWithWrongCertificate() throws Exception {
-		log("== testConnectionWithWrongCertificate");
-		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-		keyStore.load(null, "".toCharArray());
+		log("== testing connection with WRONG certificate");
+		CertificateEntry ce = getSelfSignedCertificateEntry();
+		KeyManagerFactory kmf = getKeyManagerFactory(ce);
+
+		final Account account = accountBuilder.setLogPrefix("two-way-tsl-user-WRONG").build();
+		final JaxmppBuilder jaxmppBuilder = getJaxmppBuilderForAccountBuilder(account);
+
+		jaxmppBuilder.setConfigurator(jaxmpp -> {
+			jaxmpp.getSessionObject().setProperty(SocketConnector.KEY_MANAGERS_KEY, kmf.getKeyManagers());
+			return jaxmpp;
+		});
+
+		Jaxmpp jaxmpp = jaxmppBuilder.build();
+
+		final boolean registered = accountManager.registerAccount(accountBuilder, jaxmpp);
+		assertFalse(registered);
+	}
+
+	private JaxmppBuilder getJaxmppBuilderForAccountBuilder(Account accountBuilder)
+			throws JaxmppException, InterruptedException {
+		JaxmppBuilder jaxmppBuilder = accountBuilder.createJaxmpp()
+				.setConnected(false)
+				.setHost(getInstanceHostname())
+				.setConfigurator(jaxmpp -> {
+					jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
+					jaxmpp.getProperties()
+							.setUserProperty(SocketConnector.HOSTNAME_VERIFIER_DISABLED_KEY, Boolean.TRUE);
+					jaxmpp.getProperties().setUserProperty(SocketConnector.TLS_DISABLED_KEY, Boolean.FALSE);
+					return jaxmpp;
+				});
+		return jaxmppBuilder;
+	}
+
+	private CertificateEntry getSelfSignedCertificateEntry()
+			throws NoSuchAlgorithmException, CertificateException, SignatureException, NoSuchProviderException,
+				   InvalidKeyException, IOException {
 		KeyPair keyPair = CertificateUtil.createKeyPair(1024, "");
 		X509Certificate c = CertificateUtil.createSelfSignedCertificate("alice@coffeebean.local", "domain", "org",
 																		"org", "tr", "kp", "PL", keyPair);
+
+		final CertificateEntry certificateEntry = new CertificateEntry();
+		certificateEntry.setPrivateKey(keyPair.getPrivate());
+		certificateEntry.setCertChain(new Certificate[]{c});
 		log(c.toString());
-		keyStore.setKeyEntry("client", keyPair.getPrivate(), "".toCharArray(), new Certificate[]{c});
+		return certificateEntry;
+
+	}
+
+	private CertificateEntry getCertificateEntry(String fileName)
+			throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException {
+		InputStreamReader crtStream = new InputStreamReader(getClass().getResourceAsStream(fileName));
+		CertificateEntry ce = CertificateUtil.parseCertificate(crtStream);
+		crtStream.close();
+		log(ce.toString());
+		return ce;
+	}
+
+	private KeyManagerFactory getKeyManagerFactory(CertificateEntry ce)
+			throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
+				   UnrecoverableKeyException {
+		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		keyStore.load(null, "".toCharArray());
+		keyStore.setKeyEntry("client", ce.getPrivateKey(), "".toCharArray(), ce.getCertChain());
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		kmf.init(keyStore, "".toCharArray());
-
-		jaxmpp.getSessionObject().setProperty(SocketConnector.KEY_MANAGERS_KEY, kmf.getKeyManagers());
-
-		try {
-			jaxmpp.login(true);
-		} catch (Exception e) {
-		} finally {
-			Assert.assertNull(ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject()));
-		}
+		return kmf;
 	}
 }

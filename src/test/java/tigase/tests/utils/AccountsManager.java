@@ -36,11 +36,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
-import tigase.jaxmpp.core.client.xmpp.modules.registration.UnifiedRegistrationForm;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
@@ -55,6 +53,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -131,6 +130,11 @@ public class AccountsManager
 
 	public Account registerAccount(AccountBuilder builder, Account account)
 			throws JaxmppException, InterruptedException {
+		return registerAccount(builder, account, jaxmpp -> {});
+	}
+
+	public Account registerAccount(AccountBuilder builder, Account account, Consumer<Jaxmpp> consumer)
+			throws JaxmppException, InterruptedException {
 		final String server = test.getInstanceHostname();
 		final Jaxmpp jaxmpp1 = createJaxmpp(builder.getLogPrefix());
 		jaxmpp1.getEventBus().addListener(new EventListener() {
@@ -140,66 +144,71 @@ public class AccountsManager
 				log(event != null ? event.toString() : "null event!");
 			}
 		});
-		jaxmpp1.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
+
 		if (server != null) {
 			jaxmpp1.getConnectionConfiguration().setServer(server);
 		}
-		jaxmpp1.getConnectionConfiguration().setDomain(builder.getDomain());
-		jaxmpp1.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
 
-		final Mutex mutex = new Mutex();
-		jaxmpp1.getEventBus()
-				.addHandler(InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,
-							new InBandRegistrationModule.ReceivedRequestedFieldsHandler() {
-
-								@Override
-								public void onReceivedRequestedFields(SessionObject sessionObject, IQ responseStanza,
-																	  UnifiedRegistrationForm form) {
-
-									try {
-										jaxmpp1.getModule(InBandRegistrationModule.class)
-												.register(builder.getUsername(), builder.getPassword(),
-														  builder.getEmail(), new AsyncCallback() {
-
-															@Override
-															public void onError(Stanza responseStanza,
-																				XMPPException.ErrorCondition error)
-																	throws JaxmppException {
-																mutex.notify("registration");
-																log("Account registration error: " + error);
-																Assert.fail("Account registration error: " + error);
-															}
-
-															@Override
-															public void onSuccess(Stanza responseStanza)
-																	throws JaxmppException {
-																mutex.notify("registrationSuccess");
-																mutex.notify("registration");
-															}
-
-															@Override
-															public void onTimeout() throws JaxmppException {
-																mutex.notify("registration");
-																log("Account registration failed.");
-																Assert.fail("Account registration failed.");
-															}
-														});
-									} catch (JaxmppException e) {
-										AbstractTest.fail(e);
-									}
-
-								}
-
-							});
-
-		jaxmpp1.login(false);
-		mutex.waitFor(1000 * 30, "registration");
-
-		assertTrue("Registration failed!", mutex.isItemNotified("registrationSuccess"));
+		consumer.accept(jaxmpp1);
+		final boolean registrationSuccess = registerAccount(builder, jaxmpp1);
+		assertTrue("Registration failed!", registrationSuccess);
 		jaxmpp1.disconnect(true);
 
 		add(account);
 		return account;
+	}
+
+	public boolean registerAccount(AccountBuilder builder, Jaxmpp jaxmpp) throws JaxmppException, InterruptedException {
+		final Mutex mutex = new Mutex();
+		jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
+		jaxmpp.getConnectionConfiguration().setDomain(builder.getDomain());
+		jaxmpp.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
+		jaxmpp.getEventBus().addHandler(Connector.DisconnectedHandler.DisconnectedEvent.class, sessionObject -> {
+			log("Disconnected during registration!");
+			mutex.notify("registration");
+		});
+		jaxmpp.getEventBus()
+				.addHandler(InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,
+							(sessionObject, responseStanza, form) -> {
+
+								try {
+									jaxmpp.getModule(InBandRegistrationModule.class)
+											.register(builder.getUsername(), builder.getPassword(), builder.getEmail(),
+													  new AsyncCallback() {
+
+														  @Override
+														  public void onError(Stanza responseStanza,
+																			  XMPPException.ErrorCondition error)
+																  throws JaxmppException {
+															  mutex.notify("registration");
+															  log("Account registration error: " + error);
+															  Assert.fail("Account registration error: " + error);
+														  }
+
+														  @Override
+														  public void onSuccess(Stanza responseStanza)
+																  throws JaxmppException {
+															  mutex.notify("registrationSuccess");
+															  mutex.notify("registration");
+														  }
+
+														  @Override
+														  public void onTimeout() throws JaxmppException {
+															  mutex.notify("registration");
+															  log("Account registration failed.");
+															  Assert.fail("Account registration failed.");
+														  }
+													  });
+								} catch (JaxmppException e) {
+									AbstractTest.fail(e);
+								}
+
+							});
+
+		jaxmpp.login(false);
+		mutex.waitFor(1000 * 30, "registration");
+
+		return mutex.isItemNotified("registrationSuccess");
 	}
 
 	public void remove(Account account) {

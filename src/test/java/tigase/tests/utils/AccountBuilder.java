@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static tigase.TestLogger.log;
+
 /**
  * Created by andrzej on 22.04.2017.
  */
@@ -123,11 +125,14 @@ public class AccountBuilder {
 
 		Account account = new Account(test, logPrefix, BareJID.bareJIDInstance(username, domain), password, this.unregistrationHandlers);
 		if (register) {
+			log("== Registering account on the server, username: " + username + ", domain: " + domain + ", password: " +
+						password + ", email: " + email);
 			Account acc = test.accountManager.registerAccount(this, account);
 			registrationSuccessHandlers.forEach(handler -> handler.accept(acc));
 			return acc;
 		}
 
+		log("== Account created: " + account);
 		return account;
 	}
 

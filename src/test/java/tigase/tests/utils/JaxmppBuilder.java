@@ -27,6 +27,8 @@ import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
 import java.util.function.Function;
 
+import static tigase.TestLogger.log;
+
 /**
  * Created by andrzej on 22.04.2017.
  */
@@ -66,8 +68,6 @@ public class JaxmppBuilder {
 		if (resource != null) {
 			jaxmpp1.getConnectionConfiguration().setResource(resource);
 		}
-//			if (domain != null)
-//				jaxmpp1.getConnectionConfiguration().setDomain(account.);
 
 		if (configurator != null) {
 			jaxmpp1 = configurator.apply(jaxmpp1);
@@ -75,10 +75,15 @@ public class JaxmppBuilder {
 
 		account.registerJaxmpp(jaxmpp1);
 
+		log("== creating jaxmpp: account " + account + ", resource: " + resource + ", host: " + host +
+					", connected: " + connected);
+
 		if (connected) {
 			jaxmpp1.login(true);
 			assert (jaxmpp1.isConnected());
 		}
+
+		log("== jaxmpp created, account: " + account + ", isConnected: " + jaxmpp1.isConnected());
 
 		return jaxmpp1;
 	}

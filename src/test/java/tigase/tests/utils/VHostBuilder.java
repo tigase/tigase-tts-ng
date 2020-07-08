@@ -22,6 +22,7 @@
 package tigase.tests.utils;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.util.StringUtilities;
 
 import java.util.HashMap;
 
@@ -45,6 +46,11 @@ public class VHostBuilder {
 
 	public VHostBuilder setClientCertRequired(boolean value) {
 		parameters.put("client-trust-extension-cert-required", value ? "true" : "false");
+		return this;
+	}
+
+	public VHostBuilder setAllowedSASLMechanisms(String[] mechanisms) {
+		parameters.put("Allowed SASL mechanisms", StringUtilities.stringArrayToString(mechanisms, ","));
 		return this;
 	}
 
