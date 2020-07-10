@@ -163,10 +163,10 @@ public class AccountsManager
 		jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
 		jaxmpp.getConnectionConfiguration().setDomain(builder.getDomain());
 		jaxmpp.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
-		jaxmpp.getEventBus().addHandler(Connector.DisconnectedHandler.DisconnectedEvent.class, sessionObject -> {
-			log("Disconnected during registration!");
-			mutex.notify("registration");
-		});
+//		jaxmpp.getEventBus().addHandler(Connector.DisconnectedHandler.DisconnectedEvent.class, sessionObject -> {
+//			log("Disconnected during registration!");
+//			mutex.notify("registration");
+//		});
 		jaxmpp.getEventBus()
 				.addHandler(InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,
 							(sessionObject, responseStanza, form) -> {
