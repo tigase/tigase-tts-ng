@@ -8,6 +8,11 @@ trusted = [ 'admin@localhost', 'http@{clusterNode}', 'user-status-endpoint@http.
 debug = ['server', 'xmpp', 'extras', 'extras.mailer', 'monitor', 'monitor.tasks']
 logging () {
     'packet-debug-full' = true
+    handlers {
+        'java.util.logging.FileHandler' {
+            limit = 250000000
+        }
+    }
 }
 dataSource {
     default () {
