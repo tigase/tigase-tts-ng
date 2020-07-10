@@ -57,7 +57,7 @@ public class TestCredentialsManipulation
 	private void addUsername(String username) throws JaxmppException, InterruptedException {
 		JabberDataElement request = new JabberDataElement(XDataType.submit);
 		request.addTextSingleField("jid", user.getJid().toString());
-		request.addTextSingleField("username", username);
+		request.addTextSingleField("credentialId", username);
 		request.addTextSingleField("password", "123");
 		JabberDataElement response = callAdHoc("auth-credentials-add", request);
 
@@ -99,7 +99,7 @@ public class TestCredentialsManipulation
 	private void deleteUsername(String username) throws JaxmppException, InterruptedException {
 		JabberDataElement request = new JabberDataElement(XDataType.submit);
 		request.addTextSingleField("jid", user.getJid().toString());
-		request.addTextSingleField("username", username);
+		request.addTextSingleField("credentialId", username);
 		JabberDataElement response = callAdHoc("auth-credentials-delete", request);
 
 		assertNotNull(response);
@@ -114,7 +114,7 @@ public class TestCredentialsManipulation
 
 		for (Element item : response.getChildren("item")) {
 			Element f = item.getFirstChild("field");
-			Assert.assertEquals("username", f.getAttribute("var"));
+			Assert.assertEquals("credentialId", f.getAttribute("var"));
 			names.add(f.getFirstChild("value").getValue());
 		}
 		return names;
