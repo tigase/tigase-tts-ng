@@ -8,9 +8,13 @@ trusted = [ 'admin@localhost', 'http@{clusterNode}', 'user-status-endpoint@http.
 debug = ['server', 'muc', 'component', 'pubsub', 'xmpp', 'extras', 'net', 'io', 'extras.mailer', 'monitor', 'monitor.tasks', 'auth']
 logging () {
     'packet-debug-full' = true
+    handlers {
+        'java.util.logging.FileHandler' {
+            limit = 250000000
+        }
+    }
 }
 dataSource {
-    'pool-size' = 5
     default () {
         uri = env('JDBC_URI', 'jdbc://server/database')
     }
