@@ -145,7 +145,7 @@ public class TestTwoWayTLS
 
 		consumer.accept(jaxmpp);
 
-		jaxmpp.getEventBus().addListener(event -> log(event != null ? event.toString() : "null event!"));
+//		jaxmpp.getEventBus().addListener(event -> log(event != null ? event.toString() : "null event!"));
 
 		if (server != null) {
 			jaxmpp.getConnectionConfiguration().setServer(server);
@@ -155,10 +155,10 @@ public class TestTwoWayTLS
 		jaxmpp.getProperties().setUserProperty(Connector.SEE_OTHER_HOST_KEY, Boolean.FALSE);
 		jaxmpp.getConnectionConfiguration().setDomain(account.getJid().getDomain());
 		jaxmpp.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
-		jaxmpp.getEventBus().addHandler(Connector.DisconnectedHandler.DisconnectedEvent.class, sessionObject -> {
-			log("Disconnected during registration!");
-			mutex.notify("registration");
-		});
+//		jaxmpp.getEventBus().addHandler(Connector.DisconnectedHandler.DisconnectedEvent.class, sessionObject -> {
+//			log("Disconnected during registration!");
+//			mutex.notify("registration");
+//		});
 		jaxmpp.getEventBus()
 				.addHandler(InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,
 							(sessionObject, responseStanza, form) -> {
@@ -203,9 +203,9 @@ public class TestTwoWayTLS
 		if (jaxmpp.isConnected()) {
 			jaxmpp.disconnect(true);
 		}
-		if (registrationSuccess) {
-			accountManager.add(account);
-		}
+//		if (registrationSuccess) {
+//			accountManager.add(account);
+//		}
 		return registrationSuccess;
 	}
 
