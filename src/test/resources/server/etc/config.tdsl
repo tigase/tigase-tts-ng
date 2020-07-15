@@ -5,7 +5,7 @@ admins = [ 'admin@localhost' ]
 'sm-threads-pool' = 'custom:200'
 trusted = [ 'admin@localhost', 'http@{clusterNode}', 'user-status-endpoint@http.{clusterNode}' ]
 'vhost-disable-dns-check' = true
-# debug = ['server', 'muc', 'component', 'pubsub', 'xmpp', 'extras', 'net', 'io', 'extras.mailer', 'monitor', 'monitor.tasks', 'auth']
+debug = ['server', 'muc', 'component', 'pubsub', 'xmpp', 'extras', 'auth']
 logging () {
     'packet-debug-full' = true
     handlers {

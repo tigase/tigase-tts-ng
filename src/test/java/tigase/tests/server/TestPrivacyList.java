@@ -125,7 +125,7 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		user1jaxmpp1.getConnector().stop(true);
 
 		user1jaxmpp1.login(true);
-		Thread.sleep(100);
+		Thread.sleep(500);
 		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-reconnect2_u1j1-" + UUID.randomUUID().toString()));
 		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u3-u1j1-reconnect2_u1j1-" + UUID.randomUUID().toString()));
 
@@ -134,10 +134,10 @@ public class TestPrivacyList extends AbstractJaxmppTest {
 		StreamManagementModule.reset(user1jaxmpp1.getSessionObject());
 		user1jaxmpp1.getSessionObject().setProperty(ResourceBinderModule.BINDED_RESOURCE_JID, null);
 
-		Thread.sleep(100);
+		Thread.sleep(500);
 
 		user1jaxmpp1.login(true);
-		Thread.sleep(100);
+		Thread.sleep(500);
 		assertTrue(user1jaxmpp1.isConnected());
 		assertNotNull(sendAndWait(user2jaxmpp, user1jaxmpp1, "u2-u1j1-stream_management_u1j1-" + UUID.randomUUID().toString()));
 		assertNull(sendAndWait(user3jaxmpp, user1jaxmpp1, "u2-u1j1-stream_management_u1j1-" + UUID.randomUUID().toString()));
