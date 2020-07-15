@@ -23,6 +23,7 @@ package tigase.tests.server;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 import tigase.cert.CertificateEntry;
 import tigase.cert.CertificateUtil;
@@ -61,6 +62,7 @@ import static tigase.TestLogger.log;
  *
  * There is no authentication done in the test and only passing of STARTTLS and registration afterwards is checked.
  */
+@Ignore
 public class TestTwoWayTLS
 		extends AbstractTest {
 
