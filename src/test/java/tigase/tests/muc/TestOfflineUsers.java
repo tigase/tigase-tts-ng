@@ -93,7 +93,7 @@ public class TestOfflineUsers
 
 	@Test(groups = {"Multi User Chat"}, description = "#8660: Presence delivery from offline users (persistence change)")
 	public void testOfflineUsersPresence1() throws Exception {
-		Thread.sleep(100);
+		Thread.sleep(200);
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.xa);
 
 		final Mutex mutex = new Mutex();
@@ -106,26 +106,26 @@ public class TestOfflineUsers
 		Room room = muc2Module.join(roomJID.getLocalpart(), roomJID.getDomain(), user2.getJid().toString());
 		mutex.waitFor(10 * 1000, "user2:room:joined");
 		Assert.assertTrue(mutex.isItemNotified("user2:room:joined"));
-		Thread.sleep(100);
+		Thread.sleep(500);
 
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.online);
 
 		removePersistentMember(user2.getJid());
-		Thread.sleep(100);
+		Thread.sleep(500);
 
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.online);
 
 		muc2Module.leave(room);
-		Thread.sleep(100);
+		Thread.sleep(500);
 
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.offline);
 
 		addPersistentMember(user2.getJid());
-		Thread.sleep(100);
+		Thread.sleep(500);
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.xa);
 
 		removePersistentMember(user2.getJid());
-		Thread.sleep(100);
+		Thread.sleep(500);
 		Assert.assertEquals(getPresenceShow(muc1Module, roomJID, user2.getJid().toString()), Presence.Show.offline);
 	}
 
@@ -169,9 +169,9 @@ public class TestOfflineUsers
 	@BeforeMethod
 	void prepareMucRoom() throws Exception {
 		mutex.clear();
-		this.user1 = createAccount().setLogPrefix("user1").build();
-		this.user2 = createAccount().setLogPrefix("user2").build();
-		this.user3 = createAccount().setLogPrefix("user3").build();
+		this.user1 = createAccount().setLogPrefix("muc-test-user1").build();
+		this.user2 = createAccount().setLogPrefix("muc-test-user2").build();
+		this.user3 = createAccount().setLogPrefix("muc-test-user3").build();
 		this.user1Jaxmpp = user1.createJaxmpp().setConnected(true).build();
 		this.user2Jaxmpp = user2.createJaxmpp().setConnected(true).build();
 		this.user3Jaxmpp = user3.createJaxmpp().setConnected(true).build();
