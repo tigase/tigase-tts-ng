@@ -1,11 +1,11 @@
-admins = [ 'admin@localhost' ]
+admins = [ 'admin@test-domain.com' ]
 'config-type' = '--gen-config-def'
-'default-virtual-host' = 'localhost'
+'default-virtual-host' = 'test-domain.com'
 'priority-queue-implementation' = 'tigase.util.workqueue.PriorityQueueStrict'
 'sm-threads-pool' = 'custom:200'
-trusted = [ 'admin@localhost', 'http@{clusterNode}', 'user-status-endpoint@http.{clusterNode}' ]
+trusted = [ 'admin@test-domain.com', 'http@{clusterNode}', 'user-status-endpoint@http.{clusterNode}' ]
 'vhost-disable-dns-check' = true
-debug = ['server', 'muc', 'component', 'pubsub', 'xmpp', 'extras', 'auth']
+debug = ['server', 'muc', 'component', 'pubsub', 'xmpp', 'extras', 'auth', 'vhosts']
 logging () {
     'packet-debug-full' = true
     handlers {
@@ -32,7 +32,7 @@ c2s {
     'urn:xmpp:sm:3' () {}
 }
 'disco-extensions' = {
-    'abuse-addresses' = [ 'mailto:abuse@localhost', 'xmpp:abuse@localhost' ]
+    'abuse-addresses' = [ 'mailto:abuse@test-domain.com', 'xmpp:abuse@test-domain.com' ]
 }
 ext () {}
 'ext-man' () {}
@@ -101,5 +101,5 @@ upload () {
     searchableRepository () {}
 }
 wg(class: tigase.workgroupqueues.WorkgroupQueuesComponent) {
-    'default-muc-domain' = muc.localhost
+    'default-muc-domain' = 'muc.test-domain.com'
 }

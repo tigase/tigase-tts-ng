@@ -229,6 +229,7 @@ public class TestModificationOfPrivacyRulesUsingREST
 			user.disconnect(true);
 			Thread.sleep(5 * 100);
 			user.login(true);
+			Thread.sleep(5 * 100);
 		}
 	}
 

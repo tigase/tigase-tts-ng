@@ -96,7 +96,7 @@ public class TestOfflineMessageSinkProvider
 
 		mutex.waitFor(1000 * 30, "received:" + body);
 
-		Assert.assertTrue(mutex.isItemNotified("received:" + body), "Notification from PubSub not received!");
+		Assert.assertTrue(mutex.isItemNotified("received:" + body), "Notification from PubSub not received! body: " + body);
 	}
 
 	private void preparePubSubNode(Jaxmpp ownerJaxmpp) throws JaxmppException, InterruptedException {

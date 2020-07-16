@@ -322,6 +322,6 @@ public class TestAdminUI
 	}
 
 	private String getAdminUrl() {
-		return "http://" + getDomain(0) + ":" + getHttpPort() + "/admin/";
+		return "http://" + getInstanceHostname() + ":" + getHttpPort() + "/admin/";
 	}
 }

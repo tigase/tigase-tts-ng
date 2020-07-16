@@ -189,6 +189,6 @@ public class TestPasswordReset
 	}
 
 	private URL getURL() throws MalformedURLException {
-		return new URL("http://" + getDomain(0) + ":" + getHttpPort() + "/rest/user/resetPassword");
+		return new URL("http://" + getInstanceHostname() + ":" + getHttpPort() + "/rest/user/resetPassword");
 	}
 }

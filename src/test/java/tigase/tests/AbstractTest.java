@@ -497,7 +497,7 @@ public abstract class AbstractTest {
 		} finally {
 			from.getEventBus().remove(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 		}
-		assertTrue("Message wasn't blocked", mutex.isItemNotified(rnd + ":" + ErrorCondition.forbidden));
+		assertTrue("Message wasn't blocked: " + rnd, mutex.isItemNotified(rnd + ":" + ErrorCondition.forbidden));
 	}
 
 	protected final boolean sendAndWait(Jaxmpp j, final IQ iq, final AsyncCallback asyncCallback) throws Exception {

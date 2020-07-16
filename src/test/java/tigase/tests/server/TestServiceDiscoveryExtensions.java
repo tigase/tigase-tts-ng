@@ -104,6 +104,6 @@ public class TestServiceDiscoveryExtensions extends AbstractJaxmppTest {
 		mutex.waitFor(10 * 1000, "disco:info:retrieve");
 		assertTrue(mutex.isItemNotified("disco:info:retrieve:success"));
 
-		assertTrue(mutex.isItemNotified("disco:info:field:abuse-addresses=mailto:abuse@localhost,xmpp:abuse@localhost"));
+		assertTrue(mutex.isItemNotified("disco:info:field:abuse-addresses=mailto:abuse@" + getDomain() + ",xmpp:abuse@" + getDomain()));
 	}
 }

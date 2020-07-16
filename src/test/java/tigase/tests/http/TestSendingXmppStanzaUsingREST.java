@@ -123,7 +123,7 @@ public class TestSendingXmppStanzaUsingREST
 
 							});
 
-		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
+		HttpHost target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
 		HttpClientContext localContext = HttpClientContext.create();
 		AuthCache authCache = new BasicAuthCache();
 		BasicScheme basicAuth = new BasicScheme();
