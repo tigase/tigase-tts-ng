@@ -62,7 +62,7 @@ import static tigase.TestLogger.log;
  *
  * There is no authentication done in the test and only passing of STARTTLS and registration afterwards is checked.
  */
-@Ignore
+//@Ignore
 public class TestTwoWayTLS
 		extends AbstractTest {
 
