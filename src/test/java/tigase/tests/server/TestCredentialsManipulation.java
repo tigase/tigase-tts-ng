@@ -91,7 +91,7 @@ public class TestCredentialsManipulation
 					  });
 
 		mutex.waitFor(30000, "adhoc");
-		assertNotNull(response.getValue());
+		assertNotNull("There was no response to ad-hoc call, node: '" + node + "' with data" + data, response.getValue());
 
 		return response.getValue();
 	}
