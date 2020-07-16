@@ -190,6 +190,15 @@ public abstract class AbstractTest {
 		return domain;
 	}
 
+	public String[] getDomains() {
+		final String domainsProp = props.getProperty("server.domains");
+		String[] domains = null;
+		if (null != domainsProp) {
+			domains = domainsProp.split(",");
+		}
+		return domains;
+	}
+
 	/**
 	 * Return randomly chosen domain from list of available domains in "server.cluster.nodes" property
 	 *

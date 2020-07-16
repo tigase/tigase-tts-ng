@@ -107,24 +107,24 @@ public class TestOfflineMessageSinkProvider
 				.build();
 
 		PubSubModule pubSub = ownerJaxmpp.getModule(PubSubModule.class);
-		String[] hostnames = getInstanceHostnames();
-		if (hostnames != null) {
+		String[] domains = getDomains();
+		if (domains != null) {
 			final Mutex mutex = new Mutex();
-			Arrays.stream(hostnames).forEach(hostname -> {
+			Arrays.stream(domains).forEach(domain -> {
 				try {
 					pubSub.setAffiliation(testNode.getPubsubJid(), testNode.getName(),
-										  JID.jidInstance("sess-man", hostname), Affiliation.publisher,
+										  JID.jidInstance("sess-man", domain), Affiliation.publisher,
 										  new PubSubAsyncCallback() {
 											  @Override
 											  public void onSuccess(Stanza responseStanza) throws JaxmppException {
-												  mutex.notify(hostname + ":affiliation:success");
-												  mutex.notify(hostname + ":affiliation");
+												  mutex.notify(domain + ":affiliation:success");
+												  mutex.notify(domain + ":affiliation");
 											  }
 
 											  @Override
 											  public void onTimeout() throws JaxmppException {
-												  mutex.notify(hostname + ":affiliation:timeout");
-												  mutex.notify(hostname + ":affiliation");
+												  mutex.notify(domain + ":affiliation:timeout");
+												  mutex.notify(domain + ":affiliation");
 											  }
 
 											  @Override
@@ -132,13 +132,13 @@ public class TestOfflineMessageSinkProvider
 																	XMPPException.ErrorCondition errorCondition,
 																	PubSubErrorCondition pubSubErrorCondition)
 													  throws JaxmppException {
-												  mutex.notify(hostname + ":affiliation:error");
-												  mutex.notify(hostname + ":affiliation");
+												  mutex.notify(domain + ":affiliation:error");
+												  mutex.notify(domain + ":affiliation");
 											  }
 										  });
 
-					mutex.waitFor(30 * 1000, hostname + ":affiliation");
-					Assert.assertTrue(mutex.isItemNotified(hostname + ":affiliation:success"));
+					mutex.waitFor(30 * 1000, domain + ":affiliation");
+					Assert.assertTrue(mutex.isItemNotified(domain + ":affiliation:success"));
 				} catch (JaxmppException | InterruptedException ex) {
 					ex.printStackTrace();
 				}
