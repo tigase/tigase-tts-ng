@@ -63,7 +63,7 @@ public class ComponentProtocolManagerTest extends AbstractTest {
 	public void addConnection() throws JaxmppException, InterruptedException, IOException {
 		Mutex mutex = new Mutex();
 
-		JID extJID = JID.jidInstance("ext-man", this.getInstanceHostname());
+		JID extJID = JID.jidInstance("ext-man", this.getDomain());
 		getJaxmppAdmin().getModule(AdHocCommansModule.class)
 				.execute(extJID, "comp-repo-item-add", Action.execute, null,
 						 new AdHocCommansModule.AdHocCommansAsyncCallback() {
@@ -122,7 +122,7 @@ public class ComponentProtocolManagerTest extends AbstractTest {
 	@Test(dependsOnMethods = {"addConnection"})
 	public void updateConnection() throws JaxmppException, InterruptedException {
 		Mutex mutex = new Mutex();
-		JID extJID = JID.jidInstance("ext-man", this.getInstanceHostname());
+		JID extJID = JID.jidInstance("ext-man", this.getDomain());
 
 		JabberDataElement initialForm = new JabberDataElement(XDataType.submit);
 		initialForm.addListSingleField("item-list", "muc-ext." + getDomain());
@@ -214,7 +214,7 @@ public class ComponentProtocolManagerTest extends AbstractTest {
 
 	private void removeAllSettings() throws JaxmppException, InterruptedException {
 		Mutex mutex = new Mutex();
-		JID extJID = JID.jidInstance("ext-man", this.getInstanceHostname());
+		JID extJID = JID.jidInstance("ext-man", this.getDomain());
 		getJaxmppAdmin().getModule(AdHocCommansModule.class).execute(extJID, "comp-repo-item-remove", Action.execute,
 																	 null, new AdHocCommansModule.AdHocCommansAsyncCallback() {
 					@Override

@@ -78,7 +78,7 @@ public class TestRestUserStatus extends AbstractTest {
 
 		//user2Jaxmpp.disconnect(true);
 
-		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
+		HttpHost target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()),
 									 new UsernamePasswordCredentials(getAdminAccount().getJid().toString(),

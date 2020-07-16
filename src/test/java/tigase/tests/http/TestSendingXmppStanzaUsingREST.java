@@ -38,6 +38,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
@@ -83,7 +84,7 @@ public class TestSendingXmppStanzaUsingREST
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		HttpHost target = new HttpHost(getDomain(0), Integer.parseInt(getHttpPort()), "http");
+		HttpHost target = new HttpHost(getInstanceHostname(), Integer.parseInt(getHttpPort()), "http");
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()),
 									 new UsernamePasswordCredentials(getAdminAccount().getJid().toString(),
@@ -150,6 +151,8 @@ public class TestSendingXmppStanzaUsingREST
 		postRequest.setEntity(entity);
 
 		HttpResponse response = httpClient.execute(target, postRequest, localContext);
+
+		TestLogger.log("Got response: " + response);
 
 		assertEquals(response.getStatusLine().getStatusCode(), 200);
 

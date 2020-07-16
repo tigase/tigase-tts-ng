@@ -15,6 +15,7 @@ logging () {
     }
 }
 dataSource {
+    'pool-size' = 5
     default () {
         uri = env('JDBC_URI', 'jdbc://server/database')
     }
