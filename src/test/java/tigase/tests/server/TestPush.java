@@ -304,6 +304,9 @@ public class TestPush
 
 		counter.incrementAndGet();
 
+		// added processing time, to give server time to process an error response from the Push component
+		Thread.sleep(1000);
+
 		msg = Message.create();
 		msg.setTo(JID.jidInstance(user1.getJid()));
 		msg.addChild(ElementFactory.create("body", body, null));
