@@ -263,7 +263,7 @@ public class TestPush
 	public void testAutomaticDisablingOnFailure() throws JaxmppException, InterruptedException {
 		final Mutex mutex = new Mutex();
 
-		String body = "Some body - " + UUID.randomUUID().toString();
+		String body = "Some body 1 - " + UUID.randomUUID().toString();
 
 		AtomicInteger counter = new AtomicInteger(0);
 
@@ -293,6 +293,8 @@ public class TestPush
 
 		counter.incrementAndGet();
 
+		body = "Some body 2 - " + UUID.randomUUID().toString();
+
 		msg = Message.create();
 		msg.setTo(JID.jidInstance(user1.getJid()));
 		msg.addChild(ElementFactory.create("body", body, null));
@@ -306,6 +308,8 @@ public class TestPush
 
 		// added processing time, to give server time to process an error response from the Push component
 		Thread.sleep(1000);
+
+		body = "Some body 3 - " + UUID.randomUUID().toString();
 
 		msg = Message.create();
 		msg.setTo(JID.jidInstance(user1.getJid()));
