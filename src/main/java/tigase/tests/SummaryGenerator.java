@@ -34,6 +34,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Helper class userd to (re-)generate test summary page. Can be invoked using following command:
+ *
+ * <pre>mvn clean install -DskipTests  exec:java -Dexec.mainClass="tigase.tests.SummaryGenerator" -Dexec.args="arn:aws:s3:::build.tigase.net/tests-results/tts-ng/"</pre>
+ *
+ * In case of using S3 backend it's essential that required AWS credentials are available, e.g.:
+ * $ export AWS_ACCESS_KEY_ID="key"
+ * $ export AWS_SECRET_ACCESS_KEY="secret"
+ */
 public class SummaryGenerator {
 
 	public static void main(String[] args) throws Exception {
