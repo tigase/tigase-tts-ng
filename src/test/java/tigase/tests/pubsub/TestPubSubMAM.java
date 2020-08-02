@@ -135,12 +135,14 @@ public class TestPubSubMAM
 		testRetriveAllFrom(LEAF);
 	}
 
-	@Test
+	// disabled as MAM is specified only for leaf nodes
+	@Test(enabled = false)
 	public void testRetriveAllFromCollection() throws Exception {
 		testRetriveAllFrom(COLLECTION);
 	}
 
-	@Test
+	// disabled as MAM is specified only for leaf nodes
+	@Test(enabled = false)
 	public void testRetriveAllFromRoot() throws Exception {
 		testRetriveAllFrom(ROOT);
 	}
@@ -150,23 +152,26 @@ public class TestPubSubMAM
 		testRetrieveWithLimitAndAfterFrom(LEAF);
 	}
 
-	@Test
+	// disabled as MAM is specified only for leaf nodes
+	@Test(enabled = false)
 	public void testRetrieveWithLimitAndAfterFromCollection() throws Exception {
 		testRetrieveWithLimitAndAfterFrom(COLLECTION);
 	}
 
-	@Test
+	// disabled as MAM is specified only for leaf nodes
+	@Test(enabled = false)
 	public void testRetrieveWithLimitAndAfterFromRoot() throws Exception {
 		testRetrieveWithLimitAndAfterFrom(ROOT);
-
 	}
 
-	@Test
-	public void testRetrieveWithTimestampsLimitAndAfterFromRoom() throws Exception {
+	// disabled as MAM is specified only for leaf nodes
+	@Test(enabled = false)
+	public void testRetrieveWithTimestampsLimitAndAfterFromRoot() throws Exception {
 		testRetrieveWithTimestampsLimitAndAfterFrom(ROOT);
 	}
 
-	@Test
+	// disabled as MAM is specified only for leaf nodes
+	@Test(enabled = false)
 	public void testRetrieveWithTimestampsLimitAndAfterFromCollection() throws Exception {
 		testRetrieveWithTimestampsLimitAndAfterFrom(COLLECTION);
 	}
@@ -290,6 +295,7 @@ public class TestPubSubMAM
 		query.setEnd(new Date(
 				((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000 + endDrift));
 
+		System.out.println("start:" + query.getStart().toString() + ", end:" + query.getEnd().toString() + ", e2:" + (((long) (expectedItems.get(expectedItems.size() - 1).publishedAt.getTime() / 1000) + 1) * 1000) + ", drift: " + endDrift);
 		queryNode(node.getName(), query, rsm, expectedItems, true);
 
 		expectedItems = publishedItems.stream().skip(10).limit(10).collect(Collectors.toList());
@@ -326,22 +332,22 @@ public class TestPubSubMAM
 								 @Override
 								 public void onSuccess(String queryid, boolean complete, RSM rsm)
 										 throws JaxmppException {
-									 mutex.notify("mam:queryId:" + queryid + ":complete:" + complete);
+									 mutex.notify("mam:queryId:" + queryid + ":complete:" + complete, "mam:queryId:" + queryid);
 								 }
 
 								 @Override
 								 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
 										 throws JaxmppException {
-
+									 mutex.notify("mam:queryId:" + queryId + ":error:" + error, "mam:queryId:" + queryId);
 								 }
 
 								 @Override
 								 public void onTimeout() throws JaxmppException {
-
+									 mutex.notify("mam:queryId:" + queryId + ":timeout", "mam:queryId:" + queryId);
 								 }
 							 });
 
-		mutex.waitFor(20 * 1000, "mam:queryId:" + queryId + ":complete:" + complete);
+		mutex.waitFor(20 * 1000, "mam:queryId:" + queryId);
 		assertTrue(mutex.isItemNotified("mam:queryId:" + queryId + ":complete:" + complete));
 
 		Thread.sleep(2000);
@@ -395,7 +401,7 @@ public class TestPubSubMAM
 			assertTrue(mutex.isItemNotified("publish:node:root:item-id:" + item.itemId));
 
 			results.add(item);
-			Thread.sleep(1500);
+			Thread.sleep(2000);
 		}
 		return results;
 	}

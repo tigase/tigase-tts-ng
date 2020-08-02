@@ -72,6 +72,8 @@ msgRepository {
 muc () {}
 pubsub () {
     'persistent-pep' = true
+    'mam-enabled' = true
+    'mam-enabled-for-generic-service' = true
 }
 'sess-man' {
     'audit-log' () {}
