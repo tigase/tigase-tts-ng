@@ -110,7 +110,13 @@ public class TestRestApiWithMessageExpiration
 		final String nodeName = "node_" + nextRnd().toLowerCase();
 
 		BareJID pubsubJID = BareJID.bareJIDInstance("pubsub." + getDomain(0));
-		PubSubNode pubSubNode = pubSubManager.createNode(nodeName).setJaxmpp(adminJaxmpp).build();
+		PubSubNode pubSubNode = pubSubManager.createNode(nodeName).setConfigurator(form -> {
+			try {
+				form.addTextSingleField("pubsub#notification_type", "normal");
+			} catch (XMLException ex) {
+				ex.printStackTrace();
+			}
+		}).setJaxmpp(adminJaxmpp).build();
 
 		PubSubModule pubSubModule = adminJaxmpp.getModule(PubSubModule.class);
 		subscribeUser(pubSubModule, pubsubJID, JID.jidInstance(userRegularJID), nodeName);
@@ -138,7 +144,7 @@ public class TestRestApiWithMessageExpiration
 		// testing offline messages
 		// publishing normal message (to offline)
 		log("\n\n\n===== publishing normal message (to offline) \n");
-		userRegularJaxmpp.disconnect();
+		userRegularJaxmpp.disconnect(true);
 
 		message = nextRnd().toLowerCase();
 		publishToPubsub(nodeName, null, null, "content_" + message);
