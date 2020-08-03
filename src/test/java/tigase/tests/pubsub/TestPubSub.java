@@ -38,6 +38,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.Mutex;
 
@@ -320,6 +321,7 @@ public class TestPubSub
 		Jaxmpp jaxmpp = jaxmpps.get(hostname);
 
 		IQ iq = IQ.create();
+		iq.setType(StanzaType.set);
 		iq.setTo(pubsubJid);
 
 		JabberDataElement x = new JabberDataElement(XDataType.submit);
