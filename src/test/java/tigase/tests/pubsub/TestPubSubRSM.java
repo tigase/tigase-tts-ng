@@ -76,6 +76,8 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 			createNode(mutex, jaxmpp, node, name);
 			nodes.add(new String[] { node, name });
 		}
+
+		Thread.sleep(500);
 		
 		DiscoveryModule discoveryModule = jaxmpp.getModule(DiscoveryModule.class);
 		discoveryModule.getItems(pubsubJid, new DiscoveryModule.DiscoItemsAsyncCallback() {
