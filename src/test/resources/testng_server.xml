@@ -152,4 +152,10 @@
         </classes>
     </test>
 
+    <test name="XEP-0215: External Service Discovery">
+        <classes>
+            <class name="tigase.tests.server.TestExtDisco"/>
+        </classes>
+    </test>
+
 </suite>
