@@ -295,15 +295,10 @@ function run_test() {
         profile_activation="-P`join_by , "${additional_profiles[@]}"`"
     fi
 
-    if [ -z "${maven3}" ]; then
-        maven3="mvn"
-    fi
+  mvn -version
+	mvn ${profile_activation} clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
 
-  ${maven3} -version
-
-	${maven3} ${profile_activation} clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
-
-    test_status=$?;
+  test_status=$?;
 
 	end_test=`date +%s`
 	total_time=$((end_test-start_test))
