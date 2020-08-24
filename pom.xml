@@ -71,6 +71,80 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>libs</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                            <excludeTransitive>false</excludeTransitive>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <overWriteReleases>true&gt;</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <includeArtifactIds>tigase-utils</includeArtifactIds>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+                <configuration>
+                    <!--<redirectTestOutputToFile>true</redirectTestOutputToFile>-->
+                    <argLine>-Xmx2048m -XX:MaxPermSize=256m</argLine>
+                    <!--                    <forkMode>once</forkMode>-->
+                    <!--                    <reuseForks>false</reuseForks>-->
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                    <!--                    <useSystemClassLoader>false</useSystemClassLoader>-->
+                    <printSummary>true</printSummary>
+                    <reportFormat>plain</reportFormat>
+                    <trimStackTrace>false</trimStackTrace>
+                    <failIfNoTests>false</failIfNoTests>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                    <rerunFailingTestsCount>5</rerunFailingTestsCount>
+                    <systemPropertyVariables>
+                        <org.uncommons.reportng.escape-output>true</org.uncommons.reportng.escape-output>
+                        <properties_file>${properties.file}</properties_file>
+                    </systemPropertyVariables>
+                    <testFailureIgnore>false</testFailureIgnore>
+
+                    <suiteXmlFiles>
+                        <!--<suiteXmlFile>src/test/resources/testng_features.xml</suiteXmlFile>-->
+                        <suiteXmlFile>src/test/resources/testng_server.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_muc.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_pubsub.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_http_api.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_archive.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_external.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_custom.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_jaxmpp.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <!--<workingDirectory>target/</workingDirectory>-->
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.uncommons.reportng.HTMLReporter, org.uncommons.reportng.JUnitXMLReporter,
+                                tigase.DotTestListener, tigase.CompactXMLReporter
+                            </value>
+                        </property>
+                    </properties>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
