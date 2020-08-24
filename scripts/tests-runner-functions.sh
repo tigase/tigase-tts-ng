@@ -299,6 +299,8 @@ function run_test() {
         maven3="mvn"
     fi
 
+  ${maven3} -version
+
 	${maven3} ${profile_activation} clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
 
     test_status=$?;
