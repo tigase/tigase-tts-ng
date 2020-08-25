@@ -88,7 +88,7 @@ As described in <<Test-NG_configuration>>, each test case must be included in Te
 +
 [source,xml]
 ------------------------------------
-<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 
 <suite name="Tigase Various Tests" verbose="1">
 	<test name="Example Tests">
