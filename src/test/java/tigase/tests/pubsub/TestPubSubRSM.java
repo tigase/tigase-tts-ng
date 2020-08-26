@@ -20,6 +20,7 @@ package tigase.tests.pubsub;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -44,6 +45,7 @@ import java.util.ListIterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 public class TestPubSubRSM extends AbstractJaxmppTest {
@@ -53,7 +55,7 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 	protected JID pubsubJid;
 
 	private List<String> allNodes = new ArrayList<>();
-	private List<String[]> nodes = new ArrayList<>();
+	private List<String> nodes = new ArrayList<>();
 
 	@BeforeClass
 	public void setUp() throws Exception {
@@ -65,12 +67,11 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 			return jaxmpp1;
 		}).setConnected(true).build();
 
-		for (int i=0; i<30; i++) {
-			String id = UUID.randomUUID().toString();
-			String node = "node-" + id;
-			String name = "Node " + id;
-			createNode(mutex, jaxmpp, node, name);
-			nodes.add(new String[] { node, name });
+		final int nodesToCreate = 30;
+		for (int i = 1; i <= nodesToCreate; i++) {
+			String id = String.format("%1$03d__", i) + UUID.randomUUID().toString();
+			createNode(mutex, jaxmpp, id);
+			nodes.add(id);
 		}
 
 		Thread.sleep(500);
@@ -79,6 +80,8 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 		discoveryModule.getItems(pubsubJid, new DiscoveryModule.DiscoItemsAsyncCallback() {
 			@Override
 			public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items) throws XMLException {
+				TestLogger.log("Received node items: " + items.size());
+				assertEquals("Received incorrect number of items", nodesToCreate, items.size());
 				items.stream().map(DiscoveryModule.Item::getNode).forEach(allNodes::add);
 				mutex.notify("disco:items:success", "disco:items");
 			}
@@ -100,9 +103,9 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 	@AfterClass
 	public void tearDown() throws Exception {
 		Mutex mutex = new Mutex();
-		nodes.forEach(arr -> {
+		nodes.forEach(id -> {
 			try {
-				deleteNode(mutex, jaxmpp, arr[0]);
+				deleteNode(mutex, jaxmpp, id);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -267,15 +270,18 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 		}
 	}
 
-	public void createNode(Mutex mutex, Jaxmpp jaxmpp, String nodeName, String name)
+	public void createNode(Mutex mutex, Jaxmpp jaxmpp, String id)
 			throws JaxmppException, InterruptedException {
+		String node = "node-" + id;
+		String name = "Node " + id;
+		TestLogger.log("Creating node: " + node);
 		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
 		nodeCfg.addTextSingleField("pubsub#title", name);
 		jaxmpp.getModule(PubSubModule.class)
-				.createNode(pubsubJid.getBareJid(), nodeName, nodeCfg, new PubSubAsyncCallback() {
+				.createNode(pubsubJid.getBareJid(), node, nodeCfg, new PubSubAsyncCallback() {
 					@Override
 					public void onSuccess(Stanza stanza) throws JaxmppException {
-						mutex.notify("created:node:" + nodeName + ":" + name);
+						mutex.notify("created:node:" + node + ":" + name);
 					}
 
 					@Override
@@ -289,14 +295,15 @@ public class TestPubSubRSM extends AbstractJaxmppTest {
 
 					}
 				});
-		mutex.waitFor(10 * 1000, "created:node:" + nodeName + ":" + name);
+		mutex.waitFor(10 * 1000, "created:node:" + node + ":" + name);
 
 		assertTrue(
-				"Creation of node " + nodeName + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
-						" failed", mutex.isItemNotified("created:node:" + nodeName + ":" + name));
+				"Creation of node " + node + " on " + jaxmpp.getSessionObject().getProperty("socket#ServerHost") +
+						" failed", mutex.isItemNotified("created:node:" + node + ":" + name));
 	}
 
-	public void deleteNode(Mutex mutex, Jaxmpp jaxmpp, String nodeName) throws JaxmppException, InterruptedException {
+	public void deleteNode(Mutex mutex, Jaxmpp jaxmpp, String id) throws JaxmppException, InterruptedException {
+		String nodeName = "node-" + id;
 		jaxmpp.getModule(PubSubModule.class).deleteNode(pubsubJid.getBareJid(), nodeName, new PubSubAsyncCallback() {
 			@Override
 			public void onSuccess(Stanza stanza) throws JaxmppException {
