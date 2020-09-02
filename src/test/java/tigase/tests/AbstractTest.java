@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.ISuite;
 import org.testng.ITestContext;
 import org.testng.annotations.*;
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.Connector.StanzaSendingHandler.StanzaSendingEvent;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
