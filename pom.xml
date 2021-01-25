@@ -129,6 +129,7 @@
                         <suiteXmlFile>src/test/resources/testng_external.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_custom.xml</suiteXmlFile>
                         <suiteXmlFile>src/test/resources/testng_jaxmpp.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng_mix.xml</suiteXmlFile>
                     </suiteXmlFiles>
                     <!--<workingDirectory>target/</workingDirectory>-->
                     <properties>
