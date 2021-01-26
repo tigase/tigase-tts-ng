@@ -128,7 +128,7 @@ public class TestBasicConversation
 				.setXMLNS("urn:xmpp:mix:core:1")
 				.setAttribute("channel", channelName);
 
-		Response result = sendRequest(jaxmpp1, (IQ) Stanza.create(request.getElement()));
+		Response result = sendRequest(getJaxmppAdmin(), (IQ) Stanza.create(request.getElement()));
 		AssertJUnit.assertTrue("Cannot create channel!", result instanceof Response.Success);
 	}
 
@@ -522,7 +522,7 @@ public class TestBasicConversation
 				.setXMLNS("urn:xmpp:mix:core:1")
 				.setAttribute("channel", channelName);
 
-		Response result = sendRequest(jaxmpp1, (IQ) Stanza.create(request.getElement()));
+		Response result = sendRequest(getJaxmppAdmin(), (IQ) Stanza.create(request.getElement()));
 		AssertJUnit.assertTrue("Cannot destroy channel!", result instanceof Response.Success);
 	}
 }
