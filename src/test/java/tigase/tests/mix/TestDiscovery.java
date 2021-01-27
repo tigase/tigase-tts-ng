@@ -27,6 +27,7 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementBuilder;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
@@ -308,9 +309,41 @@ public class TestDiscovery
 		for (JID channel : channels) {
 			discoverChannelInformation(con, channel);
 			discoverNodesFromChannel(con, channel);
+			joinChannel(con, channel);
 			determineInformationAboutChannel(con, channel);
 			determineParticipants(con, channel);
 		}
+	}
+
+	private void joinChannel(final ConnectionsProvider.UserDetails con, final JID channelJID)
+			throws JaxmppException, InterruptedException {
+		ElementBuilder joinRequest = ElementBuilder.create("iq")
+				.setAttribute("id", "join-1")
+				.setAttribute("type", "set")
+				.setAttribute("to", con.user.getJid().toString())
+				.child("client-join")
+				.setXMLNS("urn:xmpp:mix:pam:2")
+				.setAttribute("channel", channelJID.toString())
+				.child("join")
+				.setXMLNS("urn:xmpp:mix:core:1")
+				.child("subscribe")
+				.setAttribute("node", "urn:xmpp:mix:nodes:messages")
+				.up()
+				.child("subscribe")
+				.setAttribute("node", "urn:xmpp:mix:nodes:presence")
+				.up()
+				.child("subscribe")
+				.setAttribute("node", "urn:xmpp:mix:nodes:participants")
+				.up()
+				.child("subscribe")
+				.setAttribute("node", "urn:xmpp:mix:nodes:info")
+				.up()
+				.child("nick")
+				.setValue("third witch");
+
+		Response response = sendRequest(con.jaxmpp, (IQ) Stanza.create(joinRequest.getElement()));
+
+		assertTrue(response instanceof Response.Success);
 	}
 
 	private void determineParticipants(final ConnectionsProvider.UserDetails con, final JID channelJID)
@@ -339,9 +372,8 @@ public class TestDiscovery
 
 									  try {
 										  for (Item item : items) {
-											  Element part = item.getPayload()
-													  .getChildrenNS("participant", "urn:xmpp:mix:core:1");
-											  assertNotNull("No participant info in item", part);
+											  Element part = item.getPayload();
+											  assertTrue("No participant info in item", "participant".equals(part.getName()) && "urn:xmpp:mix:core:1".equals(part.getXMLNS()));
 											  assertNotNull("Missing nickname", part.getFirstChild("nick"));
 											  assertNotNull("Missing JID", part.getFirstChild("jid"));
 										  }
@@ -371,7 +403,7 @@ public class TestDiscovery
 										  assertEquals("Too many info items", 1, items.size());
 
 										  final JabberDataElement form = new JabberDataElement(
-												  (Element) items.iterator().next());
+												  items.iterator().next().getPayload());
 
 										  assertEquals("Invalid FORM_TYPE", "urn:xmpp:mix:core:1",
 													   form.getField("FORM_TYPE").getFieldValue());
