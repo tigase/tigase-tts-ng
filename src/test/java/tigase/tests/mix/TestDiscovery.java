@@ -421,8 +421,8 @@ public class TestDiscovery
 
 							assertEquals("It seems there were unknown JID in items", items.size(), nodes.size());
 
-							assertTrue("Missing urn:xmpp:mix:nodes:presence",
-									   nodes.contains("urn:xmpp:mix:nodes:presence"));
+//							assertTrue("Missing urn:xmpp:mix:nodes:presence",
+//									   nodes.contains("urn:xmpp:mix:nodes:presence"));
 							assertTrue("Missing urn:xmpp:mix:nodes:participants",
 									   nodes.contains("urn:xmpp:mix:nodes:participants"));
 							assertTrue("Missing urn:xmpp:mix:nodes:messages",
