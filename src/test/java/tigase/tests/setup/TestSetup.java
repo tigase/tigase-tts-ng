@@ -170,10 +170,10 @@ public class TestSetup {
 		input = form.getInputByName("5_urn:xmpp:csi:0");
 		assertNotNull(input);
 		assertEquals(input.isChecked(), true);
-		input = form.getInputByName("motd");
+		input = form.getInputByName("5_motd");
 		assertNotNull(input);
 		assertEquals(input.isChecked(), false);
-		input = form.getInputByName("jabber:iq:last-marker");
+		input = form.getInputByName("5_jabber:iq:last-marker");
 		assertNotNull(input);
 		assertEquals(input.isChecked(), false);
 		input = form.getInputByName("5_spam-filter");
