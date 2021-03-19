@@ -106,9 +106,6 @@ public class TestSetup {
 		select = form.getSelectByName("3_dbType");
 		assertNotNull(select);
 		assertEquals(select.getDefaultValue(), "derby");
-		input = form.getInputByName("3_advancedConfig");
-		assertNotNull(input);
-		assertEquals(input.isChecked(), false);
 		page = next.click();
 	}
 
