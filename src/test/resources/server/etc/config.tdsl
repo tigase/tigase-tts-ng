@@ -19,6 +19,7 @@ dataSource {
     default () {
         uri = env('JDBC_URI', 'jdbc://server/database')
     }
+    'useCallableMysqlWorkaround' = 'true'
 }
 'account-email-password-resetter' () {}
 authRepository {
