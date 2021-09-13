@@ -77,7 +77,7 @@ public class TestSetup {
 	@Test(dependsOnMethods = {"testAboutSoftwarePage"})
 	public void testACSInfoPage() throws IOException {
 		assertNotNull(page);
-		assertEquals(page.getTitleText(), "Tigase XMPP Server: Setup: Advanced Clustering Strategy information");
+		assertEquals(page.getTitleText(), "Tigase XMPP Server: Setup: License");
 		HtmlForm form = page.getForms().get(0);
 		assertNotNull(form);
 		HtmlInput input = form.getInputByName("2_acsName");
