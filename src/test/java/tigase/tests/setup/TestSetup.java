@@ -203,10 +203,8 @@ public class TestSetup {
 		assertEquals(input.getValueAttribute(), "tigase_pass");
 		input = form.getInputByName("6_rootUser");
 		assertNotNull(input);
-		assertEquals(input.getValueAttribute(), "root");
 		input = form.getInputByName("6_rootPass");
 		assertNotNull(input);
-		assertEquals(input.getValueAttribute(), "root");
 		input = form.getInputByName("6_useSSL");
 		assertNotNull(input);
 		assertEquals(input.isChecked(), false);
