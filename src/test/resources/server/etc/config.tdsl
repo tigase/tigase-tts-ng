@@ -70,7 +70,10 @@ monitor () {
 msgRepository {
     'user-store-limit-enable' = true
 }
-muc () {}
+muc () {
+    'hidden-room-creation-acl' = 'ALL'
+    'public-room-creation-acl' = 'ALL'
+}
 pubsub () {
     'persistent-pep' = true
     'mam-enabled' = true
