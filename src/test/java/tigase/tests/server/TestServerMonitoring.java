@@ -139,7 +139,8 @@ public class TestServerMonitoring
 			if (startMessageCount > 0) {
 				Message msg = inbox.getMessage(startMessageCount);
 				TestLogger.log("Last message subject: " + msg.getSubject());
-				if (msg.getSubject().contains(expected)) {
+				if (msg.getSubject().contains(expected) ||
+						(msg.isMimeType("text/plain")) && msg.getContent().toString().contains(expected)) {
 					TestLogger.log("Found expected pattern!");
 					msg.setFlag(Flags.Flag.DELETED, true);
 					inbox.close(true);
