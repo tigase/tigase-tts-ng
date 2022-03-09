@@ -295,6 +295,8 @@ function run_test() {
         profile_activation="-P`join_by , "${additional_profiles[@]}"`"
     fi
 
+  echo "Runner function JVM options: ${JAVA_TOOL_OPTIONS}"
+
   mvn -version
 	mvn ${profile_activation} clean test ${_server_ip_param} ${_test_case_param} ${_mail_host_param} ${_mail_receiver_pass_param} ${_mail_receiver_user_address_param}
 
