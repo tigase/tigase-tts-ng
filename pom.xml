@@ -102,7 +102,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration combine.children="override" combine.self="override">
                     <!--<redirectTestOutputToFile>true</redirectTestOutputToFile>-->
-                    <argLine>-Xmx2048m -XX:MaxPermSize=256m</argLine>
+                    <argLine>-Xmx4G</argLine>
                     <!--                    <forkMode>once</forkMode>-->
                     <!--                    <reuseForks>false</reuseForks>-->
                     <argLine>-Dfile.encoding=UTF-8</argLine>
