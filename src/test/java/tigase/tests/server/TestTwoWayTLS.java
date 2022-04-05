@@ -212,13 +212,12 @@ public class TestTwoWayTLS
 			throws NoSuchAlgorithmException, CertificateException, SignatureException, NoSuchProviderException,
 				   InvalidKeyException, IOException {
 		KeyPair keyPair = CertificateUtil.createKeyPair(1024, "");
-		X509Certificate c = CertificateUtil.createSelfSignedCertificate("alice@coffeebean.local", "domain", "org",
-																		"org", "tr", "kp", "PL", keyPair);
+		final CertificateEntry certificateEntry = CertificateUtil.createSelfSignedCertificate("alice@coffeebean.local", "domain", "org",
+																		"org", "tr", "kp", "PL", () -> CertificateUtil.createKeyPair(1024,
+																																	 "secret"));
 
-		final CertificateEntry certificateEntry = new CertificateEntry();
-		certificateEntry.setPrivateKey(keyPair.getPrivate());
-		certificateEntry.setCertChain(new Certificate[]{c});
-		log(c.toString());
+
+		log(certificateEntry.toString(true));
 		return certificateEntry;
 
 	}
