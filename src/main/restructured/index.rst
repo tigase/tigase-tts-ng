@@ -4,8 +4,8 @@ Tigase TTS-NG - Version 1.1.0
 ==========================================
 
 .. toctree::
-   :titlesonly:
-   :numbered:
+   :maxdepth: 3
+   :numbered: 3
 
    Overview
    Running_TTS-NG

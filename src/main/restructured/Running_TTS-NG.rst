@@ -26,7 +26,7 @@ For the convenience of running automatic tests it’s recommended to use ``$ ./s
 
 Running it without any parameter will print a help with description of the possible options:
 
-.. code:: bash
+.. code:: text
 
    $ ./scripts/tests-runner.sh
    Can't find settings file: ./scripts/tests-runner-settings.sh using defaults
