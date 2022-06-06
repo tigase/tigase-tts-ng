@@ -15,3 +15,6 @@ files
 tests-runner-settings.sh
 tigasetest
 tests-results
+
+src/main/restructured/_build/
+src/main/restructured/locale/pl/LC_MESSAGES/*.mo

@@ -1,0 +1,206 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2004-2022, Tigase, Inc
+# This file is distributed under the same license as the TigaseDoc package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TigaseDoc \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-21 15:14-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../Running_TTS-NG.rst:2
+msgid "Running TTS-NG"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:5
+msgid "Basics"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:7
+msgid ""
+"As TTS-NG is based on the known framework running the test in the basic "
+"form is simply a matter of executing particular test case class(es). The "
+"easiest way to do that is to use Maven - you can either run all tests"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:13
+msgid "or for particular package/class"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:20
+msgid ""
+"This will run particular test(s) using server details (details about "
+"server configuration are described in `??? <#TTS-NG_Configuration>`__). "
+"It’s possible to override any of the server configuration options from "
+"command line by simply appending ``-D<property_name>=<property_value>`` "
+"to the above options."
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:23
+msgid "Using test-runner script"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:25
+msgid ""
+"For the convenience of running automatic tests it’s recommended to use "
+"``$ ./scripts/tests-runner.sh`` BASH script, which automates whole "
+"process of setting up the server (and database, with correct "
+"configuration and components being enabled), running desired tests as "
+"well as generating summary page."
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:27
+msgid ""
+"Running it without any parameter will print a help with description of "
+"the possible options:"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:56
+msgid ""
+"Majority of those are self-explanatory. By default, the script will only "
+"rebuild all test cases, run them and then generate Summary page and place"
+" the output in the ``files`` subdirectory (if not configured otherwise, "
+"see `Test Runner settings <#test-runner-settings>`__)."
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:58
+msgid ""
+"After ``--all-tests`` and ``--custom <test_case>`` options it’s possible "
+"to specify a space-delimited list of databases for which tests should be "
+"run (they will match database and server IPs defined in `Test Runner "
+"settings <#test-runner-settings>`__)."
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:60
+msgid "By appending following options"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:62
+msgid ""
+"``-dl`` (or full variant: ``--download-latest``) - you will instruct the "
+"script to download latest version of the server and unpack it to ``tmp"
+"/tigase-server`` sub directory"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:64
+msgid ""
+"``-db`` (or full variant: ``--reload-db``) - you will instruct the script"
+" to download prepare the configured database (drop it if it exists and "
+"load current schema)"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:66
+msgid ""
+"``-serv`` (or full variant: ``--start-server``) - you will instruct the "
+"script start the server from the configured location and utilize "
+"recommended settings (located in "
+"``src/test/resources/server/etc/init.properties``)"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:69
+msgid "Test Runner settings"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:71
+msgid ""
+"It’s possible to adjust default Test Runner settings by copying "
+"distribution settings and adjusting it to your needs:"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:77
+msgid "Following configuration options are available:"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:79
+msgid "database configuration:"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:81
+msgid "``db_name`` - name of the database to be created,"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:83
+msgid ""
+"``db_user``, ``db_pass`` - name and password of the basic user, which "
+"will be used by Tigase,"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:85
+msgid ""
+"``db_root_user``, ``db_root_pass`` - name and password of the database "
+"*root* user, which will be used to create all necessary databases and "
+"grant roles."
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:87
+msgid "databases selection"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:89
+msgid ""
+"``DATABASES=(\"derby\" \"mysql\" \"postgresql\" \"sqlserver\" "
+"\"mongodb\")`` - a list of databases which will be tested"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:91
+msgid ""
+"``DATABASES_IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
+"\"sqlserverhost\" \"127.0.0.1\")`` - a list of IPs of the databases which"
+" will be used while testing particular database, i.e. if you have a list "
+"of 3 databases in ``DATABASE`` for each item/index respective item from "
+"this array will be used (so for first item ``derby`` from ``DATABASES``, "
+"first item from ``DATABASES_IPS`` will be used;"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:93
+msgid ""
+"``IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
+"\"127.0.0.1\")`` - a list of IPs of the servers which will be used while "
+"testing particular database, i.e. if you have a list of 3 databases in "
+"``DATABASE`` for each item/index respective item from this array will be "
+"used (so for first item ``derby`` from ``DATABASES``, first item from "
+"``IPS`` will be used as a server IP to which connection will be made."
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:95
+msgid ""
+"``server_timeout=15`` - a timeout in seconds used to delay subsequent "
+"actions/tasks (for example to allow server proper startup)"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:97
+msgid ""
+"``server_dir=\"../tigase-server/server\"`` - server directory which will "
+"be used to reload database (if enabled) and start the server (if enabled)"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:99
+msgid ""
+"``tigase_distribution_url=\"http://build.tigase.org/nightlies/dists/latest"
+"/tigase-server-dist-max.tar.gz\"`` - link which will be used to download "
+"latest release of Tigase XMPP Server"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:101
+msgid ""
+"memory configuration for normal tests: ``MS_MEM=100`` and ``MX_MEM=1000``"
+" (minimum and maximum JVM heap size respectively) and *low memory tests*:"
+" ``SMALL_MS_MEM=10``, ``SMALL_MX_MEM=50`` (minimum and maximum JVM heap "
+"size respectively)"
+msgstr ""
+
+#: ../../Running_TTS-NG.rst:103
+msgid ""
+"``ROOT_DIR=./files/`` - a root directory where tests results will be "
+"stored and where summary page will be placed (in not disabled)"
+msgstr ""
+
