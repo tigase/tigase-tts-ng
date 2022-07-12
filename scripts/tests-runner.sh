@@ -21,7 +21,7 @@
 
 JDBC_URI_derby="jdbc:derby:tigase_test_db;create=true"
 JDBC_URI_mongodb="mongodb://localhost/tigase_test_db"
-JDBC_URI_sqlserver="jdbc:jtds:sqlserver://localhost:1433;databaseName=tigase_test_db;user=tigase_test_user;password=tigase_test_pass;schema=dbo;lastUpdateCount=false"
+JDBC_URI_sqlserver="jdbc:sqlserver://localhost:1433;databaseName=tigase_test_db;user=tigase_test_user;password=tigase_test_pass;schema=dbo;lastUpdateCount=false"
 JDBC_URI_mysql="jdbc:mysql://localhost/tigase_test_db?user=tigase_test_user&password=tigase_test_pass&useSSL=false&useUnicode=true&characterEncoding=UTF-8"
 JDBC_URI_postgresql="jdbc:postgresql://localhost/tigase_test_db?user=tigase_test_user"
 
@@ -217,7 +217,7 @@ for database in ${DATABASES[*]} ; do
     [[ ! -z ${DB} ]] && database=${DB}
     [[ ! -z ${HOST} ]] && DATABASES_IPS[idx]=${HOST}
 
-#    echo "${database}, host: ${DATABASES_IPS[idx]}"
+    echo "${database}, host: ${DATABASES_IPS[idx]}"
 
     run_test ${database} ${server_dir} ${IPS[idx]} ${DATABASES_IPS[idx]} ${tests}
     if [[ ! $? -eq 0 ]] ; then
