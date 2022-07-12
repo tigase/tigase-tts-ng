@@ -39,7 +39,7 @@ function get_database_uri() {
             export JDBC_URI="jdbc:postgresql://${_database_host}/${_db_name}?user=${_db_user}&password=${_db_pass}"
             ;;
         sqlserver)
-            export JDBC_URI="jdbc:sqlserver://${_database_host}:1433;databaseName=${_db_name};user=${_db_user};password=${_db_pass};schema=dbo;lastUpdateCount=false"
+            export JDBC_URI="jdbc:sqlserver://${_database_host}:1433;databaseName=${_db_name};user=${_db_user};password=${_db_pass};schema=dbo;lastUpdateCount=false;encrypt=false"
             ;;
         derby)
             export JDBC_URI="jdbc:derby:"`pwd`"/${_db_name};create=true"
