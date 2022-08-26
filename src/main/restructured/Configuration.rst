@@ -1,5 +1,9 @@
+.. _TTS-NG_Configuration:
+
 TTS-NG Configuration
 =====================
+
+.. _test-configuration:
 
 Test Configuration
 --------------------

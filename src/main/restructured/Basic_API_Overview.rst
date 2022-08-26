@@ -38,21 +38,21 @@ All test cases should extend ``tigase.tests.AbstractTest`` class, which offers a
 
 -  utility and configuration
 
-   -  ``getDomain()`` - returns random domain from the list of available domains from the list of available domains (see `??? <#test-configuration>`__)
+   -  ``getDomain()`` - returns random domain from the list of available domains from the list of available domains (see :ref:`Test Configuration<test-configuration>`)
 
-   -  ``getDomain(int i)`` - returns i-th domain from the list of available domains from the list of available domains (see `??? <#test-configuration>`__)
+   -  ``getDomain(int i)`` - returns i-th domain from the list of available domains from the list of available domains (see :ref:`Test Configuration<test-configuration>`)
 
-   -  ``getInstanceHostname()`` - returns random machine hostname from the list of available hostnames from the list of available domains (see `??? <#test-configuration>`__)
+   -  ``getInstanceHostname()`` - returns random machine hostname from the list of available hostnames from the list of available domains (see :ref:`Test Configuration<test-configuration>`)
 
-   -  ``getInstanceHostnames()`` - returns i-th machine hostname from the list of available hostnames from the list of available domains (see `??? <#test-configuration>`__)
+   -  ``getInstanceHostnames()`` - returns i-th machine hostname from the list of available hostnames from the list of available domains (see :ref:`Test Configuration<test-configuration>`)
 
    -  ``getApiKey()`` - returns configured HTTP-API key
 
    -  ``getHttpPort()`` - returns configured HTTP-API port
 
-   -  ``getBoshURI()`` - returns BOSH URI based on configuration in `??? <#test-configuration>`__
+   -  ``getBoshURI()`` - returns BOSH URI based on configuration in :ref:`Test Configuration<test-configuration>`
 
-   -  ``getWebSocketURI()`` - returns WebSocket URI based on configuration in `??? <#test-configuration>`__
+   -  ``getWebSocketURI()`` - returns WebSocket URI based on configuration in :ref:`Test Configuration<test-configuration>`
 
 In addition ``tigase.tests.utils.AccountBuilder`` class allows:
 
@@ -106,7 +106,7 @@ As an example we will use ``src/test/java/tigase/tests/ExampleJaxmppTest.java`` 
 Adding test to suite
 -------------------------
 
-As described in `??? <#Test-NG_configuration>`__, each test case must be included in Test Suite configuration.
+As described in :ref:`TTS-NF Configuration<TTS-NG_Configuration>`, each test case must be included in Test Suite configuration.
 
 1. create new xml file under ``src/test/resources/``, for example ``example.xml``
 
@@ -124,4 +124,4 @@ As described in `??? <#Test-NG_configuration>`__, each test case must be include
           </test>
       </suite>
 
-3. include created xml file in the Test Suite (see `??? <#Test-NG_configuration>`__)
+3. include created xml file in the Test Suite (see :ref:`TTS-NF Configuration<TTS-NG_Configuration>`)
