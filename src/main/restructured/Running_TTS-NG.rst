@@ -17,7 +17,7 @@ or for particular package/class
    mvn test -Dtest=tigase.tests.util.*
    mvn test -Dtest=tigase.tests.util.RetrieveVersion
 
-This will run particular test(s) using server details (details about server configuration are described in `??? <#TTS-NG_Configuration>`__). It’s possible to override any of the server configuration options from command line by simply appending ``-D<property_name>=<property_value>`` to the above options.
+This will run particular test(s) using server details (details about server configuration are described in :ref:`TTS-NF Configuration<TTS-NG_Configuration>`). It’s possible to override any of the server configuration options from command line by simply appending ``-D<property_name>=<property_value>`` to the above options.
 
 Using test-runner script
 ----------------------------
@@ -53,9 +53,9 @@ Running it without any parameter will print a help with description of the possi
      Other possible parameters are in following order:
      [server-dir] [server-ip]
 
-Majority of those are self-explanatory. By default, the script will only rebuild all test cases, run them and then generate Summary page and place the output in the ``files`` subdirectory (if not configured otherwise, see `Test Runner settings <#test-runner-settings>`__).
+Majority of those are self-explanatory. By default, the script will only rebuild all test cases, run them and then generate Summary page and place the output in the ``files`` subdirectory (if not configured otherwise, see :ref:`Test Runner settings<test-runner-settings>`).
 
-After ``--all-tests`` and ``--custom <test_case>`` options it’s possible to specify a space-delimited list of databases for which tests should be run (they will match database and server IPs defined in `Test Runner settings <#test-runner-settings>`__).
+After ``--all-tests`` and ``--custom <test_case>`` options it’s possible to specify a space-delimited list of databases for which tests should be run (they will match database and server IPs defined in :ref:`Test Runner settings<test-runner-settings>`).
 
 By appending following options
 
@@ -64,6 +64,8 @@ By appending following options
 -  ``-db`` (or full variant: ``--reload-db``) - you will instruct the script to download prepare the configured database (drop it if it exists and load current schema)
 
 -  ``-serv`` (or full variant: ``--start-server``) - you will instruct the script start the server from the configured location and utilize recommended settings (located in ``src/test/resources/server/etc/init.properties``)
+
+.. _test-runner-settings:
 
 Test Runner settings
 ^^^^^^^^^^^^^^^^^^^^^^^^
