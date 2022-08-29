@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TigaseDoc \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-26 03:36-0700\n"
+"POT-Creation-Date: 2022-08-29 01:49-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -103,29 +103,29 @@ msgstr ""
 #: ../../Basic_API_Overview.rst:41
 msgid ""
 "``getDomain()`` - returns random domain from the list of available "
-"domains from the list of available domains (see `??? <#test-"
-"configuration>`__)"
+"domains from the list of available domains (see :ref:`Test Configuration"
+"<test-configuration>`)"
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:43
 msgid ""
 "``getDomain(int i)`` - returns i-th domain from the list of available "
-"domains from the list of available domains (see `??? <#test-"
-"configuration>`__)"
+"domains from the list of available domains (see :ref:`Test Configuration"
+"<test-configuration>`)"
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:45
 msgid ""
 "``getInstanceHostname()`` - returns random machine hostname from the list"
-" of available hostnames from the list of available domains (see `??? "
-"<#test-configuration>`__)"
+" of available hostnames from the list of available domains (see "
+":ref:`Test Configuration<test-configuration>`)"
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:47
 msgid ""
 "``getInstanceHostnames()`` - returns i-th machine hostname from the list "
-"of available hostnames from the list of available domains (see `??? "
-"<#test-configuration>`__)"
+"of available hostnames from the list of available domains (see :ref:`Test"
+" Configuration<test-configuration>`)"
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:49
@@ -138,14 +138,14 @@ msgstr ""
 
 #: ../../Basic_API_Overview.rst:53
 msgid ""
-"``getBoshURI()`` - returns BOSH URI based on configuration in `??? "
-"<#test-configuration>`__"
+"``getBoshURI()`` - returns BOSH URI based on configuration in :ref:`Test "
+"Configuration<test-configuration>`"
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:55
 msgid ""
 "``getWebSocketURI()`` - returns WebSocket URI based on configuration in "
-"`??? <#test-configuration>`__"
+":ref:`Test Configuration<test-configuration>`"
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:57
@@ -229,8 +229,8 @@ msgstr ""
 
 #: ../../Basic_API_Overview.rst:109
 msgid ""
-"As described in `??? <#Test-NG_configuration>`__, each test case must be "
-"included in Test Suite configuration."
+"As described in :ref:`TTS-NF Configuration<TTS-NG_Configuration>`, each "
+"test case must be included in Test Suite configuration."
 msgstr ""
 
 #: ../../Basic_API_Overview.rst:111
@@ -249,19 +249,19 @@ msgstr ""
 
 #: ../../Basic_API_Overview.rst:127
 msgid ""
-"include created xml file in the Test Suite (see `??? <#Test-"
-"NG_configuration>`__)"
+"include created xml file in the Test Suite (see :ref:`TTS-NF "
+"Configuration<TTS-NG_Configuration>`)"
 msgstr ""
 
-#: ../../Configuration.rst:2
+#: ../../Configuration.rst:4
 msgid "TTS-NG Configuration"
 msgstr ""
 
-#: ../../Configuration.rst:5
+#: ../../Configuration.rst:9
 msgid "Test Configuration"
 msgstr ""
 
-#: ../../Configuration.rst:7
+#: ../../Configuration.rst:11
 msgid ""
 "In order to allow connecting to any server that we want to test we need "
 "to provide server details and such details are configured in "
@@ -269,35 +269,35 @@ msgid ""
 "possible to configure:"
 msgstr ""
 
-#: ../../Configuration.rst:9
+#: ../../Configuration.rst:13
 msgid "list of configured domains/VHosts (at least one entry is needed):"
 msgstr ""
 
-#: ../../Configuration.rst:11
+#: ../../Configuration.rst:15
 msgid "``server.domains=localhost``"
 msgstr ""
 
-#: ../../Configuration.rst:13
+#: ../../Configuration.rst:17
 msgid ""
 "define which domain should be used for Two-way-TLS test (such domain must"
 " be configured to use certificate from ``certs/root_ca.pem`` file)"
 msgstr ""
 
-#: ../../Configuration.rst:15
+#: ../../Configuration.rst:19
 msgid "``server.client_auth.domain=a.localhost``"
 msgstr ""
 
-#: ../../Configuration.rst:17
+#: ../../Configuration.rst:21
 msgid ""
 "a list of cluster nodes to which test should connect (for single node "
 "setup leave only one node; at least one entry is needed)"
 msgstr ""
 
-#: ../../Configuration.rst:19
+#: ../../Configuration.rst:23
 msgid "``server.cluster.nodes=localhost``"
 msgstr ""
 
-#: ../../Configuration.rst:21
+#: ../../Configuration.rst:25
 msgid ""
 "details of the admin account (JID will be created from below username and"
 " domain name or, if details are not provided, ``admin`` name will be used"
@@ -305,44 +305,44 @@ msgid ""
 "same as used user-name)"
 msgstr ""
 
-#: ../../Configuration.rst:29
+#: ../../Configuration.rst:33
 msgid "HTTP-API component"
 msgstr ""
 
-#: ../../Configuration.rst:31
+#: ../../Configuration.rst:35
 msgid "API key used to access service:"
 msgstr ""
 
-#: ../../Configuration.rst:33
+#: ../../Configuration.rst:37
 msgid "``test.http.api-key=test-api-key``"
 msgstr ""
 
-#: ../../Configuration.rst:35
+#: ../../Configuration.rst:39
 msgid "port under which service is listening:"
 msgstr ""
 
-#: ../../Configuration.rst:37
+#: ../../Configuration.rst:41
 msgid "``test.http.port=8088``"
 msgstr ""
 
-#: ../../Configuration.rst:39
+#: ../../Configuration.rst:43
 msgid ""
 "it’s possible to override default ports for WebSocket nad BOSH "
 "connections: ``test.ws.port=5290`` and ``test.bosh.port=5280`` "
 "respectively."
 msgstr ""
 
-#: ../../Configuration.rst:41
+#: ../../Configuration.rst:45
 msgid ""
 "Tigase XMPP Server e-mail monitoring configuration can be set-up using "
 "following entries:"
 msgstr ""
 
-#: ../../Configuration.rst:50
+#: ../../Configuration.rst:54
 msgid "Recommended server configuration"
 msgstr ""
 
-#: ../../Configuration.rst:52
+#: ../../Configuration.rst:56
 msgid ""
 "In case of running tests against Tigase XMPP Server, there are a couple "
 "of required configuration changes (that differ from the default server "
@@ -352,17 +352,17 @@ msgid ""
 "used if in doubt."
 msgstr ""
 
-#: ../../Configuration.rst:55
+#: ../../Configuration.rst:59
 msgid "Test-NG configuration"
 msgstr ""
 
-#: ../../Configuration.rst:57
+#: ../../Configuration.rst:61
 msgid ""
 "All tests are grouped in *suites*. All main *suites* are defined in "
 "``pom.xml`` file in ``maven-surefire-plugin`` plugin configuration:"
 msgstr ""
 
-#: ../../Configuration.rst:71
+#: ../../Configuration.rst:75
 msgid ""
 "For the actual semantics of the suite xml files please refer to Test-NG "
 "documentation."
@@ -406,10 +406,10 @@ msgstr ""
 #: ../../Running_TTS-NG.rst:20
 msgid ""
 "This will run particular test(s) using server details (details about "
-"server configuration are described in `??? <#TTS-NG_Configuration>`__). "
-"It’s possible to override any of the server configuration options from "
-"command line by simply appending ``-D<property_name>=<property_value>`` "
-"to the above options."
+"server configuration are described in :ref:`TTS-NF Configuration<TTS-"
+"NG_Configuration>`). It’s possible to override any of the server "
+"configuration options from command line by simply appending "
+"``-D<property_name>=<property_value>`` to the above options."
 msgstr ""
 
 #: ../../Running_TTS-NG.rst:23
@@ -436,15 +436,15 @@ msgid ""
 "Majority of those are self-explanatory. By default, the script will only "
 "rebuild all test cases, run them and then generate Summary page and place"
 " the output in the ``files`` subdirectory (if not configured otherwise, "
-"see `Test Runner settings <#test-runner-settings>`__)."
+"see :ref:`Test Runner settings<test-runner-settings>`)."
 msgstr ""
 
 #: ../../Running_TTS-NG.rst:58
 msgid ""
 "After ``--all-tests`` and ``--custom <test_case>`` options it’s possible "
 "to specify a space-delimited list of databases for which tests should be "
-"run (they will match database and server IPs defined in `Test Runner "
-"settings <#test-runner-settings>`__)."
+"run (they will match database and server IPs defined in :ref:`Test Runner"
+" settings<test-runner-settings>`)."
 msgstr ""
 
 #: ../../Running_TTS-NG.rst:60
@@ -473,52 +473,52 @@ msgid ""
 "``src/test/resources/server/etc/init.properties``)"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:69
+#: ../../Running_TTS-NG.rst:71
 msgid "Test Runner settings"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:71
+#: ../../Running_TTS-NG.rst:73
 msgid ""
 "It’s possible to adjust default Test Runner settings by copying "
 "distribution settings and adjusting it to your needs:"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:77
+#: ../../Running_TTS-NG.rst:79
 msgid "Following configuration options are available:"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:79
+#: ../../Running_TTS-NG.rst:81
 msgid "database configuration:"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:81
+#: ../../Running_TTS-NG.rst:83
 msgid "``db_name`` - name of the database to be created,"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:83
+#: ../../Running_TTS-NG.rst:85
 msgid ""
 "``db_user``, ``db_pass`` - name and password of the basic user, which "
 "will be used by Tigase,"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:85
+#: ../../Running_TTS-NG.rst:87
 msgid ""
 "``db_root_user``, ``db_root_pass`` - name and password of the database "
 "*root* user, which will be used to create all necessary databases and "
 "grant roles."
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:87
+#: ../../Running_TTS-NG.rst:89
 msgid "databases selection"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:89
+#: ../../Running_TTS-NG.rst:91
 msgid ""
 "``DATABASES=(\"derby\" \"mysql\" \"postgresql\" \"sqlserver\" "
 "\"mongodb\")`` - a list of databases which will be tested"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:91
+#: ../../Running_TTS-NG.rst:93
 msgid ""
 "``DATABASES_IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
 "\"sqlserverhost\" \"127.0.0.1\")`` - a list of IPs of the databases which"
@@ -528,7 +528,7 @@ msgid ""
 "first item from ``DATABASES_IPS`` will be used;"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:93
+#: ../../Running_TTS-NG.rst:95
 msgid ""
 "``IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
 "\"127.0.0.1\")`` - a list of IPs of the servers which will be used while "
@@ -538,26 +538,26 @@ msgid ""
 "``IPS`` will be used as a server IP to which connection will be made."
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:95
+#: ../../Running_TTS-NG.rst:97
 msgid ""
 "``server_timeout=15`` - a timeout in seconds used to delay subsequent "
 "actions/tasks (for example to allow server proper startup)"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:97
+#: ../../Running_TTS-NG.rst:99
 msgid ""
 "``server_dir=\"../tigase-server/server\"`` - server directory which will "
 "be used to reload database (if enabled) and start the server (if enabled)"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:99
+#: ../../Running_TTS-NG.rst:101
 msgid ""
 "``tigase_distribution_url=\"http://build.tigase.org/nightlies/dists/latest"
 "/tigase-server-dist-max.tar.gz\"`` - link which will be used to download "
 "latest release of Tigase XMPP Server"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:101
+#: ../../Running_TTS-NG.rst:103
 msgid ""
 "memory configuration for normal tests: ``MS_MEM=100`` and ``MX_MEM=1000``"
 " (minimum and maximum JVM heap size respectively) and *low memory tests*:"
@@ -565,7 +565,7 @@ msgid ""
 "size respectively)"
 msgstr ""
 
-#: ../../Running_TTS-NG.rst:103
+#: ../../Running_TTS-NG.rst:105
 msgid ""
 "``ROOT_DIR=./files/`` - a root directory where tests results will be "
 "stored and where summary page will be placed (in not disabled)"
@@ -574,4 +574,90 @@ msgstr ""
 #: ../../index.rst:4
 msgid "Tigase TTS-NG - Version 1.1.0"
 msgstr ""
+
+#~ msgid ""
+#~ "``getDomain()`` - returns random domain "
+#~ "from the list of available domains "
+#~ "from the list of available domains "
+#~ "(see `??? <#test-configuration>`__)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "``getDomain(int i)`` - returns i-th "
+#~ "domain from the list of available "
+#~ "domains from the list of available "
+#~ "domains (see `??? <#test-configuration>`__)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "``getInstanceHostname()`` - returns random "
+#~ "machine hostname from the list of "
+#~ "available hostnames from the list of "
+#~ "available domains (see `??? <#test-"
+#~ "configuration>`__)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "``getInstanceHostnames()`` - returns i-th "
+#~ "machine hostname from the list of "
+#~ "available hostnames from the list of "
+#~ "available domains (see `??? <#test-"
+#~ "configuration>`__)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "``getBoshURI()`` - returns BOSH URI "
+#~ "based on configuration in `??? "
+#~ "<#test-configuration>`__"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "``getWebSocketURI()`` - returns WebSocket URI"
+#~ " based on configuration in `??? "
+#~ "<#test-configuration>`__"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "As described in `??? <#Test-"
+#~ "NG_configuration>`__, each test case must "
+#~ "be included in Test Suite configuration."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "include created xml file in the "
+#~ "Test Suite (see `??? <#Test-"
+#~ "NG_configuration>`__)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "This will run particular test(s) using"
+#~ " server details (details about server "
+#~ "configuration are described in `??? "
+#~ "<#TTS-NG_Configuration>`__). It’s possible to "
+#~ "override any of the server configuration"
+#~ " options from command line by simply"
+#~ " appending ``-D<property_name>=<property_value>`` to"
+#~ " the above options."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Majority of those are self-explanatory."
+#~ " By default, the script will only "
+#~ "rebuild all test cases, run them "
+#~ "and then generate Summary page and "
+#~ "place the output in the ``files`` "
+#~ "subdirectory (if not configured otherwise, "
+#~ "see `Test Runner settings <#test-"
+#~ "runner-settings>`__)."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "After ``--all-tests`` and ``--custom "
+#~ "<test_case>`` options it’s possible to "
+#~ "specify a space-delimited list of "
+#~ "databases for which tests should be "
+#~ "run (they will match database and "
+#~ "server IPs defined in `Test Runner "
+#~ "settings <#test-runner-settings>`__)."
+#~ msgstr ""
 

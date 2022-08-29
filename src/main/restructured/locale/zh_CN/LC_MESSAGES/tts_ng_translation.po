@@ -5,19 +5,18 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: TigaseDoc\n"
+"Project-Id-Version:  TigaseDoc\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-26 03:36-0700\n"
+"POT-Creation-Date: 2022-08-29 01:49-0700\n"
 "PO-Revision-Date: 2022-08-26 20:42+0000\n"
 "Last-Translator: Qian Luo <qian.luo@tigase.net>\n"
-"Language-Team: Chinese (Simplified) <http://translate.tigase.net/projects/"
-"tigase-tts-ng/tigase-tts-ng-documentation/zh_Hans/>\n"
 "Language: zh_CN\n"
+"Language-Team: Chinese (Simplified) <http://translate.tigase.net/projects"
+"/tigase-tts-ng/tigase-tts-ng-documentation/zh_Hans/>\n"
+"Plural-Forms: nplurals=1; plural=0\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.11.2\n"
 "Generated-By: Babel 2.8.0\n"
 
 #: ../../Basic_API_Overview.rst:2
@@ -52,8 +51,8 @@ msgid ""
 "``getAdminAccount()`` and ``getJaxmppAdmin()`` - get either ``Account`` "
 "object related to admin account or ``Jaxmpp`` object directly."
 msgstr ""
-"``getAdminAccount()`` 和 ``getJaxmppAdmin()`` - 直接获取与管理员帐户相关的 "
-"``Account`` 对象或 ``Jaxmpp`` 对象。"
+"``getAdminAccount()`` 和 ``getJaxmppAdmin()`` - 直接获取与管理员帐户相关的 ``Account`` "
+"对象或 ``Jaxmpp`` 对象。"
 
 #: ../../Basic_API_Overview.rst:15
 msgid "``removeUserAccount(Jaxmpp jaxmpp)`` - delete particular user account"
@@ -108,41 +107,42 @@ msgid "utility and configuration"
 msgstr "实用程序和配置"
 
 #: ../../Basic_API_Overview.rst:41
+#, fuzzy
 msgid ""
 "``getDomain()`` - returns random domain from the list of available "
-"domains from the list of available domains (see `??? <#test-"
-"configuration>`__)"
-msgstr ""
-"``getDomain()`` - 从可用域列表中的可用域列表中返回随机域（参见 :ref:`测试配置"
-"<test-configuration>`）"
+"domains from the list of available domains (see :ref:`Test Configuration"
+"<test-configuration>`)"
+msgstr "``getDomain()`` - 从可用域列表中的可用域列表中返回随机域（参见 :ref:`测试配置<test-configuration>`）"
 
 #: ../../Basic_API_Overview.rst:43
+#, fuzzy
 msgid ""
 "``getDomain(int i)`` - returns i-th domain from the list of available "
-"domains from the list of available domains (see `??? <#test-"
-"configuration>`__)"
+"domains from the list of available domains (see :ref:`Test Configuration"
+"<test-configuration>`)"
 msgstr ""
-"``getDomain(int i)`` - 从可用域列表中的可用域列表中返回第 i 个域 (参见 "
-":ref:`测试配置<test-configuration>`)"
-
-#: ../../Basic_API_Overview.rst:45
-msgid ""
-"``getInstanceHostname()`` - returns random machine hostname from the list"
-" of available hostnames from the list of available domains (see `??? "
-"<#test-configuration>`__)"
-msgstr ""
-"``getInstanceHostname()`` - "
-"从可用域列表中的可用主机名列表中返回随机机器主机名 (see :ref:`测试配置<test-"
+"``getDomain(int i)`` - 从可用域列表中的可用域列表中返回第 i 个域 (参见 :ref:`测试配置<test-"
 "configuration>`)"
 
+#: ../../Basic_API_Overview.rst:45
+#, fuzzy
+msgid ""
+"``getInstanceHostname()`` - returns random machine hostname from the list"
+" of available hostnames from the list of available domains (see "
+":ref:`Test Configuration<test-configuration>`)"
+msgstr ""
+"``getInstanceHostname()`` - 从可用域列表中的可用主机名列表中返回随机机器主机名 (see :ref:`测试配置"
+"<test-configuration>`)"
+
 #: ../../Basic_API_Overview.rst:47
+#, fuzzy
 msgid ""
 "``getInstanceHostnames()`` - returns i-th machine hostname from the list "
-"of available hostnames from the list of available domains (see `??? "
-"<#test-configuration>`__)"
+"of available hostnames from the list of available domains (see :ref:`Test"
+" Configuration<test-configuration>`)"
 msgstr ""
-"``getInstanceHostnames()`` - 从可用域列表中的可用主机名列表中返回第 i "
-"个机器主机名 (参见 :ref:`测试配置<test-configuration>`)"
+"``getInstanceHostnames()`` - 从可用域列表中的可用主机名列表中返回第 i 个机器主机名 (参见 :ref:`测试配置"
+"<test-configuration>`)"
 
 #: ../../Basic_API_Overview.rst:49
 msgid "``getApiKey()`` - returns configured HTTP-API key"
@@ -153,19 +153,20 @@ msgid "``getHttpPort()`` - returns configured HTTP-API port"
 msgstr "``getHttpPort()`` - 返回配置的 HTTP-API 端口"
 
 #: ../../Basic_API_Overview.rst:53
+#, fuzzy
 msgid ""
-"``getBoshURI()`` - returns BOSH URI based on configuration in `??? "
-"<#test-configuration>`__"
-msgstr "``getBoshURI()`` - 根据 :ref:`测试配置<test-configuration>` 中的配置返回 "
-"BOSH URI"
+"``getBoshURI()`` - returns BOSH URI based on configuration in :ref:`Test "
+"Configuration<test-configuration>`"
+msgstr "``getBoshURI()`` - 根据 :ref:`测试配置<test-configuration>` 中的配置返回 BOSH URI"
 
 #: ../../Basic_API_Overview.rst:55
+#, fuzzy
 msgid ""
 "``getWebSocketURI()`` - returns WebSocket URI based on configuration in "
-"`??? <#test-configuration>`__"
+":ref:`Test Configuration<test-configuration>`"
 msgstr ""
-"``getWebSocketURI()`` - 根据 :ref:`测试配置<test-configuration>` "
-"中的配置返回 WebSocket URI"
+"``getWebSocketURI()`` - 根据 :ref:`测试配置<test-configuration>` 中的配置返回 "
+"WebSocket URI"
 
 #: ../../Basic_API_Overview.rst:57
 msgid "In addition ``tigase.tests.utils.AccountBuilder`` class allows:"
@@ -210,11 +211,10 @@ msgid ""
 "Mutex about it \\* ``isItemNotified(String item)`` - can be used to "
 "verify whether particular item was received (useful in asserts)"
 msgstr ""
-"为了测试延迟响应， ``tigase.tests.Mutex`` 可以使用： \\* ``waitFor(long "
-"timeout, String...​ items)`` - 指示 Mutex 在配置的 ``timeout`` "
-"期间等待特定项目 \\* ``notify(String…​ itemName)`` - 在收到所需的响应时通知 "
-"Mutex \\* ``isItemNotified(String item)`` - "
-"可用于验证是否收到特定项目（在断言中很有用)"
+"为了测试延迟响应， ``tigase.tests.Mutex`` 可以使用： \\* ``waitFor(long timeout, "
+"String...​ items)`` - 指示 Mutex 在配置的 ``timeout`` 期间等待特定项目 \\* "
+"``notify(String…​ itemName)`` - 在收到所需的响应时通知 Mutex \\* "
+"``isItemNotified(String item)`` - 可用于验证是否收到特定项目（在断言中很有用)"
 
 #: ../../Basic_API_Overview.rst:74
 msgid "Creating simple test"
@@ -254,11 +254,11 @@ msgid "Adding test to suite"
 msgstr "将测试添加到套件"
 
 #: ../../Basic_API_Overview.rst:109
+#, fuzzy
 msgid ""
-"As described in `??? <#Test-NG_configuration>`__, each test case must be "
-"included in Test Suite configuration."
-msgstr "正如 :ref:`Test-NG配置<Test-NG_configuration>` "
-"中描述，每个测试用例都必须包含在测试套件配置中。"
+"As described in :ref:`TTS-NF Configuration<TTS-NG_Configuration>`, each "
+"test case must be included in Test Suite configuration."
+msgstr "正如 :ref:`Test-NG配置<Test-NG_configuration>` 中描述，每个测试用例都必须包含在测试套件配置中。"
 
 #: ../../Basic_API_Overview.rst:111
 msgid ""
@@ -272,97 +272,92 @@ msgid ""
 "(specifying name) with a list of tests (specifying names), and each test "
 "can contain multiple classes (for details please refer to TestNG "
 "documentation)"
-msgstr ""
-"在创建的xml文件中添加新的测试用例如下，创建新的Suite（指定名称），并带有一个"
-"测试列表（指定名称），每个测试可以包含多个类（详细请参考TestNG文档）"
+msgstr "在创建的xml文件中添加新的测试用例如下，创建新的Suite（指定名称），并带有一个测试列表（指定名称），每个测试可以包含多个类（详细请参考TestNG文档）"
 
 #: ../../Basic_API_Overview.rst:127
+#, fuzzy
 msgid ""
-"include created xml file in the Test Suite (see `??? <#Test-"
-"NG_configuration>`__)"
-msgstr "在测试套件中包含创建的 xml 文件（参加 :ref:`Test-NG配置<Test-"
-"NG_configuration>`）"
+"include created xml file in the Test Suite (see :ref:`TTS-NF "
+"Configuration<TTS-NG_Configuration>`)"
+msgstr "在测试套件中包含创建的 xml 文件（参加 :ref:`Test-NG配置<Test-NG_configuration>`）"
 
-#: ../../Configuration.rst:2
+#: ../../Configuration.rst:4
 msgid "TTS-NG Configuration"
 msgstr "TTS-NG 配置"
 
-#: ../../Configuration.rst:5
+#: ../../Configuration.rst:9
 msgid "Test Configuration"
 msgstr "测试配置"
 
-#: ../../Configuration.rst:7
+#: ../../Configuration.rst:11
 msgid ""
 "In order to allow connecting to any server that we want to test we need "
 "to provide server details and such details are configured in "
 "``src/test/resources/server.properties`` file. Through that file it’s "
 "possible to configure:"
 msgstr ""
-"为了允许连接到我们想要测试的任何服务器，我们需要提供服务器详细信息，"
-"这些详细信息在 ``src/test/resources/server.properties`` "
-"文件中配置。通过该文件可以配置："
+"为了允许连接到我们想要测试的任何服务器，我们需要提供服务器详细信息，这些详细信息在 "
+"``src/test/resources/server.properties`` 文件中配置。通过该文件可以配置："
 
-#: ../../Configuration.rst:9
+#: ../../Configuration.rst:13
 msgid "list of configured domains/VHosts (at least one entry is needed):"
 msgstr "已配置域/虚拟主机列表（至少需要一个条目）："
 
-#: ../../Configuration.rst:11
+#: ../../Configuration.rst:15
 msgid "``server.domains=localhost``"
 msgstr "``server.domains=localhost``"
 
-#: ../../Configuration.rst:13
+#: ../../Configuration.rst:17
 msgid ""
 "define which domain should be used for Two-way-TLS test (such domain must"
 " be configured to use certificate from ``certs/root_ca.pem`` file)"
-msgstr "定义应该使用哪个域进行双向 TLS 测试（必须将此类域配置为使用来自 ``certs/"
-"root_ca.pem`` 文件的证书）"
+msgstr "定义应该使用哪个域进行双向 TLS 测试（必须将此类域配置为使用来自 ``certs/root_ca.pem`` 文件的证书）"
 
-#: ../../Configuration.rst:15
+#: ../../Configuration.rst:19
 msgid "``server.client_auth.domain=a.localhost``"
 msgstr "``server.client_auth.domain=a.localhost``"
 
-#: ../../Configuration.rst:17
+#: ../../Configuration.rst:21
 msgid ""
 "a list of cluster nodes to which test should connect (for single node "
 "setup leave only one node; at least one entry is needed)"
 msgstr "测试应连接的集群节点列表（对于单节点设置，只保留一个节点；至少需要一个条目）"
 
-#: ../../Configuration.rst:19
+#: ../../Configuration.rst:23
 msgid "``server.cluster.nodes=localhost``"
 msgstr "``server.cluster.nodes=localhost``"
 
-#: ../../Configuration.rst:21
+#: ../../Configuration.rst:25
 msgid ""
 "details of the admin account (JID will be created from below username and"
 " domain name or, if details are not provided, ``admin`` name will be used"
 " with first item from ``server.domains``; default password will be the "
 "same as used user-name)"
 msgstr ""
-"管理员帐户的详细信息（JID "
-"将从下面的用户名和域名创建，或者，如果未提供详细信息，则 ``admin`` "
+"管理员帐户的详细信息（JID 将从下面的用户名和域名创建，或者，如果未提供详细信息，则 ``admin`` "
 "名称将与``server.domains`` 中的第一项一起使用；默认密码将与使用的用户名相同）"
 
-#: ../../Configuration.rst:29
+#: ../../Configuration.rst:33
 msgid "HTTP-API component"
 msgstr "HTTP-API 组件"
 
-#: ../../Configuration.rst:31
+#: ../../Configuration.rst:35
 msgid "API key used to access service:"
 msgstr "用于访问服务的 API 密钥："
 
-#: ../../Configuration.rst:33
+#: ../../Configuration.rst:37
 msgid "``test.http.api-key=test-api-key``"
 msgstr "``test.http.api-key=test-api-key``"
 
-#: ../../Configuration.rst:35
+#: ../../Configuration.rst:39
 msgid "port under which service is listening:"
 msgstr "服务正在侦听的端口："
 
-#: ../../Configuration.rst:37
+#: ../../Configuration.rst:41
 msgid "``test.http.port=8088``"
 msgstr "``test.http.port=8088``"
 
-#: ../../Configuration.rst:39
+#: ../../Configuration.rst:43
 msgid ""
 "it’s possible to override default ports for WebSocket nad BOSH "
 "connections: ``test.ws.port=5290`` and ``test.bosh.port=5280`` "
@@ -371,17 +366,17 @@ msgstr ""
 "可以覆盖 WebSocket 和 BOSH 连接的默认端口：分别为 ``test.ws.port=5290`` 和 "
 "``test.bosh.port=5280``。"
 
-#: ../../Configuration.rst:41
+#: ../../Configuration.rst:45
 msgid ""
 "Tigase XMPP Server e-mail monitoring configuration can be set-up using "
 "following entries:"
 msgstr "Tigase XMPP 服务器电子邮件监控配置可以使用以下条目进行设置："
 
-#: ../../Configuration.rst:50
+#: ../../Configuration.rst:54
 msgid "Recommended server configuration"
 msgstr "推荐的服务器配置"
 
-#: ../../Configuration.rst:52
+#: ../../Configuration.rst:56
 msgid ""
 "In case of running tests against Tigase XMPP Server, there are a couple "
 "of required configuration changes (that differ from the default server "
@@ -390,23 +385,22 @@ msgid ""
 "Please refer to the documentation for the explanation of the settings "
 "used if in doubt."
 msgstr ""
-"如果针对 Tigase XMPP 服务器运行测试，则需要进行一些配置更改（与默认服务器配置"
-"不同）。推荐的服务器配置位于以下位置：``src/test/resources/server/etc/init."
-"properties``。如有疑问，请参阅文档以了解所用设置的说明。"
+"如果针对 Tigase XMPP "
+"服务器运行测试，则需要进行一些配置更改（与默认服务器配置不同）。推荐的服务器配置位于以下位置：``src/test/resources/server/etc/init.properties``。如有疑问，请参阅文档以了解所用设置的说明。"
 
-#: ../../Configuration.rst:55
+#: ../../Configuration.rst:59
 msgid "Test-NG configuration"
 msgstr "Test-NG 配置"
 
-#: ../../Configuration.rst:57
+#: ../../Configuration.rst:61
 msgid ""
 "All tests are grouped in *suites*. All main *suites* are defined in "
 "``pom.xml`` file in ``maven-surefire-plugin`` plugin configuration:"
 msgstr ""
-"所有测试都分组在 *suites* 中。所有主要的 *suites* 都在 ``maven-surefire-"
-"plugin`` 插件配置中的 ``pom.xml`` 文件中定义："
+"所有测试都分组在 *suites* 中。所有主要的 *suites* 都在 ``maven-surefire-plugin`` 插件配置中的 "
+"``pom.xml`` 文件中定义："
 
-#: ../../Configuration.rst:71
+#: ../../Configuration.rst:75
 msgid ""
 "For the actual semantics of the suite xml files please refer to Test-NG "
 "documentation."
@@ -427,8 +421,8 @@ msgid ""
 " junit, serving as a basic test framework) and JaXMPP library (to provide"
 " client-side functionality)"
 msgstr ""
-"TTS-NG 是 Tigase TestSuite 的下一代版本，旨在运行自动化功能测试。它基于 "
-"TestNG 框架（类似于 junit，作为基本测试框架）和 JaXMPP 库（提供客户端功能）"
+"TTS-NG 是 Tigase TestSuite 的下一代版本，旨在运行自动化功能测试。它基于 TestNG 框架（类似于 "
+"junit，作为基本测试框架）和 JaXMPP 库（提供客户端功能）"
 
 #: ../../Running_TTS-NG.rst:2
 msgid "Running TTS-NG"
@@ -443,24 +437,23 @@ msgid ""
 "As TTS-NG is based on the known framework running the test in the basic "
 "form is simply a matter of executing particular test case class(es). The "
 "easiest way to do that is to use Maven - you can either run all tests"
-msgstr "由于 TTS-NG 基于已知框架，以基本形式运行测试只是执行特定测试用例类的问题。"
-"最简单的方法是使用 Maven - 您可以运行所有测试"
+msgstr "由于 TTS-NG 基于已知框架，以基本形式运行测试只是执行特定测试用例类的问题。最简单的方法是使用 Maven - 您可以运行所有测试"
 
 #: ../../Running_TTS-NG.rst:13
 msgid "or for particular package/class"
 msgstr "或特定的包/类"
 
 #: ../../Running_TTS-NG.rst:20
+#, fuzzy
 msgid ""
 "This will run particular test(s) using server details (details about "
-"server configuration are described in `??? <#TTS-NG_Configuration>`__). "
-"It’s possible to override any of the server configuration options from "
-"command line by simply appending ``-D<property_name>=<property_value>`` "
-"to the above options."
+"server configuration are described in :ref:`TTS-NF Configuration<TTS-"
+"NG_Configuration>`). It’s possible to override any of the server "
+"configuration options from command line by simply appending "
+"``-D<property_name>=<property_value>`` to the above options."
 msgstr ""
-"这将使用服务器详细信息运行特定测试（有关服务器配置的详细信息在 :ref:`TTS-"
-"NG配置<TTS-NG_Configuration>` 中描述）。只需将 "
-"``-D<property_name>=<property_value>`` "
+"这将使用服务器详细信息运行特定测试（有关服务器配置的详细信息在 :ref:`TTS-NG配置<TTS-NG_Configuration>` "
+"中描述）。只需将 ``-D<property_name>=<property_value>`` "
 "附加到上述选项，就可以从命令行覆盖任何服务器配置选项。"
 
 #: ../../Running_TTS-NG.rst:23
@@ -475,9 +468,8 @@ msgid ""
 "configuration and components being enabled), running desired tests as "
 "well as generating summary page."
 msgstr ""
-"为了方便运行自动测试，建议使用 ``$ ./scripts/tests-runner.sh`` BASH 脚本，它"
-"可以自动设置服务器（和数据库，启用正确的配置和组件）的整个过程，运行所需的测"
-"试以及生成摘要页面。"
+"为了方便运行自动测试，建议使用 ``$ ./scripts/tests-runner.sh`` BASH "
+"脚本，它可以自动设置服务器（和数据库，启用正确的配置和组件）的整个过程，运行所需的测试以及生成摘要页面。"
 
 #: ../../Running_TTS-NG.rst:27
 msgid ""
@@ -486,27 +478,27 @@ msgid ""
 msgstr "在没有任何参数的情况下运行它会打印一个包含可能选项描述的帮助："
 
 #: ../../Running_TTS-NG.rst:56
+#, fuzzy
 msgid ""
 "Majority of those are self-explanatory. By default, the script will only "
 "rebuild all test cases, run them and then generate Summary page and place"
 " the output in the ``files`` subdirectory (if not configured otherwise, "
-"see `Test Runner settings <#test-runner-settings>`__)."
+"see :ref:`Test Runner settings<test-runner-settings>`)."
 msgstr ""
-"其中大部分是不言自明的。默认情况下，脚本只会重建所有测试用例，"
-"运行它们然后生成摘要页面并将输出放在 ``files`` 子目录中（如果没有另外配置，"
-"请参阅 :ref:`测试运行器设置<test-runner-settings>`)。"
+"其中大部分是不言自明的。默认情况下，脚本只会重建所有测试用例，运行它们然后生成摘要页面并将输出放在 ``files`` "
+"子目录中（如果没有另外配置，请参阅 :ref:`测试运行器设置<test-runner-settings>`)。"
 
 #: ../../Running_TTS-NG.rst:58
+#, fuzzy
 msgid ""
 "After ``--all-tests`` and ``--custom <test_case>`` options it’s possible "
 "to specify a space-delimited list of databases for which tests should be "
-"run (they will match database and server IPs defined in `Test Runner "
-"settings <#test-runner-settings>`__)."
+"run (they will match database and server IPs defined in :ref:`Test Runner"
+" settings<test-runner-settings>`)."
 msgstr ""
 "在 ``--all-tests`` 和 ``--custom <test_case>`` "
-"选项之后，可以指定一个以空格分隔的数据库列表，这些数据库应该运行测试（"
-"它们将匹配在 :ref:`测试运行器设置<test-runner-settings>` "
-"中定义的数据库和服务器 IP)。"
+"选项之后，可以指定一个以空格分隔的数据库列表，这些数据库应该运行测试（它们将匹配在 :ref:`测试运行器设置<test-runner-"
+"settings>` 中定义的数据库和服务器 IP)。"
 
 #: ../../Running_TTS-NG.rst:60
 msgid "By appending following options"
@@ -518,16 +510,15 @@ msgid ""
 "script to download latest version of the server and unpack it to ``tmp"
 "/tigase-server`` sub directory"
 msgstr ""
-"``-dl`` （或完整变体： ``--download-latest`` ） - "
-"你将指示脚本下载最新版本的服务器并将其解压缩到 ``tmp/tigase-server`` 子目录"
+"``-dl`` （或完整变体： ``--download-latest`` ） - 你将指示脚本下载最新版本的服务器并将其解压缩到 ``tmp"
+"/tigase-server`` 子目录"
 
 #: ../../Running_TTS-NG.rst:64
 msgid ""
 "``-db`` (or full variant: ``--reload-db``) - you will instruct the script"
 " to download prepare the configured database (drop it if it exists and "
 "load current schema)"
-msgstr "``-db`` （或完整变体：``--reload-"
-"db``）-您将指示脚本下载准备配置的数据库（如果存在则删除它并加载当前架构）"
+msgstr "``-db`` （或完整变体：``--reload-db``）-您将指示脚本下载准备配置的数据库（如果存在则删除它并加载当前架构）"
 
 #: ../../Running_TTS-NG.rst:66
 msgid ""
@@ -536,39 +527,38 @@ msgid ""
 "recommended settings (located in "
 "``src/test/resources/server/etc/init.properties``)"
 msgstr ""
-"``-serv`` （或完整变体：``--start-"
-"server``）-您将指示脚本从配置的位置启动服务器并使用推荐的设置（位于 ``src/"
-"test/resources/server /etc/init.properties``）"
+"``-serv`` （或完整变体：``--start-server``）-您将指示脚本从配置的位置启动服务器并使用推荐的设置（位于 "
+"``src/test/resources/server /etc/init.properties``）"
 
-#: ../../Running_TTS-NG.rst:69
+#: ../../Running_TTS-NG.rst:71
 msgid "Test Runner settings"
 msgstr "测试运行器设置"
 
-#: ../../Running_TTS-NG.rst:71
+#: ../../Running_TTS-NG.rst:73
 msgid ""
 "It’s possible to adjust default Test Runner settings by copying "
 "distribution settings and adjusting it to your needs:"
 msgstr "可以通过复制分发设置并根据您的需要进行调整来调整默认的 Test Runner 设置："
 
-#: ../../Running_TTS-NG.rst:77
+#: ../../Running_TTS-NG.rst:79
 msgid "Following configuration options are available:"
 msgstr "以下配置选项可用："
 
-#: ../../Running_TTS-NG.rst:79
+#: ../../Running_TTS-NG.rst:81
 msgid "database configuration:"
 msgstr "数据库配置："
 
-#: ../../Running_TTS-NG.rst:81
+#: ../../Running_TTS-NG.rst:83
 msgid "``db_name`` - name of the database to be created,"
 msgstr "``db_name`` - 要创建的数据库的名称，"
 
-#: ../../Running_TTS-NG.rst:83
+#: ../../Running_TTS-NG.rst:85
 msgid ""
 "``db_user``, ``db_pass`` - name and password of the basic user, which "
 "will be used by Tigase,"
 msgstr "``db_user``, ``db_pass`` - Tigase 将使用的基本用户的名称和密码，"
 
-#: ../../Running_TTS-NG.rst:85
+#: ../../Running_TTS-NG.rst:87
 msgid ""
 "``db_root_user``, ``db_root_pass`` - name and password of the database "
 "*root* user, which will be used to create all necessary databases and "
@@ -577,19 +567,19 @@ msgstr ""
 "``db_root_user``, ``db_root_pass`` - 数据库 *root* "
 "用户的名称和密码，其将用于创建所有必要的数据库并授予角色。"
 
-#: ../../Running_TTS-NG.rst:87
+#: ../../Running_TTS-NG.rst:89
 msgid "databases selection"
 msgstr "数据库选择"
 
-#: ../../Running_TTS-NG.rst:89
+#: ../../Running_TTS-NG.rst:91
 msgid ""
 "``DATABASES=(\"derby\" \"mysql\" \"postgresql\" \"sqlserver\" "
 "\"mongodb\")`` - a list of databases which will be tested"
 msgstr ""
-"``DATABASES=(\"derby\" \"mysql\" \"postgresql\" \"sqlserver\" \"mongodb\")`` "
-"- 将被测试的数据库列表"
+"``DATABASES=(\"derby\" \"mysql\" \"postgresql\" \"sqlserver\" "
+"\"mongodb\")`` - 将被测试的数据库列表"
 
-#: ../../Running_TTS-NG.rst:91
+#: ../../Running_TTS-NG.rst:93
 msgid ""
 "``DATABASES_IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
 "\"sqlserverhost\" \"127.0.0.1\")`` - a list of IPs of the databases which"
@@ -598,13 +588,12 @@ msgid ""
 "this array will be used (so for first item ``derby`` from ``DATABASES``, "
 "first item from ``DATABASES_IPS`` will be used;"
 msgstr ""
-"``DATABASES_IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"sqlserverhost\" "
-"\"127.0.0.1\")`` - 测试特定数据库时将使用的数据库 IP 列表，即如果您在 "
-"``DATABASE`` 中有一个包含 3 "
-"个数据库的列表，每个项目/索引将使用该数组中的相应项目（因此对于 ``DATABASES``"
-" 中的第一项 ``derby``，将使用 ``DATABASES_IPS`` 中的第一项）；"
+"``DATABASES_IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
+"\"sqlserverhost\" \"127.0.0.1\")`` - 测试特定数据库时将使用的数据库 IP 列表，即如果您在 "
+"``DATABASE`` 中有一个包含 3 个数据库的列表，每个项目/索引将使用该数组中的相应项目（因此对于 ``DATABASES`` "
+"中的第一项 ``derby``，将使用 ``DATABASES_IPS`` 中的第一项）；"
 
-#: ../../Running_TTS-NG.rst:93
+#: ../../Running_TTS-NG.rst:95
 msgid ""
 "``IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
 "\"127.0.0.1\")`` - a list of IPs of the servers which will be used while "
@@ -613,20 +602,18 @@ msgid ""
 "used (so for first item ``derby`` from ``DATABASES``, first item from "
 "``IPS`` will be used as a server IP to which connection will be made."
 msgstr ""
-"``IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\""
-")`` - 测试特定数据库时将使用的服务器 IP 列表，也就是说，如果您在 ``DATABASE``"
-" 中为每个项目/索引有 3 个数据库的列表，则将使用该数组中的相应项目（因此对于 "
-"``DATABASES`` 中的第一个项目 ``derby``，来自 ``IPS`` "
-"的第一项将用作将建立连接的服务器 IP）。"
+"``IPS=(\"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" \"127.0.0.1\" "
+"\"127.0.0.1\")`` - 测试特定数据库时将使用的服务器 IP 列表，也就是说，如果您在 ``DATABASE`` "
+"中为每个项目/索引有 3 个数据库的列表，则将使用该数组中的相应项目（因此对于 ``DATABASES`` 中的第一个项目 "
+"``derby``，来自 ``IPS`` 的第一项将用作将建立连接的服务器 IP）。"
 
-#: ../../Running_TTS-NG.rst:95
+#: ../../Running_TTS-NG.rst:97
 msgid ""
 "``server_timeout=15`` - a timeout in seconds used to delay subsequent "
 "actions/tasks (for example to allow server proper startup)"
-msgstr "``server_timeout=15`` - "
-"以秒为单位的超时，用于延迟后续操作/任务（例如，允许服务器正确启动）"
+msgstr "``server_timeout=15`` - 以秒为单位的超时，用于延迟后续操作/任务（例如，允许服务器正确启动）"
 
-#: ../../Running_TTS-NG.rst:97
+#: ../../Running_TTS-NG.rst:99
 msgid ""
 "``server_dir=\"../tigase-server/server\"`` - server directory which will "
 "be used to reload database (if enabled) and start the server (if enabled)"
@@ -634,27 +621,26 @@ msgstr ""
 "``server_dir=\"../tigase-server/server\"`` - "
 "服务器目录将用于重新加载数据库（如果启用）和启动服务器（如果启用）"
 
-#: ../../Running_TTS-NG.rst:99
+#: ../../Running_TTS-NG.rst:101
 msgid ""
 "``tigase_distribution_url=\"http://build.tigase.org/nightlies/dists/latest"
 "/tigase-server-dist-max.tar.gz\"`` - link which will be used to download "
 "latest release of Tigase XMPP Server"
 msgstr ""
-"``tigase_distribution_url=\"http://build.tigase.org/nightlies/dists/latest/"
-"tigase-server-dist-max.tar.gz\"`` - 用于下载 Tigase XMPP 服务器最新版本的链接"
+"``tigase_distribution_url=\"http://build.tigase.org/nightlies/dists/latest"
+"/tigase-server-dist-max.tar.gz\"`` - 用于下载 Tigase XMPP 服务器最新版本的链接"
 
-#: ../../Running_TTS-NG.rst:101
+#: ../../Running_TTS-NG.rst:103
 msgid ""
 "memory configuration for normal tests: ``MS_MEM=100`` and ``MX_MEM=1000``"
 " (minimum and maximum JVM heap size respectively) and *low memory tests*:"
 " ``SMALL_MS_MEM=10``, ``SMALL_MX_MEM=50`` (minimum and maximum JVM heap "
 "size respectively)"
 msgstr ""
-"正常测试的内存配置：``MS_MEM=100`` 和 ``MX_MEM=1000`` "
-"（分别是最小和最大JVM堆容量）和 *低内存测试*：``SMALL_MS_MEM=10``, "
-"``SMALL_MX_MEM=50`` （分别是最小和最大 JVM 堆容量）"
+"正常测试的内存配置：``MS_MEM=100`` 和 ``MX_MEM=1000`` （分别是最小和最大JVM堆容量）和 "
+"*低内存测试*：``SMALL_MS_MEM=10``, ``SMALL_MX_MEM=50`` （分别是最小和最大 JVM 堆容量）"
 
-#: ../../Running_TTS-NG.rst:103
+#: ../../Running_TTS-NG.rst:105
 msgid ""
 "``ROOT_DIR=./files/`` - a root directory where tests results will be "
 "stored and where summary page will be placed (in not disabled)"
@@ -663,3 +649,4 @@ msgstr "``ROOT_DIR=./files/`` - 将存储测试结果和放置摘要页面的根
 #: ../../index.rst:4
 msgid "Tigase TTS-NG - Version 1.1.0"
 msgstr "Tigase TTS-NG - 版本 1.1.0"
+
