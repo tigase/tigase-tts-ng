@@ -5,18 +5,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  TigaseDoc\n"
+"Project-Id-Version: TigaseDoc\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-08-29 01:49-0700\n"
-"PO-Revision-Date: 2022-08-26 20:42+0000\n"
+"PO-Revision-Date: 2022-09-01 18:28+0000\n"
 "Last-Translator: Qian Luo <qian.luo@tigase.net>\n"
+"Language-Team: Chinese (Simplified) <http://translate.tigase.net/projects/"
+"tigase-tts-ng/tigase-tts-ng-documentation/zh_Hans/>\n"
 "Language: zh_CN\n"
-"Language-Team: Chinese (Simplified) <http://translate.tigase.net/projects"
-"/tigase-tts-ng/tigase-tts-ng-documentation/zh_Hans/>\n"
-"Plural-Forms: nplurals=1; plural=0\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.11.2\n"
 "Generated-By: Babel 2.8.0\n"
 
 #: ../../Basic_API_Overview.rst:2
@@ -107,42 +108,41 @@ msgid "utility and configuration"
 msgstr "实用程序和配置"
 
 #: ../../Basic_API_Overview.rst:41
-#, fuzzy
 msgid ""
 "``getDomain()`` - returns random domain from the list of available "
 "domains from the list of available domains (see :ref:`Test Configuration"
 "<test-configuration>`)"
-msgstr "``getDomain()`` - 从可用域列表中的可用域列表中返回随机域（参见 :ref:`测试配置<test-configuration>`）"
+msgstr ""
+"``getDomain()`` - 从可用域列表中的可用域列表中返回随机域（参见 :ref:`测试配置"
+"<test-configuration>`）"
 
 #: ../../Basic_API_Overview.rst:43
-#, fuzzy
 msgid ""
 "``getDomain(int i)`` - returns i-th domain from the list of available "
 "domains from the list of available domains (see :ref:`Test Configuration"
 "<test-configuration>`)"
 msgstr ""
-"``getDomain(int i)`` - 从可用域列表中的可用域列表中返回第 i 个域 (参见 :ref:`测试配置<test-"
-"configuration>`)"
+"``getDomain(int i)`` - 从可用域列表中的可用域列表中返回第 i 个域 (参见 "
+":ref:`测试配置<test-configuration>`)"
 
 #: ../../Basic_API_Overview.rst:45
-#, fuzzy
 msgid ""
 "``getInstanceHostname()`` - returns random machine hostname from the list"
 " of available hostnames from the list of available domains (see "
 ":ref:`Test Configuration<test-configuration>`)"
 msgstr ""
-"``getInstanceHostname()`` - 从可用域列表中的可用主机名列表中返回随机机器主机名 (see :ref:`测试配置"
-"<test-configuration>`)"
+"``getInstanceHostname()`` - "
+"从可用域列表中的可用主机名列表中返回随机机器主机名 (see :ref:`测试配置<test-"
+"configuration>`)"
 
 #: ../../Basic_API_Overview.rst:47
-#, fuzzy
 msgid ""
 "``getInstanceHostnames()`` - returns i-th machine hostname from the list "
 "of available hostnames from the list of available domains (see :ref:`Test"
 " Configuration<test-configuration>`)"
 msgstr ""
-"``getInstanceHostnames()`` - 从可用域列表中的可用主机名列表中返回第 i 个机器主机名 (参见 :ref:`测试配置"
-"<test-configuration>`)"
+"``getInstanceHostnames()`` - 从可用域列表中的可用主机名列表中返回第 i "
+"个机器主机名 (参见 :ref:`测试配置<test-configuration>`)"
 
 #: ../../Basic_API_Overview.rst:49
 msgid "``getApiKey()`` - returns configured HTTP-API key"
@@ -153,20 +153,19 @@ msgid "``getHttpPort()`` - returns configured HTTP-API port"
 msgstr "``getHttpPort()`` - 返回配置的 HTTP-API 端口"
 
 #: ../../Basic_API_Overview.rst:53
-#, fuzzy
 msgid ""
 "``getBoshURI()`` - returns BOSH URI based on configuration in :ref:`Test "
 "Configuration<test-configuration>`"
-msgstr "``getBoshURI()`` - 根据 :ref:`测试配置<test-configuration>` 中的配置返回 BOSH URI"
+msgstr "``getBoshURI()`` - 根据 :ref:`测试配置<test-configuration>` 中的配置返回 "
+"BOSH URI"
 
 #: ../../Basic_API_Overview.rst:55
-#, fuzzy
 msgid ""
 "``getWebSocketURI()`` - returns WebSocket URI based on configuration in "
 ":ref:`Test Configuration<test-configuration>`"
 msgstr ""
-"``getWebSocketURI()`` - 根据 :ref:`测试配置<test-configuration>` 中的配置返回 "
-"WebSocket URI"
+"``getWebSocketURI()`` - 根据 :ref:`测试配置<test-configuration>` "
+"中的配置返回 WebSocket URI"
 
 #: ../../Basic_API_Overview.rst:57
 msgid "In addition ``tigase.tests.utils.AccountBuilder`` class allows:"
@@ -254,11 +253,11 @@ msgid "Adding test to suite"
 msgstr "将测试添加到套件"
 
 #: ../../Basic_API_Overview.rst:109
-#, fuzzy
 msgid ""
 "As described in :ref:`TTS-NF Configuration<TTS-NG_Configuration>`, each "
 "test case must be included in Test Suite configuration."
-msgstr "正如 :ref:`Test-NG配置<Test-NG_configuration>` 中描述，每个测试用例都必须包含在测试套件配置中。"
+msgstr "正如 :ref:`Test-NG配置<Test-NG_configuration>` "
+"中描述，每个测试用例都必须包含在测试套件配置中。"
 
 #: ../../Basic_API_Overview.rst:111
 msgid ""
@@ -275,11 +274,11 @@ msgid ""
 msgstr "在创建的xml文件中添加新的测试用例如下，创建新的Suite（指定名称），并带有一个测试列表（指定名称），每个测试可以包含多个类（详细请参考TestNG文档）"
 
 #: ../../Basic_API_Overview.rst:127
-#, fuzzy
 msgid ""
 "include created xml file in the Test Suite (see :ref:`TTS-NF "
 "Configuration<TTS-NG_Configuration>`)"
-msgstr "在测试套件中包含创建的 xml 文件（参加 :ref:`Test-NG配置<Test-NG_configuration>`）"
+msgstr "在测试套件中包含创建的 xml 文件（参加 :ref:`Test-NG配置<Test-"
+"NG_configuration>`）"
 
 #: ../../Configuration.rst:4
 msgid "TTS-NG Configuration"
@@ -444,7 +443,6 @@ msgid "or for particular package/class"
 msgstr "或特定的包/类"
 
 #: ../../Running_TTS-NG.rst:20
-#, fuzzy
 msgid ""
 "This will run particular test(s) using server details (details about "
 "server configuration are described in :ref:`TTS-NF Configuration<TTS-"
@@ -452,8 +450,9 @@ msgid ""
 "configuration options from command line by simply appending "
 "``-D<property_name>=<property_value>`` to the above options."
 msgstr ""
-"这将使用服务器详细信息运行特定测试（有关服务器配置的详细信息在 :ref:`TTS-NG配置<TTS-NG_Configuration>` "
-"中描述）。只需将 ``-D<property_name>=<property_value>`` "
+"这将使用服务器详细信息运行特定测试（有关服务器配置的详细信息在 :ref:`TTS-"
+"NG配置<TTS-NG_Configuration>` 中描述）。只需将 "
+"``-D<property_name>=<property_value>`` "
 "附加到上述选项，就可以从命令行覆盖任何服务器配置选项。"
 
 #: ../../Running_TTS-NG.rst:23
@@ -478,18 +477,17 @@ msgid ""
 msgstr "在没有任何参数的情况下运行它会打印一个包含可能选项描述的帮助："
 
 #: ../../Running_TTS-NG.rst:56
-#, fuzzy
 msgid ""
 "Majority of those are self-explanatory. By default, the script will only "
 "rebuild all test cases, run them and then generate Summary page and place"
 " the output in the ``files`` subdirectory (if not configured otherwise, "
 "see :ref:`Test Runner settings<test-runner-settings>`)."
 msgstr ""
-"其中大部分是不言自明的。默认情况下，脚本只会重建所有测试用例，运行它们然后生成摘要页面并将输出放在 ``files`` "
-"子目录中（如果没有另外配置，请参阅 :ref:`测试运行器设置<test-runner-settings>`)。"
+"其中大部分是不言自明的。默认情况下，脚本只会重建所有测试用例，"
+"运行它们然后生成摘要页面并将输出放在 ``files`` 子目录中（如果没有另外配置，"
+"请参阅 :ref:`测试运行器设置<test-runner-settings>`)。"
 
 #: ../../Running_TTS-NG.rst:58
-#, fuzzy
 msgid ""
 "After ``--all-tests`` and ``--custom <test_case>`` options it’s possible "
 "to specify a space-delimited list of databases for which tests should be "
@@ -497,8 +495,9 @@ msgid ""
 " settings<test-runner-settings>`)."
 msgstr ""
 "在 ``--all-tests`` 和 ``--custom <test_case>`` "
-"选项之后，可以指定一个以空格分隔的数据库列表，这些数据库应该运行测试（它们将匹配在 :ref:`测试运行器设置<test-runner-"
-"settings>` 中定义的数据库和服务器 IP)。"
+"选项之后，可以指定一个以空格分隔的数据库列表，这些数据库应该运行测试（"
+"它们将匹配在 :ref:`测试运行器设置<test-runner-settings>` "
+"中定义的数据库和服务器 IP)。"
 
 #: ../../Running_TTS-NG.rst:60
 msgid "By appending following options"
@@ -649,4 +648,3 @@ msgstr "``ROOT_DIR=./files/`` - 将存储测试结果和放置摘要页面的根
 #: ../../index.rst:4
 msgid "Tigase TTS-NG - Version 1.1.0"
 msgstr "Tigase TTS-NG - 版本 1.1.0"
-
