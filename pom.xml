@@ -160,7 +160,7 @@
         <dependency>
             <groupId>tigase</groupId>
             <artifactId>jaxmpp-all</artifactId>
-            <version>3.5.0</version>
+            <version>3.6.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>tigase</groupId>
