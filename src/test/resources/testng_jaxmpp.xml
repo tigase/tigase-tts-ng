@@ -1,4 +1,4 @@
-<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+ <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 
 <suite name="JaXMPP Tests" verbose="1">
     <test name="Testing reconnections - #4266">
@@ -9,6 +9,11 @@
     <test name="Testing state of JaXMPP instance after issues with connection or authentication timeout - #4378">
         <classes>
             <class name="tigase.tests.jaxmpp.TestHandlingOfConnectionIssues"/>
+        </classes>
+    </test>
+    <test name="Testing XEP-0198: Stream Management - resumption">
+        <classes>
+            <class name="tigase.tests.jaxmpp.TestSMResumption"></class>
         </classes>
     </test>
 </suite>
