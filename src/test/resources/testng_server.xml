@@ -15,6 +15,7 @@
     <test name="SASL authentication">
         <classes>
             <class name="tigase.tests.server.TestSaslAuthentication"/>
+            <class name="tigase.tests.Sasl2Bind2Test"/>
         </classes>
     </test>
     <test name="Brute Force Prevention">
