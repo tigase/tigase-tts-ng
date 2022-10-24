@@ -19,9 +19,12 @@ package tigase.tests
 
 import tigase.TestLogger
 import tigase.halcyon.core.Halcyon
+import tigase.halcyon.core.builder.createHalcyon
+import tigase.halcyon.core.builder.socketConnector
 import tigase.halcyon.core.connector.ReceivedXMLElementEvent
 import tigase.halcyon.core.connector.SentXMLElementEvent
 import tigase.halcyon.core.xmpp.BareJID
+import tigase.jaxmpp.core.client.xmpp.modules.auth.ClientSaslException
 import java.util.*
 
 fun loadProperties(): Properties {
@@ -44,16 +47,74 @@ fun loadProperties(): Properties {
 	return props
 }
 
-fun createHalcyonAdmin(): Halcyon = Halcyon().also { h ->
-	loadProperties().let { props ->
+fun createHalcyonAdmin(): Halcyon {
+	val props = loadProperties()
+	return createHalcyon {
 		val domains = props.getProperty("server.domains")
 			.split(",")
-		h.configure {
-			val d = props.getProperty("test.admin.domain", domains[0])
-			userJID = BareJID(props.getProperty("test.admin.username") ?: "admin", d)
-			password = props.getProperty("test.admin.password") ?: props.getProperty("test.admin.username") ?: "admin"
+		account {
+			userJID = BareJID(
+				props.getProperty("test.admin.username") ?: "admin", props.getProperty("test.admin.domain", domains[0])
+			)
+			password { props.getProperty("test.admin.password") ?: props.getProperty("test.admin.username") ?: "admin" }
 		}
+		socketConnector {
+			hostname = props.getProperty("server.cluster.nodes")
+				.split(",")
+				.random()
+		}
+	}.also { h ->
+		h.eventBus.register<ReceivedXMLElementEvent>(ReceivedXMLElementEvent.TYPE) { TestLogger.log(" >> ${it.element.getAsString()}") }
+		h.eventBus.register<SentXMLElementEvent>(SentXMLElementEvent.TYPE) { TestLogger.log(" << ${it.element.getAsString()}") }
 	}
-	h.eventBus.register<ReceivedXMLElementEvent>(ReceivedXMLElementEvent.TYPE) { TestLogger.log(" >> ${it.element.getAsString()}") }
-	h.eventBus.register<SentXMLElementEvent>(SentXMLElementEvent.TYPE) { TestLogger.log(" << ${it.element.getAsString()}") }
+}
+
+fun ensureAdminAccountExists() {
+	val props = loadProperties()
+	val domains = props.getProperty("server.domains")
+		.split(",")
+	val user =
+		BareJID(props.getProperty("test.admin.username") ?: "admin", props.getProperty("test.admin.domain", domains[0]))
+	val password = props.getProperty("test.admin.password") ?: props.getProperty("test.admin.username") ?: "admin"
+	val host = props.getProperty("server.cluster.nodes")
+		.split(",")
+		.random()
+	val halcyon = createHalcyon {
+		account {
+			userJID = user
+			password { password }
+		}
+		socketConnector {
+			hostname = host
+		}
+	}.also { h ->
+		h.eventBus.register<ReceivedXMLElementEvent>(ReceivedXMLElementEvent.TYPE) { TestLogger.log(" >> ${it.element.getAsString()}") }
+		h.eventBus.register<SentXMLElementEvent>(SentXMLElementEvent.TYPE) { TestLogger.log(" << ${it.element.getAsString()}") }
+	}
+
+	try {
+		halcyon.connectAndWait()
+	} catch (e: ClientSaslException) {
+		val crh=createHalcyon {
+			createAccount {
+				domain = user.domain
+				registrationHandler { form ->
+					form.getFieldByVar("username")!!.fieldValue = user.localpart
+					form.getFieldByVar("password")!!.fieldValue = password
+					form.getFieldByVar("email")!!.fieldValue = user.toString()
+					form
+				}
+			}
+			socketConnector {
+				hostname = host
+			}
+		}.also { h ->
+			h.eventBus.register<ReceivedXMLElementEvent>(ReceivedXMLElementEvent.TYPE) { TestLogger.log(" >> ${it.element.getAsString()}") }
+			h.eventBus.register<SentXMLElementEvent>(SentXMLElementEvent.TYPE) { TestLogger.log(" << ${it.element.getAsString()}") }
+		}
+		crh.connectAndWait()
+		crh.waitForAllResponses()
+		crh.disconnect()
+	}
+
 }
