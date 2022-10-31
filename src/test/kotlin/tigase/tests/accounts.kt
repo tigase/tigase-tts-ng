@@ -26,6 +26,7 @@ import tigase.halcyon.core.connector.SentXMLElementEvent
 import tigase.halcyon.core.xmpp.BareJID
 import tigase.jaxmpp.core.client.xmpp.modules.auth.ClientSaslException
 import java.util.*
+import tigase.halcyon.core.configuration.JIDPasswordAuthConfigBuilder
 
 fun loadProperties(): Properties {
 	val props = Properties()
@@ -52,7 +53,7 @@ fun createHalcyonAdmin(): Halcyon {
 	return createHalcyon {
 		val domains = props.getProperty("server.domains")
 			.split(",")
-		account {
+		auth {
 			userJID = BareJID(
 				props.getProperty("test.admin.username") ?: "admin", props.getProperty("test.admin.domain", domains[0])
 			)
@@ -80,7 +81,7 @@ fun ensureAdminAccountExists() {
 		.split(",")
 		.random()
 	val halcyon = createHalcyon {
-		account {
+		auth {
 			userJID = user
 			password { password }
 		}
@@ -96,7 +97,7 @@ fun ensureAdminAccountExists() {
 		halcyon.connectAndWait()
 	} catch (e: ClientSaslException) {
 		val crh=createHalcyon {
-			createAccount {
+			register {
 				domain = user.domain
 				registrationHandler { form ->
 					form.getFieldByVar("username")!!.fieldValue = user.localpart
