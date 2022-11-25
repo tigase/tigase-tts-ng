@@ -96,6 +96,8 @@ pubsub () {
         away () {}
     }
     'urn:xmpp:mam:1' () {}
+    'urn:xmpp:bind:0' () {}
+    'urn:xmpp:sasl:2' () {}
 }
 'cm-traffic-throttling' = 'xmpp:0:0:disc,bin:0:0:disc'
 upload () {
