@@ -18,6 +18,8 @@
 package tigase.tests.server;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import tigase.TestLogger;
 import tigase.jaxmpp.core.client.AsyncCallback;
@@ -34,7 +36,12 @@ import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 
 import javax.mail.*;
+import javax.mail.event.MessageCountAdapter;
+import javax.mail.event.MessageCountEvent;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class TestServerMonitoring
 		extends AbstractTest {
@@ -42,10 +49,48 @@ public class TestServerMonitoring
 	@Test(groups = {"Monitor"}, description = "Tigase XMPP server monitoring")
 	public void testTigaseXMPPServerMonitoring() throws Exception {
 		final Mutex mutex = new Mutex();
+		final String msgUID = "test-" + nextRnd();
+
+		purgeEmailMailboxes();
+
+		Properties mailProps = new Properties();
+
+		mailProps.put("mail.imaps.ssl.checkserveridentity", "false");
+		mailProps.put("mail.imaps.ssl.trust", "*");
+
+		Session session = Session.getDefaultInstance(mailProps, null);
+
+		EmailAccount emailAccount = getGlobalServerReceiverAccount();
+		Store store = session.getStore("imaps");
+		store.connect(emailAccount.server, emailAccount.imapsServerPort, emailAccount.username,
+		              emailAccount.password);
+
+		Folder inbox = store.getFolder("inbox");
+		inbox.open(Folder.READ_WRITE);
+
+		inbox.addMessageCountListener(new MessageCountAdapter() {
+			@Override
+			public void messagesAdded(MessageCountEvent e) {
+//				super.messagesAdded(e);
+
+				Arrays.stream(e.getMessages()).filter(msg -> {
+					try {
+						TestLogger.log("Received message: " + msg.getSubject() + ", " + msg.getContent());
+						return msg.getSubject().contains(msgUID) ||
+								(msg.isMimeType("text/plain")) && msg.getContent().toString().contains(msgUID);
+					} catch (MessagingException | IOException ex) {
+						throw new RuntimeException(ex);
+					}
+				}).findAny().ifPresent(message -> {
+					mutex.notify("mail:" + msgUID);
+				});
+
+			}
+		});
+
 		Jaxmpp jaxmpp = getJaxmppAdmin();
 
 		AdHocCommansModule adHoc = jaxmpp.getModule(AdHocCommansModule.class);
-		final String msgUID = "test-" + nextRnd();
 
 		final JID monitorTaskJID = JID.jidInstance("monitor",
 												   ResourceBinderModule.getBindedJID(jaxmpp.getSessionObject())
@@ -79,8 +124,14 @@ public class TestServerMonitoring
 		mutex.waitFor(60 * 1000, "enableTaskConfig");
 		Assert.assertTrue(mutex.isItemNotified("enableTaskConfig:success"), "SampleTask is not enabled!");
 
-		boolean foundPattern = read(msgUID, 1000 * 240);
-		Assert.assertTrue(foundPattern, "Mail with notification not received");
+		TimeUnit.SECONDS.sleep(5);
+
+		TestLogger.log("Msg count: " + inbox.getMessageCount());
+
+		mutex.waitFor(TimeUnit.SECONDS.toMillis(10), "mail:" + msgUID);
+		Assert.assertTrue(mutex.isItemNotified("mail:" + msgUID), "Mail with notification not received");
+		inbox.close(true);
+		store.close();
 
 		disableTaskConfig(monitorTaskJID, adHoc);
 	}
@@ -115,73 +166,75 @@ public class TestServerMonitoring
 
 	}
 
-	private boolean read(final String expected, final long timeout) throws Exception {
-		TestLogger.log("Waiting for e-mail...");
-		Properties props = new Properties();
-
-		props.put("mail.imaps.ssl.checkserveridentity", "false");
-		props.put("mail.imaps.ssl.trust", "*");
-		try {
-
-			Session session = Session.getDefaultInstance(props, null);
-
-			EmailAccount emailAccount = getGlobalServerReceiverAccount();
-			Store store = session.getStore("imaps");
-			store.connect(emailAccount.server, emailAccount.imapsServerPort, emailAccount.username,
-						  emailAccount.password);
-
-			Folder inbox = store.getFolder("inbox");
-			inbox.open(Folder.READ_WRITE);
-
-			TestLogger.log("Mail receiver connected (I hope so!)");
-
-			final int startMessageCount = inbox.getMessageCount();
-			if (startMessageCount > 0) {
-				Message msg = inbox.getMessage(startMessageCount);
-				TestLogger.log("Last message subject: " + msg.getSubject());
-				if (msg.getSubject().contains(expected) ||
-						(msg.isMimeType("text/plain")) && msg.getContent().toString().contains(expected)) {
-					TestLogger.log("Found expected pattern!");
-					msg.setFlag(Flags.Flag.DELETED, true);
-					inbox.close(true);
-					store.close();
-					return true;
-				}
-			}
-
-			final long startTime = System.currentTimeMillis();
-
-			boolean result = false;
-			int lastCheckedMessagesCount = startMessageCount;
-			while (true) {
-				int messageCount = inbox.getMessageCount();
-				if (messageCount != lastCheckedMessagesCount) {
-					lastCheckedMessagesCount = messageCount;
-					Message msg = inbox.getMessage(messageCount);
-					TestLogger.log("New message subject: " + msg.getSubject());
-					if (msg.getSubject().contains(expected)) {
-						TestLogger.log("Found expected pattern!");
-						result = true;
-						msg.setFlag(Flags.Flag.DELETED, true);
-						break;
-					}
-				}
-				Thread.sleep(1000);
-
-				final long now = System.currentTimeMillis();
-				if (startTime + timeout < now) {
-					TestLogger.log("No expected mail! We can't wait longer!");
-					break;
-				}
-			}
-
-			inbox.close(true);
-			store.close();
-			return result;
-		} catch (Exception e) {
-			TestLogger.log(e.getMessage());
-			return false;
-		}
-	}
-
+//	private boolean read(final String expected, final long timeout) throws Exception {
+//		TestLogger.log("Waiting for e-mail...: " + expected);
+//		Properties props = new Properties();
+//
+//		props.put("mail.imaps.ssl.checkserveridentity", "false");
+//		props.put("mail.imaps.ssl.trust", "*");
+//		try {
+//
+//			Session session = Session.getDefaultInstance(props, null);
+//
+//			EmailAccount emailAccount = getGlobalServerReceiverAccount();
+//			Store store = session.getStore("imaps");
+//			store.connect(emailAccount.server, emailAccount.imapsServerPort, emailAccount.username,
+//						  emailAccount.password);
+//
+//			Folder inbox = store.getFolder("inbox");
+//			inbox.open(Folder.READ_WRITE);
+//
+//			TestLogger.log("Mail receiver connected (I hope so!), message count: " + inbox.getMessageCount());
+//
+//			final int startMessageCount = inbox.getMessageCount();
+//			if (startMessageCount > 0) {
+//				Message msg = inbox.getMessage(startMessageCount);
+//				TestLogger.log("Last message subject: " + msg.getSubject());
+//				TestLogger.log("Last message content: " + msg.getContent());
+//				if (msg.getSubject().contains(expected) ||
+//						(msg.isMimeType("text/plain")) && msg.getContent().toString().contains(expected)) {
+//					TestLogger.log("Found expected pattern!");
+//					msg.setFlag(Flags.Flag.DELETED, true);
+//					return true;
+//				} else {
+//					TestLogger.log("Expected pattern + '" + expected + "' NOT found!");
+//				}
+//			}
+//
+//			final long startTime = System.currentTimeMillis();
+//
+//			boolean result = false;
+//			int lastCheckedMessagesCount = startMessageCount;
+//			while (true) {
+//				int messageCount = inbox.getMessageCount();
+//				if (messageCount != lastCheckedMessagesCount) {
+//					lastCheckedMessagesCount = messageCount;
+//					Message msg = inbox.getMessage(messageCount);
+//					TestLogger.log("New message subject: " + msg.getSubject());
+//					if (msg.getSubject().contains(expected)) {
+//						TestLogger.log("Found expected pattern!");
+//						result = true;
+//						msg.setFlag(Flags.Flag.DELETED, true);
+//						break;
+//					} else {
+//						TestLogger.log("Expected pattern + '" + expected + "' NOT found!");
+//					}
+//				}
+//				TimeUnit.SECONDS.sleep(2);
+//
+//				final long now = System.currentTimeMillis();
+//				if (startTime + timeout < now) {
+//					TestLogger.log("No expected mail! We can't wait longer!");
+//					break;
+//				}
+//			}
+//
+//			inbox.close(true);
+//			store.close();
+//			return result;
+//		} catch (Exception e) {
+//			TestLogger.log(e.getMessage());
+//			return false;
+//		}
+//	}
 }

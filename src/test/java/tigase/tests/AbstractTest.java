@@ -17,6 +17,7 @@
  */
 package tigase.tests;
 
+import com.icegreen.greenmail.store.FolderException;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -308,6 +309,15 @@ public abstract class AbstractTest {
 		greenMail.setUser(email, username, password);
 		userToEmailMap.put(email, emailAccount);
 		return emailAccount;
+	}
+
+	public void purgeEmailMailboxes() {
+		try {
+			greenMail.purgeEmailFromAllMailboxes();
+		} catch (FolderException e) {
+			log("Purging mailboxes failed");
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static final Map<String, EmailAccount> userToEmailMap = new ConcurrentHashMap<>();
