@@ -43,7 +43,7 @@ public class TestLogger {
 		if (params != null) {
 			s = java.text.MessageFormat.format(s, params);
 		}
-		System.out.println(date + s);
+//		System.out.println(date + s);
 		Reporter.log(date + s + (newline ? "\n" : ""));
 //		Reporter.log( escapeHtml4( s ) );
 	}
