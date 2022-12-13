@@ -27,6 +27,8 @@ import tigase.halcyon.core.xmpp.BareJID
 import tigase.jaxmpp.core.client.xmpp.modules.auth.ClientSaslException
 import java.util.*
 import tigase.halcyon.core.configuration.JIDPasswordAuthConfigBuilder
+import tigase.halcyon.core.connector.ConnectionErrorEvent
+import tigase.halcyon.core.connector.ConnectorStateChangeEvent
 
 fun loadProperties(): Properties {
 	val props = Properties()
@@ -65,6 +67,8 @@ fun createHalcyonAdmin(): Halcyon {
 				.random()
 		}
 	}.also { h ->
+        h.eventBus.register<ConnectorStateChangeEvent>(ConnectorStateChangeEvent.TYPE) { TestLogger.log(" >> ${it.toString()} : from ${it.oldState} to ${it.newState}" ) }
+        h.eventBus.register<ConnectionErrorEvent>(ConnectionErrorEvent.TYPE) { TestLogger.log(" >> ${it.toString()}") }
 		h.eventBus.register<ReceivedXMLElementEvent>(ReceivedXMLElementEvent.TYPE) { TestLogger.log(" >> ${it.element.getAsString()}") }
 		h.eventBus.register<SentXMLElementEvent>(SentXMLElementEvent.TYPE) { TestLogger.log(" << ${it.element.getAsString()}") }
 	}
