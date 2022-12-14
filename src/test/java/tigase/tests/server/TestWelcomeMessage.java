@@ -65,7 +65,7 @@ public class TestWelcomeMessage
 	public void setUp() throws JaxmppException, InterruptedException {
 		adminJaxmpp = getAdminAccount().createJaxmpp().setConnected(true).build();
 		sessManJid = JID.jidInstance("sess-man", getDomain());
-		body = "Wecome to " + UUID.randomUUID() + "\nThis message was set at: " + new Date();
+		body = "Welcome to " + UUID.randomUUID() + "\nThis message was set at: " + new Date();
 	}
 
 	@Test
@@ -144,6 +144,11 @@ public class TestWelcomeMessage
 		assertTrue(mutex.isItemNotified("adhoc:response:" + SET_MESSAGE + ":submit:success"));
 	}
 
+	/**
+	 * Tests delivery of the Welcome Message, it should be delivered only once (upon registration)
+	 * @throws JaxmppException
+	 * @throws InterruptedException
+	 */
 	@Test(dependsOnMethods = {"testSetWelcomeMessage"})
 	public void testWelcomeMessageDelivery() throws JaxmppException, InterruptedException {
 		if (!configured) {
@@ -165,6 +170,8 @@ public class TestWelcomeMessage
 		};
 
 		userJaxmpp = createAccount().build().createJaxmpp().setConfigurator(jaxmpp -> {
+			// we are testing welcome-message delivery, we should not care about stream-management concurrency issues
+			jaxmpp.getModulesManager().unregister(new StreamManagementModule(jaxmpp));
 			jaxmpp.getEventBus().addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, handler);
 			return jaxmpp;
 		}).setConnected(true).build();
@@ -174,7 +181,6 @@ public class TestWelcomeMessage
 
 		Thread.sleep(500);
 
-		userJaxmpp.getModule(StreamManagementModule.class).sendAck();
 		userJaxmpp.disconnect(true);
 
 		counter.incrementAndGet();
