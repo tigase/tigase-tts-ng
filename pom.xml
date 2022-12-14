@@ -318,7 +318,7 @@
         <dependency>
             <groupId>tigase.halcyon</groupId>
             <artifactId>halcyon-core-jvm</artifactId>
-            <version>0.0.20-SNAPSHOT</version>
+            <version>0.0.22-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
