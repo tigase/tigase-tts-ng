@@ -97,12 +97,7 @@ function usage() {
 	echo "  --skip-rebuild-tts|-srb      Turns off rebuilding TTS-NG and only runs already build tests"
 	echo "  --skip-summary-page-get|-sp  Turns off automatic generation of Summary Page"
 	echo "  --skip-overriding-config     Turns off copying default TTS-NG test config"
-
-
-
-# use ready-package or build the server
-
-
+	echo "  --test-setup                 Enables Web Setup test mode on server and launch setup tests "
 	echo "  --download-latest|-dl        Turns on downloading latest Tigase Server release"
 	echo "  --reload-db|-db              Turns on reloading database"
 	echo "  --start-server|-serv         Turns on starting Tigase server"
