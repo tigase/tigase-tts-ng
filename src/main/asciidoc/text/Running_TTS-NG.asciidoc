@@ -88,6 +88,6 @@ Following configuration options are available:
 ** `IPS=("127.0.0.1" "127.0.0.1" "127.0.0.1" "127.0.0.1" "127.0.0.1")` - a list of IPs of the servers which will be used while testing particular database, i.e. if you have a list of 3 databases in `DATABASE` for each item/index respective item from this array will be used (so for first item `derby` from `DATABASES`, first item from `IPS` will be used as a server IP to which connection will be made.
 * `server_timeout=15` - a timeout in seconds used to delay subsequent actions/tasks (for example to allow server proper startup)
 * `server_dir="../tigase-server/server"` - server directory which will be used to reload database (if enabled) and start the server (if enabled)
-* `tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"` - link which will be used to download latest release of Tigase XMPP Server
+* `tigase_distribution_url="https://build.tigase.net/nightlies/dists/latest/tigase-server-dist-enterprise.tar.gz"` - link which will be used to download latest release of Tigase XMPP Server
 * memory configuration for normal tests: `MS_MEM=100` and `MX_MEM=1000` (minimum and maximum JVM heap size respectively) and _low memory tests_: `SMALL_MS_MEM=10`, `SMALL_MX_MEM=50` (minimum and maximum JVM heap size respectively)
 * `ROOT_DIR=./files/` - a root directory where tests results will be stored and where summary page will be placed (in not disabled)

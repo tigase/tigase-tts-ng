@@ -43,7 +43,7 @@ MAIL_SENDER_PASS="bt555ml"
 MAIL_RECEIVER_ADDRESS="receiver@localhost"
 MAIL_RECEIVER_PASS="bt55ml"
 
-tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"
+tigase_distribution_url="https://build.tigase.net/nightlies/dists/latest/tigase-server-dist-enterprise.tar.gz"
 
 MS_MEM=100
 MX_MEM=1000

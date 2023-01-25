@@ -98,7 +98,7 @@ Following configuration options are available:
 
 -  ``server_dir="../tigase-server/server"`` - server directory which will be used to reload database (if enabled) and start the server (if enabled)
 
--  ``tigase_distribution_url="http://build.tigase.org/nightlies/dists/latest/tigase-server-dist-max.tar.gz"`` - link which will be used to download latest release of Tigase XMPP Server
+-  ``tigase_distribution_url="https://build.tigase.net/nightlies/dists/latest/tigase-server-dist-enterprise.tar.gz"`` - link which will be used to download latest release of Tigase XMPP Server
 
 -  memory configuration for normal tests: ``MS_MEM=100`` and ``MX_MEM=1000`` (minimum and maximum JVM heap size respectively) and *low memory tests*: ``SMALL_MS_MEM=10``, ``SMALL_MX_MEM=50`` (minimum and maximum JVM heap size respectively)
 
