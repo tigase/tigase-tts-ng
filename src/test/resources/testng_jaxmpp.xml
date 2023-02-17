@@ -16,4 +16,9 @@
             <class name="tigase.tests.jaxmpp.TestSMResumption"></class>
         </classes>
     </test>
+    <test name="Testing message redelivery of messages not delivered to the client">
+        <classes>
+            <class name="tigase.tests.jaxmpp.TestMessageRedelivery"></class>
+        </classes>
+    </test>
 </suite>
