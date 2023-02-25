@@ -21,25 +21,21 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.eventbus.Event;
 import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementBuilder;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.*;
 import tigase.jaxmpp.core.client.xmpp.utils.RSM;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.AbstractTest;
@@ -48,33 +44,27 @@ import tigase.tests.utils.Account;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
-/**
- * Created by andrzej on 20.12.2016.
- */
-public class TestMessageArchiveManagement
-		extends AbstractTest {
+public class TestModeration extends AbstractTest {
 
 	final Mutex mutex = new Mutex();
 	private MucModule muc1Module;
 	private MucModule muc2Module;
-	private MucModule muc3Module;
 	private List<MucModule> mucModules;
 	private BareJID roomJID;
-	private List<Item> sentMessages;
+	private List<TestModeration.Item> sentMessages;
 	private Account user1;
 	private Jaxmpp user1Jaxmpp;
 	private Account user2;
 	private Jaxmpp user2Jaxmpp;
-	private Account user3;
-	private Jaxmpp user3Jaxmpp;
 
-	public static final List<String> NAMESPACES = Arrays.asList("urn:xmpp:mam:1", "urn:xmpp:mam:2");
-
+	private int messageToModerate = 0;
 	@Test
 	public void testSupportAdvertisement() throws Exception {
 		final Mutex mutex = new Mutex();
@@ -87,7 +77,7 @@ public class TestMessageArchiveManagement
 							identities.forEach(identity -> mutex.notify("discovery:identity:" + identity.getCategory() + ":" + identity.getType()));
 						}
 						if (features != null) {
-							features.forEach(feature -> mutex.notify("discovery:feature:" + feature));
+							features.stream().forEach(feature -> mutex.notify("discovery:feature:" + feature));
 						}
 						mutex.notify("discovery:completed:success", "discovery:completed");
 					}
@@ -106,112 +96,25 @@ public class TestMessageArchiveManagement
 
 		mutex.waitFor(10 * 1000, "discovery:completed");
 		assertTrue(mutex.isItemNotified("discovery:completed:success"));
-		for (String namespace : NAMESPACES) {
-			assertTrue(mutex.isItemNotified("discovery:feature:" + namespace));
-		}
-	}
-
-	@Test
-	public void test_MAM_retrieveAll() throws Exception {
-		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
-		RSM rsm = null;
-		assertRetrievedMessages(mutex, roomJID, sentMessages, sentMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
-			assertEquals(true, complete);
-			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
-			assertEquals(0, rsm1.getIndex().intValue());
-		}, true);
-	}
-	
-	@Test(dependsOnMethods = {"test_MAM_retrieveAll"})
-	public void test_MAM_retrieveBetween() throws Exception {
-		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
-		query.setStart(sentMessages.get(2).ts);
-		Date end = sentMessages.get(sentMessages.size() - 3).ts;
-		query.setEnd(new Date(((long)(end.getTime()/1000)) * 1000));
-
-		RSM rsm = null;
-		List<Item> expMessages = sentMessages.subList(2, (sentMessages.size() - 3));
-		assertRetrievedMessages(mutex, roomJID, expMessages, expMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
-			assertEquals(true, complete);
-			assertEquals(expMessages.size(), rsm1.getCount().intValue());
-			assertEquals(0, rsm1.getIndex().intValue());
-		}, false);
-	}
-
-	@Test(dependsOnMethods = {"test_MAM_retrieveBetween"})
-	public void test_MAM_retrieveAllWithPagination() throws Exception {
-		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
-		RSM rsm = new RSM();
-		rsm.setMax(sentMessages.size() / 2);
-
-		List<Item> expMessages1 = sentMessages.subList(0, sentMessages.size() / 2);
-		List<Item> recvMessages1 = assertRetrievedMessages(mutex, roomJID, expMessages1, sentMessages.size(), user1Jaxmpp, query, rsm,
-														   (complete, rsm1) -> {
-															   assertEquals(false, complete);
-															   assertEquals(sentMessages.size(),
-																			rsm1.getCount().intValue());
-															   assertEquals(0, rsm1.getIndex().intValue());
-														   }, false);
-
-		rsm.setAfter(recvMessages1.get(expMessages1.size() - 1).msgId);
-		List<Item> expMessages2 = sentMessages.subList(sentMessages.size() / 2, ((int) (sentMessages.size() / 2)) * 2);
-		assertRetrievedMessages(mutex, roomJID, expMessages2, sentMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
-			assertEquals(sentMessages.size() % 2 == 0, complete);
-			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
-			assertEquals(expMessages1.size(), rsm1.getIndex().intValue());
-		}, false);
-	}
-
-	@Test(dependsOnMethods = {"test_MAM_retrieveAllWithPagination"})
-	public void test_MAM_checkNonJoined() throws Exception {
-		String queryId = UUID.randomUUID().toString();
-		muc1Module.leave(muc1Module.getRoom(roomJID));
-		Thread.sleep(500);
-		user1Jaxmpp.getModule(MessageArchiveManagementModule.class)
-				.queryItems(new MessageArchiveManagementModule.Query(), JID.jidInstance(roomJID), null, queryId, null,
-							new MessageArchiveManagementModule.ResultCallback() {
-								@Override
-								public void onSuccess(String queryid, boolean complete, RSM rsm)
-										throws JaxmppException {
-									assertTrue(false);
-								}
-
-								@Override
-								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-										throws JaxmppException {
-									mutex.notify("mam:error:" + queryId + ":error=" + error.name());
-								}
-
-								@Override
-								public void onTimeout() throws JaxmppException {
-									assertTrue(false);
-								}
-							});
-
-		String id = "mam:error:" + queryId + ":error=" + XMPPException.ErrorCondition.forbidden.name();
-		mutex.waitFor(30 * 1000, id);
-
-		assertTrue(mutex.isItemNotified(id));
+		assertTrue(mutex.isItemNotified("discovery:feature:urn:xmpp:message-moderate:0"));
 	}
 	
 	@BeforeClass
 	protected void setUp() throws Exception {
 		user1 = createAccount().setLogPrefix("user1").build();
 		user2 = createAccount().setLogPrefix("user2").build();
-		user3 = createAccount().setLogPrefix("user3").build();
 		user1Jaxmpp = user1.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
 		user2Jaxmpp = user2.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
-		user3Jaxmpp = user3.createJaxmpp().setConfigurator(this::configureJaxmpp).setConnected(true).build();
 
 		muc1Module = user1Jaxmpp.getModule(MucModule.class);
 		muc2Module = user2Jaxmpp.getModule(MucModule.class);
-		muc3Module = user3Jaxmpp.getModule(MucModule.class);
-		mucModules = Arrays.asList(muc1Module, muc2Module, muc3Module);
+		mucModules = Arrays.asList(muc1Module, muc2Module);
 
 		roomJID = BareJID.bareJIDInstance("room" + nextRnd(), "muc." + user1.getJid().getDomain());
 
 		joinAll();
-		sentMessages = sendRandomMessages(20);
+		sentMessages = sendRandomMessages(10);
+		messageToModerate = new Random().nextInt(sentMessages.size()-1);
 	}
 
 	protected Jaxmpp configureJaxmpp(Jaxmpp jaxmpp) {
@@ -223,7 +126,7 @@ public class TestMessageArchiveManagement
 		Mutex mutex1 = new Mutex();
 		Random random = new Random();
 		//List<Item> sentMessages = new ArrayList<Item>();
-		List<Item> receivedMessage = new ArrayList<Item>();
+		List<Item> receivedMessage = new ArrayList<>();
 		List<String> sentBodies = new ArrayList<>();
 		AtomicInteger counter = new AtomicInteger(0);
 		MucModule.MucMessageReceivedHandler handler = (sessionObject, message, room, s, date) -> {
@@ -260,13 +163,6 @@ public class TestMessageArchiveManagement
 					@Override
 					public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
 						mutex.notify("2:joinAs:" + asNickname);
-					}
-				});
-		user3Jaxmpp.getEventBus()
-				.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, new MucModule.YouJoinedHandler() {
-					@Override
-					public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
-						mutex.notify("3:joinAs:" + asNickname);
 					}
 				});
 
@@ -323,11 +219,144 @@ public class TestMessageArchiveManagement
 		Thread.sleep(1000);
 
 		joinAs(user2Jaxmpp, roomJID, "user2", "joinAs:user2");
-		joinAs(user3Jaxmpp, roomJID, "user3", "joinAs:user3");
+	}
+
+	private void joinAs(final Jaxmpp jaxmpp, final BareJID roomJID, final String nick, String expectedEvent)
+			throws InterruptedException {
+		final Mutex mutex = new Mutex();
+
+		final MucModule.YouJoinedHandler handlerJoined = new MucModule.YouJoinedHandler() {
+			@Override
+			public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
+				mutex.notify("resp", "joinAs:" + asNickname);
+			}
+		};
+		final MucModule.PresenceErrorHandler handlerError = new MucModule.PresenceErrorHandler() {
+			@Override
+			public void onPresenceError(SessionObject sessionObject, Room room, Presence presence, String asNickname) {
+				mutex.notify("resp", "notJoinAs:" + asNickname);
+			}
+		};
+
+		final tigase.jaxmpp.core.client.eventbus.EventListener listener = new EventListener() {
+			@Override
+			public void onEvent(Event<? extends EventHandler> event) {
+			}
+		};
+		try {
+			jaxmpp.getEventBus().addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, handlerJoined);
+			jaxmpp.getEventBus().addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, handlerError);
+			jaxmpp.getEventBus().addListener(listener);
+			final MucModule mucModule = jaxmpp.getModule(MucModule.class);
+
+			mucModule.join(roomJID.getLocalpart(), roomJID.getDomain(), nick);
+
+			mutex.waitFor(1000 * 20, "resp");
+
+			Assert.assertTrue(mutex.isItemNotified(expectedEvent),
+							  "Expected event '" + expectedEvent + "' not received.");
+		} catch (JaxmppException e) {
+			fail(e);
+			e.printStackTrace();
+		} finally {
+			jaxmpp.getEventBus().remove(listener);
+			jaxmpp.getEventBus().remove(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, handlerError);
+			jaxmpp.getEventBus().remove(MucModule.YouJoinedHandler.YouJoinedEvent.class, handlerJoined);
+		}
+	}
+	
+	@Test(dependsOnMethods = "testSupportAdvertisement")
+	public void test_moderationNotification() throws JaxmppException, InterruptedException {
+		Item item = sentMessages.get(messageToModerate);
+		AtomicReference<Item> moderationItem = new AtomicReference<>();
+		MucModule.MucMessageReceivedHandler handler = (sessionObject, message, room, s, date) -> {
+			try {
+				Element applyTo = message.getFirstChild("apply-to");
+				if (applyTo != null &&
+						item.msgId.equals(applyTo.getAttribute("id"))) {
+					Element moderatedEl = applyTo.getFirstChild("moderated");
+					if (moderatedEl != null) {
+						Element stanzaId = message.getFirstChild("stanza-id");
+						if (stanzaId != null) {
+							moderationItem.set(
+									new Item(message.getFrom().getResource(), null,
+											 message.getBody(),
+											 stanzaId.getAttribute("id")));
+							mutex.notify("muc:moderate:notification:success");
+							mutex.notify("muc:moderate:notification:received");
+							return;
+						}
+					}
+				}
+				mutex.notify("muc:moderate:notification:invalid");
+				mutex.notify("muc:moderate:notification:received");
+			} catch (Throwable ex) {
+				throw new RuntimeException(ex);
+			}
+		};
+		user1Jaxmpp.getEventBus().addHandler(MucModule.MucMessageReceivedHandler.MucMessageReceivedEvent.class,
+											 handler);
+
+		IQ iq = IQ.create();
+		iq.setTo(JID.jidInstance(roomJID));
+		iq.setType(StanzaType.set);
+		Element applyTo = ElementFactory.create("apply-to", null, "urn:xmpp:fasten:0");
+		applyTo.setAttribute("id", item.msgId);
+		iq.addChild(applyTo);
+		Element moderate = ElementFactory.create("moderate", null, "urn:xmpp:message-moderate:0");
+		applyTo.addChild(moderate);
+		moderate.addChild(ElementFactory.create("retract", null, "urn:xmpp:message-retract:0"));
+		moderate.addChild(ElementFactory.create("reason", "This message was inapropriate", null));
+
+		user1Jaxmpp.send(iq, new AsyncCallback() {
+			@Override
+			public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
+				mutex.notify("muc:moderation:error:" + errorCondition);
+				mutex.notify("muc:moderation:completed");
+			}
+
+			@Override
+			public void onSuccess(Stanza stanza) throws JaxmppException {
+				mutex.notify("muc:moderation:success");
+				mutex.notify("muc:moderation:completed");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("muc:moderation:error:timeout");
+				mutex.notify("muc:moderation:completed");
+			}
+		});
+		mutex.waitFor(10000, "muc:moderation:completed");
+		assertTrue(mutex.isItemNotified("muc:moderation:success"));
+		mutex.waitFor(10000, "muc:moderate:notification:received");
+		user1Jaxmpp.getEventBus().remove(MucModule.MucMessageReceivedHandler.MucMessageReceivedEvent.class, handler);
+		assertTrue(mutex.isItemNotified("muc:moderate:notification:success"));
+
+		sentMessages = Stream.concat(sentMessages.stream(), Optional.ofNullable(moderationItem.get()).stream())
+				.collect(Collectors.toUnmodifiableList());
+	}
+
+	@Test(dependsOnMethods = "test_moderationNotification")
+	public void test_moderationInArchive() throws Exception {
+		Item item = sentMessages.get(messageToModerate);
+		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
+		RSM rsm = null;
+		
+		Item moderatedItem = new Item(item.nickname, item.ts, null, item.msgId);
+		sentMessages = Stream.concat(Stream.concat(sentMessages.stream().limit(messageToModerate), Stream.of(moderatedItem)),
+									  sentMessages.stream().skip(messageToModerate + 1)).collect(Collectors.toUnmodifiableList());
+
+
+		assertRetrievedMessages(mutex, roomJID, sentMessages, sentMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
+			assertEquals(true, complete);
+			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
+			assertEquals(0, rsm1.getIndex().intValue());
+		}, true);
 	}
 
 	private List<Item> assertRetrievedMessages(Mutex mutex, BareJID roomJID, List<Item> expMessages, Integer expMessagesCount, Jaxmpp user1Jaxmpp,
-											   MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier, boolean updateTimestamps)
+																			MessageArchiveManagementModule.Query query, RSM rsm, Verifier verifier, boolean updateTimestamps)
 			throws Exception {
 		List<Item> receivedMessages = new ArrayList<>();
 		MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler handler = (SessionObject sessionObject, String queryid, String messageId, Date timestamp, Message message) -> {
@@ -393,50 +422,6 @@ public class TestMessageArchiveManagement
 						handler);
 
 		return receivedMessages;
-	}
-
-	private void joinAs(final Jaxmpp jaxmpp, final BareJID roomJID, final String nick, String expectedEvent)
-			throws InterruptedException {
-		final Mutex mutex = new Mutex();
-
-		final MucModule.YouJoinedHandler handlerJoined = new MucModule.YouJoinedHandler() {
-			@Override
-			public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
-				mutex.notify("resp", "joinAs:" + asNickname);
-			}
-		};
-		final MucModule.PresenceErrorHandler handlerError = new MucModule.PresenceErrorHandler() {
-			@Override
-			public void onPresenceError(SessionObject sessionObject, Room room, Presence presence, String asNickname) {
-				mutex.notify("resp", "notJoinAs:" + asNickname);
-			}
-		};
-
-		final EventListener listener = new EventListener() {
-			@Override
-			public void onEvent(Event<? extends EventHandler> event) {
-			}
-		};
-		try {
-			jaxmpp.getEventBus().addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, handlerJoined);
-			jaxmpp.getEventBus().addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, handlerError);
-			jaxmpp.getEventBus().addListener(listener);
-			final MucModule mucModule = jaxmpp.getModule(MucModule.class);
-
-			mucModule.join(roomJID.getLocalpart(), roomJID.getDomain(), nick);
-
-			mutex.waitFor(1000 * 20, "resp");
-
-			Assert.assertTrue(mutex.isItemNotified(expectedEvent),
-							  "Expected event '" + expectedEvent + "' not received.");
-		} catch (JaxmppException e) {
-			fail(e);
-			e.printStackTrace();
-		} finally {
-			jaxmpp.getEventBus().remove(listener);
-			jaxmpp.getEventBus().remove(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, handlerError);
-			jaxmpp.getEventBus().remove(MucModule.YouJoinedHandler.YouJoinedEvent.class, handlerJoined);
-		}
 	}
 
 	private interface Verifier {

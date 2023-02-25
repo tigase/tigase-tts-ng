@@ -6,6 +6,11 @@
             <class name="tigase.tests.muc.TestMessageArchiveManagement"/>
         </classes>
     </test>
+    <test name="Test Message Moderation support">
+        <classes>
+            <class name="tigase.tests.muc.TestModeration"/>
+        </classes>
+    </test>
     <test name="Test limit of users per room - #3179">
         <classes>
             <class name="tigase.tests.muc.TestLimitOfUsersPerRoom"/>
