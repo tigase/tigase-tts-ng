@@ -24,4 +24,11 @@
             <class name="tigase.tests.mix.TestBasicConversation"/>
         </classes>
     </test>
+
+    <test name="Check MIX Message Retraction">
+        <classes>
+            <class name="tigase.tests.mix.TestMessageRetraction"/>
+        </classes>
+    </test>
+
 </suite>
