@@ -20,15 +20,16 @@ package tigase.tests.mix;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.Connector;
+import tigase.TestLogger;
+import tigase.jaxmpp.core.client.Connector.StanzaReceivedHandler.StanzaReceivedEvent;
 import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementBuilder;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
+import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -39,13 +40,13 @@ import tigase.jaxmpp.j2se.connectors.socket.JaxmppHostnameVerifier;
 import tigase.tests.AbstractTest;
 import tigase.tests.Mutex;
 
-import java.security.cert.Certificate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule.Query;
+import static tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule.ResultCallback;
 import static tigase.jaxmpp.j2se.connectors.socket.SocketConnector.HOSTNAME_VERIFIER_DISABLED_KEY;
 import static tigase.jaxmpp.j2se.connectors.socket.SocketConnector.HOSTNAME_VERIFIER_KEY;
 
@@ -57,12 +58,7 @@ public class TestMessageRetraction extends AbstractTest {
 
 	@BeforeClass
 	public void setUp() throws Exception {
-		JaxmppHostnameVerifier hostnameVerifier = new JaxmppHostnameVerifier() {
-			@Override
-			public boolean verify(String hostname, Certificate certificate) {
-				return true;
-			}
-		};
+		JaxmppHostnameVerifier hostnameVerifier = (hostname, certificate) -> true;
 
 		this.jaxmpp = getAdminAccount().createJaxmpp().setConfigurator(jaxmpp -> {
 			jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
@@ -77,7 +73,6 @@ public class TestMessageRetraction extends AbstractTest {
 
 	@Test
 	public void testMessageRetraction() throws Exception {
-		Date start = new Date();
 		createChannel();
 		try {
 			Response result = sendRequest(jaxmpp, createJoinRequest(jaxmpp, "user"));
@@ -90,14 +85,13 @@ public class TestMessageRetraction extends AbstractTest {
 			JID channelJid = JID.jidInstance(channelName, mixJID.getDomain());
 			AtomicBoolean processMessages = new AtomicBoolean(true);
 
-			jaxmpp.getEventBus().addHandler(Connector.StanzaReceivedHandler.StanzaReceivedEvent.class, (sessionObject, streamPacket) -> {
+			jaxmpp.getEventBus().addHandler(StanzaReceivedEvent.class, (sessionObject, streamPacket) -> {
 				try {
 					if (!processMessages.get()) {
 						return;
 					}
 					if (streamPacket instanceof Message &&
 							streamPacket.getAttribute("from").startsWith(channelJid.toString())) {
-						System.out.println(streamPacket);
 						if (((Message) streamPacket).getType() == StanzaType.groupchat) {
 							receivedMessages.add((Message) streamPacket);
 							mutex.notify("received:message:" + receivedMessages.size());
@@ -134,50 +128,43 @@ public class TestMessageRetraction extends AbstractTest {
 			AssertJUnit.assertNotNull(receivedRetract);
 			AssertJUnit.assertEquals(idToModerate, receivedRetract.getAttribute("id"));
 
-			MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
-			//query.setStart(start);
+			Query query = new Query();
 			String queryId = UUID.randomUUID().toString();
 			processMessages.set(false);
 			List<Message> mamMessages = new ArrayList<>();
-			jaxmpp.getEventBus().addHandler(MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
-											new MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler() {
-												@Override
-												public void onArchiveItemReceived(SessionObject sessionObject, String s,
-																				  String s1, Date date, Message message)
-														throws JaxmppException {
-													mamMessages.add(message);
-												}
-											});
-			jaxmpp.getModule(MessageArchiveManagementModule.class).queryItems(query, channelJid, queryId, new RSM(100),
-																			  new MessageArchiveManagementModule.ResultCallback() {
-																				  @Override
-																				  public void onError(Stanza stanza,
-																									  XMPPException.ErrorCondition errorCondition)
-																						  throws JaxmppException {
-																					  mutex.notify("mam:fetch:error:" + errorCondition.name());
-																					  mutex.notify("mam:fetch:completed");
-																				  }
+			jaxmpp.getEventBus().addHandler(MessageArchiveItemReceivedEvent.class,
+											(sessionObject, s, s1, date, message) -> mamMessages.add(message));
+			ResultCallback resultCallback = new ResultCallback() {
+				@Override
+				public void onError(Stanza stanza,
+									XMPPException.ErrorCondition errorCondition)
+						throws JaxmppException {
+					mutex.notify("mam:fetch:error:" + errorCondition.name());
+					mutex.notify("mam:fetch:completed");
+				}
 
-																				  @Override
-																				  public void onTimeout()
-																						  throws JaxmppException {
-																					  mutex.notify("mam:fetch:error:timeout");
-																					  mutex.notify("mam:fetch:completed");
-																				  }
+				@Override
+				public void onTimeout()
+						throws JaxmppException {
+					mutex.notify("mam:fetch:error:timeout");
+					mutex.notify("mam:fetch:completed");
+				}
 
-																				  @Override
-																				  public void onSuccess(String s,
-																										boolean b,
-																										tigase.jaxmpp.core.client.xmpp.utils.RSM rsm)
-																						  throws JaxmppException {
-																					  mutex.notify("mam:fetch:success");
-																					  mutex.notify("mam:fetch:completed");
-																				  }
-																			  });
+				@Override
+				public void onSuccess(String s,
+									  boolean b,
+									  tigase.jaxmpp.core.client.xmpp.utils.RSM rsm)
+						throws JaxmppException {
+					mutex.notify("mam:fetch:success");
+					mutex.notify("mam:fetch:completed");
+				}
+			};
+			jaxmpp.getModule(MessageArchiveManagementModule.class)
+					.queryItems(query, channelJid, queryId, new RSM(100), resultCallback);
 			mutex.waitFor(10*1000, "mam:fetch:completed");
 			AssertJUnit.assertTrue(mutex.isItemNotified("mam:fetch:success"));
 			Thread.sleep(100);
-			System.out.println(mamMessages);
+			TestLogger.log("received MAM messages: " + mamMessages);
 			AssertJUnit.assertEquals(2, mamMessages.size());
 
 			Element retractedEl = mamMessages.get(0).getChildrenNS("retracted", "urn:xmpp:mix:misc:0");
