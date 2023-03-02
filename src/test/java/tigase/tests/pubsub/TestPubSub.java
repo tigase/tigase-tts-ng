@@ -18,6 +18,7 @@
 package tigase.tests.pubsub;
 
 import org.testng.annotations.Test;
+import tigase.TestLogger;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -26,6 +27,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.forms.Field;
 import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
 import tigase.jaxmpp.core.client.xmpp.forms.TextMultiField;
 import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
@@ -38,6 +40,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.tests.Mutex;
+import tigase.tests.utils.PubSubNode;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -93,6 +96,70 @@ public class TestPubSub
 		assertTrue(mutex.isItemNotified("discovery:identity:pubsub:service"));
 		assertTrue(mutex.isItemNotified("discovery:feature:http://jabber.org/protocol/pubsub#publish"));
 		assertTrue(mutex.isItemNotified("discovery:feature:http://jabber.org/protocol/pubsub#subscribe"));
+		assertTrue(mutex.isItemNotified("discovery:feature:http://jabber.org/protocol/pubsub#config-node-max"));
+	}
+
+	@Test
+	public void testMaxItemsMax() throws JaxmppException, InterruptedException {
+		String hostname = getInstanceHostnames()[0];
+		Jaxmpp jaxmpp = jaxmpps.get(hostname);
+		String node = "max-" + UUID.randomUUID();
+		createNode(hostname, jaxmpp.getSessionObject().getUserBareJid(), node, "Title " + UUID.randomUUID(), false);
+		pubSubManager.add(new PubSubNode(pubSubManager, pubsubJid.getBareJid(), node), this.getClass());
+
+		JabberDataElement nodeCfg = new JabberDataElement(XDataType.submit);
+		nodeCfg.addTextSingleField("pubsub#max_items", "max");
+		jaxmpp.getModule(PubSubModule.class).configureNode(pubsubJid.getBareJid(), node, nodeCfg, new PubSubAsyncCallback() {
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				mutex.notify("configure:set:max-items:error:" + errorCondition);
+				mutex.notify("configure:set:max-items:completed");
+			}
+
+			@Override
+			public void onSuccess(Stanza stanza) throws JaxmppException {
+				mutex.notify("configure:set:max-items:success");
+				mutex.notify("configure:set:max-items:completed");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("configure:set:max-items:error:timeout");
+				mutex.notify("configure:set:max-items:completed");
+			}
+		});
+		mutex.waitFor(10*1000, "configure:set:max-items:completed");
+		assertTrue(mutex.isItemNotified("configure:set:max-items:success"));
+
+		jaxmpp.getModule(PubSubModule.class).getNodeConfiguration(pubsubJid.getBareJid(), node, new PubSubModule.NodeConfigurationAsyncCallback() {
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				mutex.notify("configure:get:max-items:error:" + errorCondition);
+				mutex.notify("configure:get:max-items:completed");
+			}
+			
+			@Override
+			protected void onReceiveConfiguration(IQ iq, String s, JabberDataElement jabberDataElement) {
+				try {
+					Field field = jabberDataElement.getField("pubsub#max_items");
+					mutex.notify("configure:get:max-items:success:" + field.getFieldValue());
+				} catch (Throwable ex) {
+					TestLogger.log("exception: " + ex.getMessage());
+				}
+				mutex.notify("configure:get:max-items:completed");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify("configure:get:max-items:error:timeout");
+				mutex.notify("configure:get:max-items:completed");
+			}
+		});
+
+		mutex.waitFor(10*1000, "configure:get:max-items:completed");
+		assertTrue(mutex.isItemNotified("configure:get:max-items:success:max"));
 	}
 
 	// Direct PubSub based implementation
