@@ -162,6 +162,30 @@ public class TestMessageArchiveManagement
 		}, false);
 	}
 
+	@Test(dependsOnMethods = {"test_MAM_retrieveBetween"})
+	public void test_MAM_retrieveAllWithPagination_oldMessageIds() throws Exception {
+		MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
+		RSM rsm = new RSM();
+		rsm.setMax(sentMessages.size() / 2);
+
+		List<Item> expMessages1 = sentMessages.subList(0, sentMessages.size() / 2);
+		List<Item> recvMessages1 = assertRetrievedMessages(mutex, roomJID, expMessages1, sentMessages.size(), user1Jaxmpp, query, rsm,
+														   (complete, rsm1) -> {
+															   assertEquals(false, complete);
+															   assertEquals(sentMessages.size(),
+																			rsm1.getCount().intValue());
+															   assertEquals(0, rsm1.getIndex().intValue());
+														   }, false);
+
+		rsm.setAfter(String.valueOf(recvMessages1.get(expMessages1.size() - 1).ts.getTime() + 1));
+		List<Item> expMessages2 = sentMessages.subList(sentMessages.size() / 2, ((int) (sentMessages.size() / 2)) * 2);
+		assertRetrievedMessages(mutex, roomJID, expMessages2, sentMessages.size(), user1Jaxmpp, query, rsm, (complete, rsm1) -> {
+			assertEquals(sentMessages.size() % 2 == 0, complete);
+			assertEquals(sentMessages.size(), rsm1.getCount().intValue());
+			assertEquals(expMessages1.size(), rsm1.getIndex().intValue());
+		}, false);
+	}
+
 	@Test(dependsOnMethods = {"test_MAM_retrieveAllWithPagination"})
 	public void test_MAM_checkNonJoined() throws Exception {
 		String queryId = UUID.randomUUID().toString();
