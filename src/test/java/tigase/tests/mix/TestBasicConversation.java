@@ -20,15 +20,14 @@ package tigase.tests.mix;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import tigase.jaxmpp.core.client.Connector;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementBuilder;
+import tigase.jaxmpp.core.client.xml.*;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubErrorCondition;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.RetrieveItemsAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -41,8 +40,10 @@ import tigase.tests.Mutex;
 
 import java.security.cert.Certificate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static tigase.jaxmpp.j2se.connectors.socket.SocketConnector.HOSTNAME_VERIFIER_DISABLED_KEY;
 import static tigase.jaxmpp.j2se.connectors.socket.SocketConnector.HOSTNAME_VERIFIER_KEY;
 
@@ -513,6 +514,185 @@ public class TestBasicConversation
 	}
 
 	@Test(dependsOnMethods = {"testLeaveUser2"})
+	public void testPresentNodesModification() throws JaxmppException, InterruptedException {
+		final BareJID channelJID = BareJID.bareJIDInstance(channelName, mixJID.getDomain());
+		final Mutex mutex = new Mutex();
+
+		final AtomicReference<Element> refPayload = new AtomicReference<>();
+		final String TAG1 = "1:retrieve:config";
+		getJaxmppAdmin().getModule(PubSubModule.class).retrieveItems(channelJID, "urn:xmpp:mix:nodes:config", null, null, new RetrieveItemsAsyncCallback() {
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify(TAG1 + ":timeout", TAG1);
+			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				mutex.notify(TAG1 + ":error:" + errorCondition + ":" + pubSubErrorCondition, TAG1);
+			}
+
+			@Override
+			protected void onRetrieve(IQ iq, String s, Collection<Item> collection) {
+				refPayload.set(collection.iterator().next().getPayload());
+				mutex.notify(TAG1 + ":success", TAG1);
+			}
+		});
+		mutex.waitFor(30*1000, TAG1);
+		assertTrue(mutex.isItemNotified(TAG1 + ":success"));
+		Element payload = refPayload.get();
+		assertNotNull(payload);
+		assertEquals("x", payload.getName());
+		assertEquals("jabber:x:data", payload.getXMLNS());
+
+		payload = ElementFactory.create(payload);
+		payload.setParent(null);
+
+		for (Element field : payload.getChildren("field")) {
+			if ("Nodes Present".equals(field.getAttribute("var"))) {
+				Set<String> nodesPresent = field.getChildren("value").stream().map(it -> {
+					try {
+						return it.getValue();
+					} catch (Throwable e) {
+						throw new RuntimeException(e);
+					}
+				}).collect(Collectors.toSet());
+
+				assertFalse(nodesPresent.contains("allowed"));
+				assertFalse(nodesPresent.contains("banned"));
+				field.addChild(ElementBuilder.create("value").setValue("allowed").getElement());
+				field.addChild(ElementBuilder.create("value").setValue("banned").getElement());
+			}
+		}
+
+		final String TAG2 = "2:publish:config";
+		getJaxmppAdmin().getModule(PubSubModule.class).publishItem(channelJID, "urn:xmpp:mix:nodes:config", "2024-01-01", payload, new PubSubModule.PublishAsyncCallback() {
+			@Override
+			public void onPublish(String s) {
+				mutex.notify(TAG2 + ":success", TAG2);
+			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				mutex.notify(TAG2 + ":error:" + errorCondition + ":" + pubSubErrorCondition, TAG2);
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify(TAG2 + ":timeout", TAG2);
+			}
+		});
+		mutex.waitFor(30*1000, TAG2);
+		assertTrue(mutex.isItemNotified(TAG2 + ":success"));
+
+		Thread.sleep(1000);
+		
+		final ArrayList<DiscoveryModule.Item> items = new ArrayList<>();
+		final String TAG3 = "3:disco:nodes";
+		getJaxmppAdmin().getModule(DiscoveryModule.class).getItems(JID.jidInstance(channelJID), "mix", new DiscoveryModule.DiscoItemsAsyncCallback() {
+			@Override
+			public void onInfoReceived(String node, ArrayList<DiscoveryModule.Item> newItems) throws XMLException {
+				items.addAll(newItems);
+				mutex.notify(TAG3 + ":success", TAG3);
+			}
+
+			@Override
+			public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
+				mutex.notify(TAG3 + ":error:" + errorCondition, TAG3);
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify(TAG3 + ":timeout", TAG3);
+			}
+		});
+		mutex.waitFor(30*1000, TAG3);
+		assertTrue(mutex.isItemNotified(TAG3 + ":success"));
+		assertFalse(items.isEmpty());
+
+		Set<String> nodes = items.stream().map(DiscoveryModule.Item::getNode).filter(Objects::nonNull).collect(Collectors.toSet());
+		assertTrue(nodes.contains("urn:xmpp:mix:nodes:allowed"));
+		assertTrue(nodes.contains("urn:xmpp:mix:nodes:banned"));
+
+		payload = ElementFactory.create(payload);
+		payload.setParent(null);
+
+		for (Element field : payload.getChildren("field")) {
+			if ("Nodes Present".equals(field.getAttribute("var"))) {
+				Set<String> nodesPresent = field.getChildren("value").stream().map(it -> {
+					try {
+						return it.getValue();
+					} catch (Throwable e) {
+						throw new RuntimeException(e);
+					}
+				}).collect(Collectors.toSet());
+
+				assertTrue(nodesPresent.contains("allowed"));
+				assertTrue(nodesPresent.contains("banned"));
+
+				nodesPresent.remove("allowed");
+				for (Element value : field.getChildren("value")) {
+					field.removeChild(value);
+				}
+				for (String node : nodesPresent) {
+					field.addChild(ElementBuilder.create("value").setValue(node).getElement());
+				}
+			}
+		}
+
+		final String TAG4 = "4:publish:config";
+		getJaxmppAdmin().getModule(PubSubModule.class).publishItem(channelJID, "urn:xmpp:mix:nodes:config", "2024-01-01", payload, new PubSubModule.PublishAsyncCallback() {
+			@Override
+			public void onPublish(String s) {
+				mutex.notify(TAG4 + ":success", TAG4);
+			}
+
+			@Override
+			protected void onEror(IQ iq, XMPPException.ErrorCondition errorCondition,
+								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+				mutex.notify(TAG4 + ":error:" + errorCondition + ":" + pubSubErrorCondition, TAG4);
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify(TAG4 + ":timeout", TAG4);
+			}
+		});
+		mutex.waitFor(30*1000, TAG4);
+		assertTrue(mutex.isItemNotified(TAG4 + ":success"));
+
+		Thread.sleep(1000);
+
+		items.clear();
+		final String TAG5 = "5:disco:nodes";
+		getJaxmppAdmin().getModule(DiscoveryModule.class).getItems(JID.jidInstance(channelJID), "mix", new DiscoveryModule.DiscoItemsAsyncCallback() {
+			@Override
+			public void onInfoReceived(String node, ArrayList<DiscoveryModule.Item> newItems) throws XMLException {
+				items.addAll(newItems);
+				mutex.notify(TAG5 + ":success", TAG5);
+			}
+
+			@Override
+			public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
+				mutex.notify(TAG5 + ":error:" + errorCondition, TAG5);
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				mutex.notify(TAG5 + ":timeout", TAG5);
+			}
+		});
+		mutex.waitFor(30*1000, TAG5);
+		assertTrue(mutex.isItemNotified(TAG5 + ":success"));
+		assertFalse(items.isEmpty());
+
+		nodes = items.stream().map(DiscoveryModule.Item::getNode).filter(Objects::nonNull).collect(Collectors.toSet());
+		assertFalse(nodes.contains("urn:xmpp:mix:nodes:allowed"));
+		assertTrue(nodes.contains("urn:xmpp:mix:nodes:banned"));
+	}
+
+	@Test(dependsOnMethods = {"testPresentNodesModification"})
 	public void testDestroyChannel() throws Exception {
 		ElementBuilder request = ElementBuilder.create("iq")
 				.setAttribute("id", "create-01")
